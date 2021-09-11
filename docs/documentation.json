@@ -314,6 +314,72 @@
 				"contents": "Returns the number of voters of this problem"
 			},
       
+      {
+				"heading_level": 3,
+				"title": "MathProblemCache",
+				"contents": "A cache of math problems :)"
+			},
+
+      {
+				"heading_level": 4,
+				"title": "convert_dict_to_math_problem",
+				"contents": "The reverse of mathProblem.to_dict"
+			},
+
+      {
+				"heading_level": 4,
+				"title": "update_cache",
+				"contents": "Updates the cache by re-loading the file. Automatically called upon initialization"
+			},
+
+      {
+				"heading_level": 4,
+				"title": "update_file_cache",
+				"contents": "Updates the file used to store math problems."
+			},
+
+      {
+				"heading_level": 4,
+				"title": "get_problem",
+				"contents": "Gets a problem"
+			},
+
+      {
+				"heading_level": 4,
+				"title": "fetch_problem",
+				"contents": "Reloads the cache and then gets the problem"
+			},
+
+      {
+				"heading_level": 4,
+				"title": "get_guild_problems",
+				"contents": "Get problems from a specific guild."
+			},
+
+      {
+				"heading_level": 4,
+				"title": "get_global_problems",
+				"contents": "Get Global Problems"
+			},
+      {
+				"heading_level": 4,
+				"title": "add_empty_guild",
+				"contents": "Adds an empty guild to the cache"
+			},
+
+      {
+				"heading_level": 4,
+				"title": "add_problem",
+				"contents": "Adds a problem!"
+			},
+
+      {
+				"heading_level": 4,
+				"title": "delete_problem",
+				"contents": "Delete a problem"
+			},
+
+
 			{
 				"heading_level": 1,
 				"title": "# Misc. Non-Command-Functions in main.py",

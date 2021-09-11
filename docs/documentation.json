@@ -203,6 +203,33 @@
 				"title": "custom_embeds.SuccessEmbed***",
 				"contents": "Basically the same as ErrorEmbed. Except the title argument is called successTitle and the default color is green.\n"
 			},
+      {
+				"heading_level": 2,
+				"title": "problems_module",
+				"contents": "\n\n A module made for clarity purposes :)"
+			},
+      {
+				"heading_level": 3,
+				"title": "TooLongArgument",
+				"contents": "Raised when an argument passed into MathProblem() is too long."
+			},
+      {
+				"heading_level": 3,
+				"title": "TooLongAnswer",
+				"contents": "Raised when an answer is too long."
+			},
+
+      {
+				"heading_level": 3,
+				"title": "TooLongQuestion",
+				"contents": "Raised when a question's too long"
+			},
+
+      {
+				"heading_level": 3,
+				"title": "GuildAlreadyExistsException",
+				"contents": "Raised when MathProblemCache.add_empty_guild adds a guild that already has problems"
+			},
 			{
 				"heading_level": 1,
 				"title": "# Misc. Non-Command-Functions in main.py",

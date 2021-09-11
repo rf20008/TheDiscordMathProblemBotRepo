@@ -44,11 +44,16 @@ class MathProblem:
       self.solvers = solvers
   def convert_to_dict(self):
     """Convert self to a dictionary"""
+    if self.guild_id == None:
+      guild_id = "None"
+    else:
+      guild_id = self.guild_id
+
     return {
       "question": self.question,
       "answer": self.answer,
       "id": self.id,
-      "guild_id": self.guild_id,
+      "guild_id": guild_id
       "voters": self.voters,
       "solvers": self.solvers
     }
@@ -99,3 +104,21 @@ class MathProblem:
     if not isinstance(User,nextcord.User) and not isinstance(User,nextcord.Member):
       raise TypeError
     return User.id in self.get_solvers()
+
+class MathProblemCache:
+  def __init__(self):
+    pass
+  def convert_dict_to_math_problem(self,problem: dict) -> MathProblem:
+    guild_id = problem["guild_id"]
+    if guild_id == "None":
+      guild_id = None 
+  
+    problem2 = MathProblem(
+      question=problem["question"],
+      answer=problem["answer"],
+      id = problem["id"]
+      guild_id = guild_id,
+      voters = problem["voters"],
+      solvers=problem["solvers"]
+    )
+    return problem2

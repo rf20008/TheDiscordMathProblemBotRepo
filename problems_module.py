@@ -11,7 +11,11 @@ class TooLongAnswer(TooLongArgument):
 class TooLongQuestion(TooLongArgument):
   """Raised when a question is too long."""
 
+class GuildAlreadyExistsException(Exception):
+  "Raised when MathProblemCache.add_empty_guild tries to run on a guild that already has problems."
+
 class MathProblem:
+  "For readability purposes :)"
   def __init__(self,question,answer,id,guild_id=None,voters=[],solvers=[]):
     if guild_id != None and not isinstance(guild_id, int):
       raise TypeError
@@ -109,7 +113,7 @@ class MathProblem:
     return str(self.convert_to_dict)
 
 class MathProblemCache:
-  def __init__(self):
+   def __init__(self):
     self._dict = {}
     self.update_cache()
   def convert_dict_to_math_problem(self,problem: dict) -> MathProblem:
@@ -127,7 +131,7 @@ class MathProblemCache:
       solvers=problem["solvers"]
     )
     return problem2
-  async def update_cache(self):
+  def update_cache(self):
     "This method replaces the new cache with the cache from the file."
     with open("math_problems.json","r") as file:
       dict = json.loads("\n".join(fp))
@@ -135,7 +139,7 @@ class MathProblemCache:
       self._dict[item] = {}
       for item2 in dict[item].keys():
         self._dict[item][item2] = self.convert_dict_to_math_problem(dict[item][item2])
-  async def update_file_cache(self):
+   def update_file_cache(self):
     "This method updates the file cache."
     thing_to_write = ""
     for guild_id in self._dict.keys():
@@ -153,4 +157,51 @@ class MathProblemCache:
   def get_problem(self,guild_id,problem_id):
     "Gets the problem with this guild id and problem id"
     return self._dict[guild_id][problem_id]
+  def fetch_problem(self,guild_id,problem_id):
+    "Reloads the cache with the file and then loads the problem."
+    self.update_cache()
+    return self.get_problem(guild_id, problem_id)
+  def get_guild_problems(self,Guild):
+    """Gets the guild problems! Guild must be a Guild object. If you are trying to get global problems, use get_global_problems."""
+    if not isinstance(Guild, nextcord.Guild):
+      raise TypeError
+    return self._dict[Guild.id].values()
+  def get_global_problems(self):
+    "Returns global problems"
+    return self._dict[None].values()
+  def add_empty_guild(self,Guild):
+    "Adds an dictionary that is empty for the guild. Guild must be a nextcord.Guild object"
+    if not isinstance(Guild, nextcord.Guild):
+      raise TypeError
+    try:
+      if self._dict[Guild.id] != {}:
+        raise GuildAlreadyExistsException
+    except:
+      pass
+      
+    self._dict[Guild.id] = {}
+  def add_problem(self,guild_id,problem_id,Problem):
+    "Adds a problem and returns the added MathProblem"
+    if not isinstance(Problem,(MathProblem, dict)):
+      raise TypeError("Problem is not a valid MathProblem object.")
+    if isinstance(Problem,dict):
+      try:
+        Problem = self.convert_dict_to_math_problem(Problem)
+      except KeyError:
+        raise Exception("Not a valid problem!")
+    if guild_id != None:
+      try:
+        if self._dict[guild_id] != {}:
+          raise GuildAlreadyExistsException
+        else:
+          self._dict[guild_id] = {}
+      except:
+        self._dict[guild_id] = {}
+    self._dict[guild_id][problem_id] = Problem
+    return Problem
+  def remove_problem(self,guild_id,problem_id):
+    "Removes a problem. Returns the deleted problem"
+    Problem = self._dict[guild_id][problem_id]
+    del self._dict[guild_id][problem_id]
+    return Problem
 

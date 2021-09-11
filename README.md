@@ -6,7 +6,7 @@ This is a discord bot! All help is appreciated.
 
 # License
 
-This discord bot is licensed under the combined terms of the GNU license and the MIT license. (due to nextcord being licensed under the MIT license)
+This discord bot and all of its code is licensed under the combined terms of the GNU license and the MIT license. (due to nextcord being licensed under the MIT license)
 
 # If you run into issues
 If you run into any issues create an issue or DM me (ay136416#2707)). 

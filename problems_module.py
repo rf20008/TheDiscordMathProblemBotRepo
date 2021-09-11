@@ -1,3 +1,5 @@
+import nextcord
+
 # This is a module containing MathProblem, MathProblemHandler, and MathProblemCache objects. (And exceptions as well!)
 
 class TooLongArgument(Exception):
@@ -23,11 +25,32 @@ class MathProblem:
     self.guild_id = guild_id
     self.voters = voters
     self.solvers=solvers
-  def edit(self,question=None,answer=None,id,guild_id=None,voters=None,solvers=None):
+  def edit(self,question=None,answer=None,id=None,guild_id=None,voters=None,solvers=None):
     """Edit a math problem."""
     if question != None:
+        raise TooLongQuestion(f"Question {question} is too long (250+ characters)")
       self.question = question
     if answer != None:
       if len(answer) > 100:
         raise TooLongAnswer(f"Answer {answer} is too long.")
       self.answer = answer
+    if id != None:
+      self.id = id
+    if guild_id != None:
+      self.guild_id = guild_id
+    if voters != None:
+      self.voters = voters
+    if solvers != None:
+      self.solvers = solvers
+  def convert_to_dict(self):
+    """Convert self to a dictionary"""
+    return {
+      "question": self.question,
+      "answer": self.answer,
+      "id": self.id,
+      "guild_id": self.guild_id,
+      "voters": self.voters,
+      "solvers": self.solvers
+    }
+  def add_voters(self,voter):
+    """Add a voter. Voter must be a nextcord.User object."""

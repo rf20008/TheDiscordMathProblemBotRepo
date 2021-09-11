@@ -61,15 +61,17 @@ class MathProblem:
       "voters": self.voters,
       "solvers": self.solvers
     }
-  def add_voters(self,voter):
+  def add_voter(self,voter):
     """Adds a voter. Voter must be a nextcord.User object or nextcord.Member object."""
     if not isinstance(voter,nextcord.User) and not isinstance(voter,nextcord.Member):
       raise TypeError
-    self.voters.append(voter.id)
+    if not self.is_voter(voter):
+      self.voters.append(voter.id)
   def add_solver(self,solver):
     """Adds a solver. Solver must be a nextcord.User object or nextcord.Member object."""
     if not isinstance(solver,nextcord.User) and not isinstance(solver,nextcord.Member):
       raise TypeError
+    if not self.is_solver(solver)
     self.solvers.append(solver.id)
   def get_answer(self):
     "Return my answer."

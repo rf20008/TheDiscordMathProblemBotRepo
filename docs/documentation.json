@@ -230,6 +230,26 @@
 				"title": "GuildAlreadyExistsException",
 				"contents": "Raised when MathProblemCache.add_empty_guild adds a guild that already has problems"
 			},
+      {
+				"heading_level": 3,
+				"title": "MathProblem",
+				"contents": "A class that represents a math problem. Made for readability :)"
+			},
+      {
+				"heading_level": 4,
+				"title": "edit",
+				"contents": "Edits a math problem, changing its question, answer, id, guild_id, voters, and solvers."
+			},
+      {
+				"heading_level": 4,
+				"title": "convert_to_dict",
+				"contents": "Convert a Math Problem into a dictionary in order to be stored"
+			},
+      {
+				"heading_level": 4,
+				"title": "GuildAlreadyExistsException",
+				"contents": "Raised when MathProblemCache.add_empty_guild adds a guild that already has problems"
+			},
 			{
 				"heading_level": 1,
 				"title": "# Misc. Non-Command-Functions in main.py",

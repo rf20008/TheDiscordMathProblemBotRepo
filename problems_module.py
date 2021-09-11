@@ -129,7 +129,7 @@ class MathProblemCache:
     return problem2
   async def update_cache(self):
     "This method replaces the new cache with the cache from the file."
-    with open("math_problems.json") as file:
+    with open("math_problems.json","r") as file:
       dict = json.loads("\n".join(fp))
     for item in dict.keys():
       self._dict[item] = {}
@@ -142,5 +142,15 @@ class MathProblemCache:
       thing_to_write += "{" + str(guild_id) + ": " 
       for problem_id in self._dict[guild_id].keys():
         thing_to_write += str(problem_id) + ": "
-        thing_to_write += str(self._dict[guild_id][problem_id])       
+        thing_to_write += str(self._dict[guild_id][problem_id])
+        thing_to_write += ","
+      thing_to_write = thing_to_write.remove_suffix(",")    
+      thing_to_write += "},"
+    thing_to_write.remove_suffix(",")
+    thing_to_write += "}"
+    with open("math_problems.json", "w") as file:
+      file.write(thing_to_write)
+  def get_problem(self,guild_id,problem_id):
+    "Gets the problem with this guild id and problem id"
+    return self._dict[guild_id][problem_id]
 

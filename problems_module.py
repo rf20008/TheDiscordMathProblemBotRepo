@@ -1,6 +1,6 @@
 import nextcord, json
 
-# This is a module containing MathProblem, MathProblemHandler, and MathProblemCache objects. (And exceptions as well!)
+# This is a module containing MathProblem and MathProblemCache objects. (And exceptions as well!)
 
 class TooLongArgument(Exception):
   '''Raised when an argument passed into MathProblem() is too long.'''

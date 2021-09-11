@@ -2,6 +2,7 @@ import math, random, os, warnings, threading, aiohttp, copy, nextcord, discord
 import dislash
 import return_intents
 import nextcord.ext.commands as nextcord_commands
+import problems_module
 
 from dislash import InteractionClient, Option, OptionType, NotOwner, OptionChoice
 from time import sleep, time
@@ -13,6 +14,7 @@ from nextcord.ext.commands import errors
 from save_files import FileSaver
 from user_error import UserError
 from the_documentation_file_loader import *
+from problems_module import
 
 
 warnings.simplefilter("ignore")

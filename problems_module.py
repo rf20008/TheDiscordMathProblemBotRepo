@@ -205,3 +205,6 @@ class MathProblemCache:
     del self._dict[guild_id][problem_id]
     return Problem
 
+main_cache = MathProblemCache()
+def return_main_cache():
+  return main_cache

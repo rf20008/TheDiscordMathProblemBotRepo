@@ -58,7 +58,7 @@ class MathProblem:
       "question": self.question,
       "answer": self.answer,
       "id": self.id,
-      "guild_id": guild_id
+      "guild_id": guild_id,
       "voters": self.voters,
       "solvers": self.solvers
     }
@@ -72,8 +72,8 @@ class MathProblem:
     """Adds a solver. Solver must be a nextcord.User object or nextcord.Member object."""
     if not isinstance(solver,nextcord.User) and not isinstance(solver,nextcord.Member):
       raise TypeError
-    if not self.is_solver(solver)
-    self.solvers.append(solver.id)
+    if not self.is_solver(solver):
+      self.solvers.append(solver.id)
   def get_answer(self):
     "Return my answer."
     return self.answer
@@ -116,10 +116,11 @@ class MathProblem:
     return str(self.convert_to_dict)
 
 class MathProblemCache:
-   def __init__(self):
+  def __init__(self):
     self._dict = {}
     self.update_cache()
-  def convert_dict_to_math_problem(self,problem: dict) -> MathProblem:
+
+  def convert_dict_to_math_problem(self,problem):
     "Convert a dictionary into a math problem. It must be in the expected format."
     guild_id = problem["guild_id"]
     if guild_id == "None":
@@ -128,7 +129,7 @@ class MathProblemCache:
     problem2 = MathProblem(
       question=problem["question"],
       answer=problem["answer"],
-      id = problem["id"]
+      id = problem["id"],
       guild_id = guild_id,
       voters = problem["voters"],
       solvers=problem["solvers"]
@@ -137,12 +138,12 @@ class MathProblemCache:
   def update_cache(self):
     "This method replaces the new cache with the cache from the file."
     with open("math_problems.json","r") as file:
-      dict = json.loads("\n".join(fp))
+      dict = json.loads("\n".join(file))
     for item in dict.keys():
       self._dict[item] = {}
       for item2 in dict[item].keys():
         self._dict[item][item2] = self.convert_dict_to_math_problem(dict[item][item2])
-   def update_file_cache(self):
+  def update_file_cache(self):
     "This method updates the file cache."
     thing_to_write = ""
     for guild_id in self._dict.keys():

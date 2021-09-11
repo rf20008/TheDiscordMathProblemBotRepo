@@ -14,7 +14,7 @@ from nextcord.ext.commands import errors
 from save_files import FileSaver
 from user_error import UserError
 from the_documentation_file_loader import *
-from problems_module import
+from problems_module import get_main_cache
 
 
 warnings.simplefilter("ignore")

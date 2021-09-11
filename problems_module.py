@@ -62,4 +62,18 @@ class MathProblem:
     if not isinstance(solver,nextcord.User) and not isinstance(solver,nextcord.Member):
       raise TypeError
     self.solvers.append(solver.id)
-    
+  def get_answer(self):
+    "Return my answer."
+    return self.answer
+  def get_question(self):
+    "Return my question."
+    return self.question
+  def check_answer_and_add_checker(self,answer,potentialSolver):
+    "Checks the answer. If it's correct, it adds potentialSolver to the solvers."
+    if not isinstance(potentialSolver,nextcord.User) and not isinstance(potentialSolver,nextcord.Member):
+      raise TypeError
+    if self.check_answer(answer):
+      self.add_solver(potentialSolver)
+  def check_answer(self,answer):
+    "Checks the answer. Returns True if it's correct and False otherwise."
+    return answer == self.get_answer()

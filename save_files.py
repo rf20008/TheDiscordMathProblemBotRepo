@@ -1,7 +1,7 @@
-import json
+import json, problems_module
 numFileSavers=0
 class FileSaver:
-  def __init__(self,name=None,enabled=False,printSuccessMessagesByDefault=False,math_problems_file_name="math_problems.json",guild_math_problems_file_name="guild_math_problems.json",trusted_users_file_name="trusted_users.txt",vote_threshold_file_name="vote_threshold.txt"):
+  def __init__(self,name=None,enabled=False,printSuccessMessagesByDefault=False,):
     """Creates a new FileSaver object."""
     global numFileSavers
     numFileSavers+=1
@@ -10,10 +10,6 @@ class FileSaver:
     self.id = numFileSavers
     self.printSuccessMessagesByDefault=printSuccessMessagesByDefault
     self.enabled=True
-    self.math_problems_file_name=math_problems_file_name
-    self.guild_math_problems_file_name=guild_math_problems_file_name
-    self.trusted_users_file_name=trusted_users_file_name
-    self.vote_threshold_file_name=vote_threshold_file_name
     self.name=name
   def __str__(self):
     return self.name
@@ -30,8 +26,7 @@ class FileSaver:
     trusted_users=[]
     if printSuccessMessages or printSuccessMessages==None and self.printSuccessMessagesByDefault:
       print(f"{str(self)}: Attempting to load guild_math_problems_dict from {self.guild_math_problems_file_name}, vote_threshold from {self.vote_threshold_file_name}, trusted_users_list from {self.trusted_users_file_name}, and math_problems_dict from {self.math_problems_file_name}...")
-    with open("math_problems.json", "r") as file:
-      mathProblems = json.load(fp=file)
+    problems_module.get_main_cache().update_cache()
     with open("trusted_users.txt", "r") as file2:
       for line in file2:
         trusted_users.append(int(line))
@@ -43,15 +38,14 @@ class FileSaver:
       guildMathProblems = json.load(fp=file4)
     if printSuccessMessages or printSuccessMessages==None and self.printSuccessMessagesByDefault:
       print(f"{self.name}: Successfully loaded files.")
-    return {"guildMathProblems":guildMathProblems,"trusted_users":trusted_users,"mathProblems":mathProblems,"vote_threshold":vote_threshold}
+    return {"guildMathProblems":guildMathProblems,"trusted_users":trusted_users,"vote_threshold":vote_threshold}
   def save_files(self,printSuccessMessages=None,guild_math_problems_dict={},vote_threshold=3,math_problems_dict={},trusted_users_list={}):
     "Saves files to file names specified in __init__."
     if not self.enabled:
       raise RuntimeError("I'm not enabled! I can't load files!")
     if printSuccessMessages or printSuccessMessages==None and self.printSuccessMessagesByDefault:
       print(f"{str(self)}: Attempting to save guild_math_problems_dict to {self.guild_math_problems_file_name}, vote_threshold to {self.vote_threshold_file_name}, trusted_users_list to  {self.trusted_users_file_name}, and math_problems_dict to {self.math_problems_file_name}...")
-    with open("math_problems.json", "w") as file:
-      file.write(json.dumps(math_problems_dict))
+    problems_module.get_main_cache().update_file_cache()
     with open("trusted_users.txt", "w") as file2:
       for user in trusted_users_list:
         file2.write(str(user))

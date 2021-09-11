@@ -206,5 +206,6 @@ class MathProblemCache:
     return Problem
 
 main_cache = MathProblemCache()
-def return_main_cache():
+def get_main_cache():
+  "Returns the main cache."
   return main_cache

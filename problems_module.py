@@ -77,3 +77,25 @@ class MathProblem:
   def check_answer(self,answer):
     "Checks the answer. Returns True if it's correct and False otherwise."
     return answer == self.get_answer()
+  def my_id(self):
+    "Returns id & guild_id in a list. id is first and guild_id is second."
+    return [self.id, self.guild_id]
+  def get_voters(self):
+    "Returns self.voters"
+    return self.voters
+  def get_num_voters(self):
+    "Returns the number of solvers."
+    return len(self.get_voters())
+  def is_voter(self,User):
+    "Returns True if user is a voter. False otherwise. User must be a nextcord.User or nextcord.Member object."
+    if not isinstance(User,nextcord.User) and not isinstance(User,nextcord.Member):
+      raise TypeError
+    return User.id in self.get_voters()
+  def get_solvers(self):
+    "Returns self.solvers"
+    return self.solvers
+  def is_solver(self,User):
+    "Returns True if user is a solver. False otherwise. User must be a nextcord.User or nextcord.Member object."
+    if not isinstance(User,nextcord.User) and not isinstance(User,nextcord.Member):
+      raise TypeError
+    return User.id in self.get_solvers()

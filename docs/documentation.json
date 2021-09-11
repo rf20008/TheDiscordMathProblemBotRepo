@@ -261,10 +261,59 @@
 				"contents": "Checks the answer. if it's correct, adds the solver to the list of its solvers."
 			},
       {
-				"heading_level": 3,
-				"title": "check_answe",
-				"contents": "Raised when MathProblemCache.add_empty_guild adds a guild that already has problems"
+				"heading_level": 4,
+				"title": "check_answer",
+				"contents": "Checks the answer"
 			},
+      
+      {
+				"heading_level": 4,
+				"title": "add_voter",
+				"contents": "Adds a voter"
+			},
+
+      {
+				"heading_level": 4,
+				"title": "add_solver",
+				"contents": "Adds a solver"
+			},
+
+      {
+				"heading_level": 4,
+				"title": "my_id",
+				"contents": "Returns the id of it as a list"
+			},
+
+      {
+				"heading_level": 4,
+				"title": "get_voters",
+				"contents": "Returns voters"
+			},
+
+      {
+				"heading_level": 4,
+				"title": "get_solvers",
+				"contents": "Returns my solvers"
+			},
+
+      {
+				"heading_level": 4,
+				"title": "is_voter",
+				"contents": "Returns whether a user is a voter for the deletion of this problem"
+			},
+
+      {
+				"heading_level": 4,
+				"title": "is_solver",
+				"contents": "Returns whether a user is a solver of this problem"
+			},
+
+      {
+				"heading_level": 4,
+				"title": "get_num_voters",
+				"contents": "Returns the number of voters of this problem"
+			},
+      
 			{
 				"heading_level": 1,
 				"title": "# Misc. Non-Command-Functions in main.py",

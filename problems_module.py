@@ -157,9 +157,9 @@ class MathProblemCache:
         thing_to_write += str(problem_id) + ": "
         thing_to_write += str(self._dict[guild_id][problem_id])
         thing_to_write += ","
-      thing_to_write = thing_to_write.remove_suffix(",")    
+      thing_to_write = thing_to_write[len(thing_to_write)-2] 
       thing_to_write += "},"
-    thing_to_write.remove_suffix(",")
+    thing_to_write = thing_to_write[len(thing_to_write)-2]
     thing_to_write += "}"
     with open("math_problems.json", "w") as file:
       file.write(thing_to_write)

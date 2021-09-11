@@ -104,6 +104,8 @@ class MathProblem:
     if not isinstance(User,nextcord.User) and not isinstance(User,nextcord.Member):
       raise TypeError
     return User.id in self.get_solvers()
+  def __str__(self):
+    return str(self.convert_to_dict)
 
 class MathProblemCache:
   def __init__(self):
@@ -135,6 +137,9 @@ class MathProblemCache:
   async def update_file_cache(self):
     "This method updates the file cache."
     thing_to_write = ""
-    
-        
+    for guild_id in self._dict.keys():
+      thing_to_write += "{" + str(guild_id) + ": " 
+      for problem_id in self._dict[guild_id].keys():
+        thing_to_write += str(problem_id) + ": "
+        thing_to_write += str()       
 

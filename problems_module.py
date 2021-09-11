@@ -122,6 +122,11 @@ class MathProblemCache:
 
   def convert_dict_to_math_problem(self,problem):
     "Convert a dictionary into a math problem. It must be in the expected format."
+    try:
+      assert isinstance(problem,dict)
+    except AssertionError:
+      print(problem)
+      raise TypeError
     guild_id = problem["guild_id"]
     if guild_id == "None":
       guild_id = None 

@@ -25,7 +25,7 @@ class FileSaver:
       raise RuntimeError("I'm not enabled! I can't load files!")
     trusted_users=[]
     if printSuccessMessages or printSuccessMessages==None and self.printSuccessMessagesByDefault:
-      print(f"{str(self)}: Attempting to load guild_math_problems_dict from {self.guild_math_problems_file_name}, vote_threshold from {self.vote_threshold_file_name}, trusted_users_list from {self.trusted_users_file_name}, and math_problems_dict from {self.math_problems_file_name}...")
+      print(f"{str(self)}: Attempting to load vote_threshold from vote_threshold.txt, trusted_users_list from trusted_users.txt, and math_problems  from math_problems.json...")
     problems_module.get_main_cache().update_cache()
     with open("trusted_users.txt", "r") as file2:
       for line in file2:
@@ -44,7 +44,7 @@ class FileSaver:
     if not self.enabled:
       raise RuntimeError("I'm not enabled! I can't load files!")
     if printSuccessMessages or printSuccessMessages==None and self.printSuccessMessagesByDefault:
-      print(f"{str(self)}: Attempting to save guild_math_problems_dict to {self.guild_math_problems_file_name}, vote_threshold to {self.vote_threshold_file_name}, trusted_users_list to  {self.trusted_users_file_name}, and math_problems_dict to {self.math_problems_file_name}...")
+      print(f"{str(self)}: Attempting to save math problems vote_threshold to vote_threshold.txt, trusted_users_list to  trusted_users.txt...")
     problems_module.get_main_cache().update_file_cache()
     with open("trusted_users.txt", "w") as file2:
       for user in trusted_users_list:

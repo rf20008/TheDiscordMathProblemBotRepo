@@ -113,6 +113,70 @@ Inherits from custom_embeds.SimpleEmbed. Also takes 3 arguments, except the colo
 ### custom_embeds.SuccessEmbed***
 Basically the same as ErrorEmbed. Except the title argument is called successTitle and the default color is green.
 
+## problems_module
+
+
+ A module made for clarity purposes :)
+### TooLongArgument
+Raised when an argument passed into MathProblem() is too long.
+### TooLongAnswer
+Raised when an answer is too long.
+### TooLongQuestion
+Raised when a question's too long
+### GuildAlreadyExistsException
+Raised when MathProblemCache.add_empty_guild adds a guild that already has problems
+### MathProblem
+A class that represents a math problem. Made for readability :)
+#### edit
+Edits a math problem, changing its question, answer, id, guild_id, voters, and solvers.
+#### convert_to_dict
+Convert a Math Problem into a dictionary in order to be stored
+#### get_answer
+Returns my answer
+#### get_question
+Returns my question
+#### check_answer_and_add_checker
+Checks the answer. if it's correct, adds the solver to the list of its solvers.
+#### check_answer
+Checks the answer
+#### add_voter
+Adds a voter
+#### add_solver
+Adds a solver
+#### my_id
+Returns the id of it as a list
+#### get_voters
+Returns voters
+#### get_solvers
+Returns my solvers
+#### is_voter
+Returns whether a user is a voter for the deletion of this problem
+#### is_solver
+Returns whether a user is a solver of this problem
+#### get_num_voters
+Returns the number of voters of this problem
+### MathProblemCache
+A cache of math problems :)
+#### convert_dict_to_math_problem
+The reverse of mathProblem.to_dict
+#### update_cache
+Updates the cache by re-loading the file. Automatically called upon initialization
+#### update_file_cache
+Updates the file used to store math problems.
+#### get_problem
+Gets a problem
+#### fetch_problem
+Reloads the cache and then gets the problem
+#### get_guild_problems
+Get problems from a specific guild.
+#### get_global_problems
+Get Global Problems
+#### add_empty_guild
+Adds an empty guild to the cache
+#### add_problem
+Adds a problem!
+#### delete_problem
+Delete a problem
 # # Misc. Non-Command-Functions in main.py
 
 

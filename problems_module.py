@@ -110,6 +110,7 @@ class MathProblemCache:
     self._dict = {}
     self.update_cache()
   def convert_dict_to_math_problem(self,problem: dict) -> MathProblem:
+    "Convert a dictionary into a math problem. It must be in the expected format."
     guild_id = problem["guild_id"]
     if guild_id == "None":
       guild_id = None 
@@ -123,7 +124,7 @@ class MathProblemCache:
       solvers=problem["solvers"]
     )
     return problem2
-  def update_cache(self):
+  async def update_cache(self):
     "This method replaces the new cache with the cache from the file."
     with open("math_problems.json") as file:
       dict = json.loads("\n".join(fp))
@@ -131,5 +132,9 @@ class MathProblemCache:
       self._dict[item] = {}
       for item2 in dict[item].keys():
         self._dict[item][item2] = self.convert_dict_to_math_problem(dict[item][item2])
-  def update_file_cache(self):
+  async def update_file_cache(self):
     "This method updates the file cache."
+    thing_to_write = ""
+    
+        
+

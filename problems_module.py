@@ -124,4 +124,12 @@ class MathProblemCache:
     )
     return problem2
   def update_cache(self):
-    with open("math_problems.json") as
+    "This method replaces the new cache with the cache from the file."
+    with open("math_problems.json") as file:
+      dict = json.loads("\n".join(fp))
+    for item in dict.keys():
+      self._dict[item] = {}
+      for item2 in dict[item].keys():
+        self._dict[item][item2] = self.convert_dict_to_math_problem(dict[item][item2])
+  def update_file_cache(self):
+    "This method updates the file cache."

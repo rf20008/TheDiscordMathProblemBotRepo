@@ -1,4 +1,4 @@
-import nextcord
+import nextcord, json
 
 # This is a module containing MathProblem, MathProblemHandler, and MathProblemCache objects. (And exceptions as well!)
 
@@ -108,6 +108,7 @@ class MathProblem:
 class MathProblemCache:
   def __init__(self):
     self._dict = {}
+    self.update_cache()
   def convert_dict_to_math_problem(self,problem: dict) -> MathProblem:
     guild_id = problem["guild_id"]
     if guild_id == "None":
@@ -122,3 +123,5 @@ class MathProblemCache:
       solvers=problem["solvers"]
     )
     return problem2
+  def update_cache(self):
+    with open("math_problems.json") as

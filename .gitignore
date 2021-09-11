@@ -1,4 +1,4 @@
-*.json # Don't show the actual problems
-.env # I need to keep my secret safe
-*.cpython # These files crash the ide
-*.pyc #crashes the ide :)
+math_problems.json 
+.env
+*.cpython
+*.pyc

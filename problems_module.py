@@ -107,7 +107,7 @@ class MathProblem:
 
 class MathProblemCache:
   def __init__(self):
-    pass
+    self._dict = {}
   def convert_dict_to_math_problem(self,problem: dict) -> MathProblem:
     guild_id = problem["guild_id"]
     if guild_id == "None":

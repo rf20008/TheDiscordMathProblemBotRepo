@@ -105,6 +105,7 @@ class MathProblem:
       raise TypeError
     return User.id in self.get_solvers()
   def __str__(self):
+    "Return str(self) by converting it to a dictionary and converting the dictionary to a string"
     return str(self.convert_to_dict)
 
 class MathProblemCache:
@@ -141,5 +142,5 @@ class MathProblemCache:
       thing_to_write += "{" + str(guild_id) + ": " 
       for problem_id in self._dict[guild_id].keys():
         thing_to_write += str(problem_id) + ": "
-        thing_to_write += str()       
+        thing_to_write += str(self._dict[guild_id][problem_id])       
 

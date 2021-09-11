@@ -143,23 +143,26 @@ class MathProblemCache:
   def update_cache(self):
     "This method replaces the new cache with the cache from the file."
     with open("math_problems.json","r") as file:
-      dict = json.loads("\n".join(file))
+      dict = json.loads("".join([str(thing) for thing in file]))
     for item in dict.keys():
       self._dict[item] = {}
       for item2 in dict[item].keys():
         self._dict[item][item2] = self.convert_dict_to_math_problem(dict[item][item2])
   def update_file_cache(self):
     "This method updates the file cache."
-    thing_to_write = ""
+    thing_to_write = "{"
     for guild_id in self._dict.keys():
       thing_to_write += "{" + str(guild_id) + ": " 
+      e= False
       for problem_id in self._dict[guild_id].keys():
+        e= True
         thing_to_write += str(problem_id) + ": "
         thing_to_write += str(self._dict[guild_id][problem_id])
         thing_to_write += ","
-      thing_to_write = thing_to_write[len(thing_to_write)-2] 
+      #if e:
+        #thing_to_write = thing_to_write[len(thing_to_write)-1:] 
       thing_to_write += "},"
-    thing_to_write = thing_to_write[len(thing_to_write)-2]
+    #thing_to_write = thing_to_write[len(thing_to_write)-1:]
     thing_to_write += "}"
     with open("math_problems.json", "w") as file:
       file.write(thing_to_write)

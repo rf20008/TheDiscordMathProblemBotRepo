@@ -32,6 +32,7 @@ class MathProblem:
   def edit(self,question=None,answer=None,id=None,guild_id=None,voters=None,solvers=None):
     """Edit a math problem."""
     if question != None:
+      if len(question) > 250:
         raise TooLongQuestion(f"Question {question} is too long (250+ characters)")
       self.question = question
     if answer != None:

@@ -247,7 +247,22 @@
 			},
       {
 				"heading_level": 4,
-				"title": "GuildAlreadyExistsException",
+				"title": "get_answer",
+				"contents": "Returns my answer"
+			},
+      {
+				"heading_level": 4,
+				"title": "get_question",
+				"contents": "Returns my question"
+			},
+      {
+				"heading_level": 4,
+				"title": "check_answer_and_add_checker",
+				"contents": "Checks the answer. if it's correct, adds the solver to the list of its solvers."
+			},
+      {
+				"heading_level": 3,
+				"title": "check_answe",
 				"contents": "Raised when MathProblemCache.add_empty_guild adds a guild that already has problems"
 			},
 			{

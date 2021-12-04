@@ -1,4 +1,5 @@
 [![Powered by Nextcord](https://custom-icon-badges.herokuapp.com/badge/-Powered%20by%20Nextcord-0d1620?logo=nextcord)](https://github.com/nextcord/nextcord "Powered by Nextcord Python API Wrapper")
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Frf20008%2FTheDiscordMathProblemBotRepo.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Frf20008%2FTheDiscordMathProblemBotRepo?ref=badge_shield)
 
 # If you run into issues
 If you run into any issues create an issue or DM me (ay136416#2707)). 
@@ -62,3 +63,7 @@ No privileged intents are required (the bot has been designed to not require pri
 2. Run ``git pull`` (updates the repo)
 3. If there are any merge conflicts, please fix them. Then do step 2. If there are no merge conflicts, skip this step
 4. Stop your bot! And then re-start it again
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Frf20008%2FTheDiscordMathProblemBotRepo.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Frf20008%2FTheDiscordMathProblemBotRepo?ref=badge_large)

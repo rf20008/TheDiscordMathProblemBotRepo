@@ -167,6 +167,7 @@ async def on_ready(bot: TheDiscordMathProblemBot):
     print(
         f"My owner id is {bot.owner_id if bot.owner_id is not None else app_info.owner.id}!"
     )
+    print(f"I am able to connect {bot.session_start_limit.total} times before being prohibited today.")
     if bot.owner_id is None and app_info.owner.id is not None:
         bot.owner_id = app_info.owner.id
 

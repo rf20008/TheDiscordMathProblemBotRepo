@@ -4,6 +4,7 @@ import enum
 
 
 class QuizIntensity(float, enum.Enum):
+    """An enumeration of quiz"""
     IMPOSSIBLE = float("inf")
     ONLY_GENIUSES_CAN_SOLVE_THIS = 200 << 100
     EXTREMELY_CHALLENGING = 10000.0

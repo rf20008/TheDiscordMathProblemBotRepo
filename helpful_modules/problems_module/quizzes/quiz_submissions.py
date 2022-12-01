@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Union, Optional, Dict
-from ....threads_or_useful_funcs import assert_type_or_throw_exception
+from ...threads_or_useful_funcs import assert_type_or_throw_exception
 from ..errors import MathProblemsModuleException
 from warnings import warn
 
@@ -50,7 +50,7 @@ class QuizSubmission:
     user_id: Optional[int]
     cache: "MathProblemCache" # type: ignore
     quiz_id: Optional[int]
-    answers: Dict[int, QuizSubmission]
+    answers: Dict[int, QuizSubmissionAnswer]
 
     def __init__(self, user_id: int, quiz_id: int, cache: "MathProblemCache"): # type: ignore
         """
@@ -143,7 +143,7 @@ class QuizSubmission:
         c.mutable = dict_["mutable"]
         return c
 
-    def submit(self, cache: "MathProblemCache") -> True: # type: ignore
+    async def submit(self, cache: "MathProblemCache") -> True: # type: ignore
 
         self.mutable = False
         if self in self.quiz.submissions:

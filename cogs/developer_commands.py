@@ -203,7 +203,7 @@ class DeveloperCommands(HelperCog):
                 await self.bot.cache.get_guild_problems(inter.guild)
             ),
         }
-        correct_permissions = {
+        correct_permissions = { # todo: don't hardcode
             "Read Message History": "✅" if my_permissions.read_messages else "❌",
             "Read Messages": "✅"
             if my_permissions.read_messages

@@ -51,7 +51,11 @@ class InterestingComputationCog(HelperCog):
             for i in range(len(moduli)):
                 num = product // moduli[i]
                 # compute the multiplicative number of product/b_i mod b_i
-                return_val = threads_or_useful_funcs.extended_gcd(product, self.moduli[i])
+                return_val = threads_or_useful_funcs.extended_gcd(product, self.moduli[i]) # replace with pow(product, -1, self.moduli[i]) since pow can compute modular inverses
+                try:
+                    return_val = pow(product, -1, self.moduli[i])
+                except ValueError:
+                    raise ValueError("They aren't relatively prime")
                 mult_inv = return_val[0][1]
                 sum += num * mult_inv * self.remainders[i]
             return sum

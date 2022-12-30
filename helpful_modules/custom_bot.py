@@ -119,7 +119,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         self.is_closing = False
         await super().close()
 
-    async def maybe_send_closing_messages(self):
+    async def maybe_send_closing_message(self):
         guild = self.support_server
         channel = guild.get_channel(ANNOUNCEMENTS_CHANNEL)
         await channel.send_message(f"This process will stop functioning in {TIME_TO_WAIT} seconds (if waiting is enabled")

@@ -57,7 +57,9 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
             assert isinstance(task, disnake.ext.tasks.Loop)
             task.start()  # TODO: add being able to change it
         self.timeStarted = float("inf")
-
+        self.total_stats = None
+        self.this_session = None
+        self.initialize_stats()
         # self.trusted_users = kwargs.get("trusted_users", None)
         # if not self.trusted_users and self.trusted_users != []:
         #    raise TypeError("trusted_users was not found")
@@ -268,3 +270,6 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
             raise TypeError("func is not awaitable!!")
 
         return decorator
+    async def save_stats(self):
+        await self.storer.writeStats(self.total_stats)
+    def initialize_stats(self):

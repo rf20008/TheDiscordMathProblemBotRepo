@@ -1,9 +1,9 @@
 import disnake
 from disnake.ext import commands
-
+import time
 from .custom_bot import TheDiscordMathProblemBot
 from .problems_module.user_data import UserData
-
+from .StatsTrack import CommandUsage, CommandStats, StreamWrapperStorer
 bot = None
 MAX_LIMIT = 120_000 # Nothing longer than 120,000 characters
 MAX_NUM = 1
@@ -218,5 +218,17 @@ def no_insanely_huge_numbers_check(max_num = MAX_NUM):
                             return False
                     except:
                         pass
+        return True
+    return commands.check(predicate)
+
+def cmds_cnt():
+    """Count the number of commands used and store it in storer. Storer must support storer.writeStats(CommandStats) and storer.appendStats(CommandStats"""
+
+    async def predicate(inter):
+        # increment both total_stats
+        # and this_session
+        #and then set these objects to
+        inter.bot.total_stats.update(CommandUsage(inter.user.id, inter.data.name, time.time())) # warning
+        inter.bot.this_session.update(CommandUsage(inter.user.id, inter.data.name, time.time()))  # warning
         return True
     return commands.check(predicate)

@@ -35,7 +35,7 @@ class InterestingComputationCog(HelperCog):
                 if not (
                     isinstance(remainders[i], int)
                     and isinstance(moduli[i], int)
-                    and modli[i] > remainders[i] > 0
+                    and moduli[i] > remainders[i] > 0
                 ):
                     raise ValueError("The CRT prerequsites are not satisifed!")
             self.remainders = remainders
@@ -48,8 +48,8 @@ class InterestingComputationCog(HelperCog):
             for i in range(len(self.moduli)):
                 product *= self.moduli[i]
             sum = 0
-            for i in range(len(moduli)):
-                num = product // moduli[i]
+            for i in range(len(self.moduli)):
+                num = product // self.moduli[i]
                 # compute the multiplicative number of product/b_i mod b_i
                 return_val = threads_or_useful_funcs.extended_gcd(product, self.moduli[i]) # replace with pow(product, -1, self.moduli[i]) since pow can compute modular inverses
                 try:

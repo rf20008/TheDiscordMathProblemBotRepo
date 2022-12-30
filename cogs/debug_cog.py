@@ -12,9 +12,9 @@ from helpful_modules import checks, problems_module
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules.custom_embeds import ErrorEmbed, SimpleEmbed, SuccessEmbed
 from helpful_modules.threads_or_useful_funcs import get_log
-
 from .helper_cog import HelperCog
-
+from .interesting_computation_ import InterestingComputationCog
+CRTC = InterestingComputationCog.ChineseRemainderTheoremComputer
 log = get_log(__name__)
 
 
@@ -61,7 +61,7 @@ class DebugCog(HelperCog):
             )
         ],
     )
-    async def sql(self, inter: disnake.ApplicationCommandInteraction, query: str):
+    async def sql(self, inter: disnake.ApplicationCommandInteraction, query: str, ephemeral: bool = False):
         """/sql [query: str]
         A debug command to run SQL!
         You must own this bot to run this command!"""
@@ -69,22 +69,23 @@ class DebugCog(HelperCog):
             self.bot.owner_ids not in [None, [], set()]
             and inter.author.id not in self.bot.owner_ids
         ):
-            await inter.send("You don't own this bot...")
+            await inter.send("You don't own this bot...", ephermeral=ephemeral)
             return
         if self.bot.owner_id is not None and inter.author.id != self.bot.owner_id:
-            await inter.send("You don't own this bot!!!")
+            await inter.send("You don't own this bot!!!", ephemeral=ephemeral)
             return
         if self.bot.owner_id is None and self.bot.owner_ids is None:
             return await inter.send(
-                "Neither owner_id or owner_ids is defined... exiting!"
+                "Neither owner_id or owner_ids is defined... exiting!",
+                ephemeral=ephemeral
             )
         try:
             result = await self.cache.run_sql(query)
         except BaseException as e:
-            await inter.send("An exception occurred while running the SQL!")
+            await inter.send("An exception occurred while running the SQL!", ephemeral=ephemeral)
             raise
 
-        await inter.send(f"Result: {result}")
+        await inter.send(f"Result: {result}", ephemeral=ephemeral)
         return
 
     @commands.is_owner()
@@ -98,10 +99,16 @@ class DebugCog(HelperCog):
                 description="The code to execute",
                 type=disnake.OptionType.string,
                 required=True,
+            ),
+            disnake.Option(
+                name = "ephemeral",
+                description = "Whether the result of the code should be printed ephemerally",
+                type=disnake.OptionType.boolean,
+                required=False
             )
         ],
     )
-    async def eval(self, inter: disnake.ApplicationCommandInteraction, code: str):
+    async def eval(self, inter: disnake.ApplicationCommandInteraction, code: str, ephemeral=False):
         """/eval [code: str]
         Evaluate arbitrary python code.
         Any instances of `\n` in code and stdin will be replaced with a newline character!
@@ -116,14 +123,15 @@ class DebugCog(HelperCog):
             self.bot.owner_ids not in [None, [], set()]
             and inter.author.id not in self.bot.owner_ids
         ):
-            await inter.send("You don't own this bot...")
+            await inter.send("You don't own this bot...",ephemeral=ephemeral)
             return
         if self.bot.owner_id is not None and inter.author.id != self.bot.owner_id:
-            await inter.send("You don't own this bot!!!")
+            await inter.send("You don't own this bot!!!",ephemeral=ephemeral)
             return
         if self.bot.owner_id is None and self.bot.owner_ids is None:
             return await inter.send(
-                "Neither owner_id or owner_ids is defined... exiting!"
+                "Neither owner_id or owner_ids is defined... exiting!",
+                ephemeral=ephemeral
             )
 
         # the administrator permission requiring was removed
@@ -177,7 +185,8 @@ class DebugCog(HelperCog):
                 f"""The code was successfully executed!
 stdout: ```{new_stdout.getvalue()} ```
 stderr: ```{new_stderr.getvalue()} ```"""
-            )
+            ),
+            ephemeral=ephemeral
         )
         new_stdout.close()
         new_stderr.close()

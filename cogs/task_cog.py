@@ -8,7 +8,7 @@ from disnake.ext.commands import (AutoShardedBot, AutoShardedInteractionBot,
 from helpful_modules import problems_module
 from helpful_modules._error_logging import log_error
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
-
+from helpful_modules.
 from .helper_cog import HelperCog
 
 # TODO: make this an extension :-)
@@ -71,6 +71,10 @@ class TaskCog(HelperCog):
     @tasks.loop(seconds=5)
     async def make_sure_config_json_is_correct(self):
         await self.bot.config_json.update_my_file()
+
+    @tasks.loop(seconds = 45)
+    async def make_sure_stats_are_saved(self):
+        await self.bot.save_stats()
 
 
 def setup(bot: TheDiscordMathProblemBot):

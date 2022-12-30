@@ -8,7 +8,7 @@ from helpful_modules import (checks, custom_bot, problems_module,
                              threads_or_useful_funcs)
 
 from .helper_cog import HelperCog
-
+PAGE_SIZE = 3000
 
 class DataModificationCog(HelperCog):
     def __init__(self, bot):
@@ -88,6 +88,23 @@ class DataModificationCog(HelperCog):
             P: number of problems user created
             """
             assert Self.check(interaction)
+            #attempt to delete all command stats (but not aggregate data such as the total # of commands)
+            # and we try 2 times because race conditions
+            for i in range(2):
+                new_usages = []
+                numberUsages = 0
+                for usage in self.bot.total_stats.usages:
+                    numberUsages += 1
+                    if numberUsages % PAGE_SIZE == 0:
+                        await asyncio.sleep(0.5) # give other processes a chance to run
+                    if usage.user_id != interaction.user.id:
+                        new_usages.append(usage)
+                self.bot.total_stats.usages=new_usages
+                #repeat the same thing for this session
+                new_usages=[]
+                numberUsages=0
+                for usage in self.bot.this_session.usages:
+
             kwargs = {
                 "content": "Successfully deleted your data! Your data should now be cleared now."
             }
@@ -217,6 +234,7 @@ class DataModificationCog(HelperCog):
                 "blacklisted": is_blacklisted,
             },
             "Appeals": [appeal.to_dict() for appeal in raw_data["appeals"]],
+            "total_session_command_stats": [usage.to_dict() for usage in self.total_stats.usages if usage.user_id == author.id]
         }
         return new_data
 

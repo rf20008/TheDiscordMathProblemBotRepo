@@ -15,9 +15,13 @@ from helpful_modules import problems_module
 from helpful_modules.constants_loader import BotConstants
 from helpful_modules.problems_module.cache import MathProblemCache
 from helpful_modules.restart_the_bot import RestartTheBot
-
+from .StatsTrack import CommandStats, CommandUsage, StreamWrapperStorer
 from .FileDictionaryReader import AsyncFileDict
 from .threads_or_useful_funcs import modified_async_wrap
+
+WAIT = True
+TIME_TO_WAIT = 25
+ANNOUNCEMENTS_CHANNEL = 960725589260652588
 
 
 class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
@@ -26,6 +30,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
 
         self.tasks = kwargs.pop("tasks")
         self.config_json = AsyncFileDict("config.json")
+        self.storer = kwargs.pop("storer")
         self.trusted_users = kwargs.pop("trusted_users")
         self._on_ready_func = kwargs.pop(
             "on_ready_func"
@@ -98,6 +103,10 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
 
     async def close(self):
         self.is_closing = True
+
+        await self.maybe_send_closing_message()
+        if WAIT:
+            await asyncio.sleep(TIME_TO_WAIT)
         for cog_name in list(self.cogs):
             self.remove_cog(cog_name)
         for extension in list(self.extensions):
@@ -105,9 +114,16 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         for task in self.tasks:
             task.stop()
         await asyncio.sleep(5)
+        self.storer.close()
         await asyncio.gather(*self.closing_things)
         self.is_closing = False
         await super().close()
+
+    async def maybe_send_closing_messages(self):
+        guild = self.support_server
+        channel = guild.get_channel(ANNOUNCEMENTS_CHANNEL)
+        await channel.send_message(f"This process will stop functioning in {TIME_TO_WAIT} seconds (if waiting is enabled")
+
 
     def add_closing_thing(self, thing: FunctionType) -> None:
         if asyncio.iscoroutinefunction(thing):
@@ -270,6 +286,10 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
             raise TypeError("func is not awaitable!!")
 
         return decorator
+
     async def save_stats(self):
         await self.storer.writeStats(self.total_stats)
+
     def initialize_stats(self):
+        self.total_stats = self.storer.return_stats()
+        self.this_session = CommandStats(usages=[], unique_users=set(), total_cmds=0)

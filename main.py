@@ -25,7 +25,7 @@ from helpful_modules.constants_loader import *
 from helpful_modules.cooldowns import check_for_cooldown
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules.threads_or_useful_funcs import *
-
+from helpful_modules.StatsTrack import StreamWrapperStorer, CommandStats, CommandUsage
 # Imports - My own files
 
 
@@ -177,7 +177,9 @@ async def on_ready(bot: TheDiscordMathProblemBot):
 # Bot creation
 
 asyncio.set_event_loop(asyncio.new_event_loop())  # Otherwise, weird errors will happen
+my_amazing_storer = StreamWrapperStorer(open("storer.json", "w"), reading=open("storer_old.json", "r"))
 bot = TheDiscordMathProblemBot(
+    storer=my_amazing_storer,
     intents=return_intents.return_intents(),
     application_id=845751152901750824,
     status=disnake.Status.idle,
@@ -219,6 +221,7 @@ _the_daemon_file_saver.start()
 # slash = InteractionClient(client=bot, sync_commands=True)
 # bot.slash = slash
 # Add the commands
+bot.add_check(checks.cmds_cnt)
 bot.add_cog(DebugCog(bot))
 bot.add_cog(DeveloperCommands(bot))
 bot.add_cog(ProblemsCog(bot))

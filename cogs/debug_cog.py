@@ -24,28 +24,31 @@ class DebugCog(HelperCog):
     def __init__(self, bot: TheDiscordMathProblemBot):
         super().__init__(bot)
 
-    def cog_slash_command_check(self, inter: disnake.ApplicationCommandInteraction):
+    async def cog_slash_command_check(self, inter: disnake.ApplicationCommandInteraction):
         """A check that makes sure only bot owners can use this cog!"""
-        if self.bot.owner_id in [None, [], set()] and self.bot.owner_ids is None:
-            raise commands.CheckFailure(
-                "Failing to protect myself (neither owner_id nor owner_ids are defined)"
-            )
-        if self.bot.owner_id in [None, [], set()]:
-            raise commands.CheckFailure(
-                "You're not the owner of this bot! You must be the owner to execute debug commands!"
-            )
-        if self.bot.owner_id == inter.author.id:
-            return True
-
-        try:
-            if (
-                self.bot.owner_ids not in [None, [], set()]
-                and inter.author.id in self.bot.owner_ids
-            ):
-                return True
-            raise commands.CheckFailure("You don't own this bot!")
-        except AttributeError:
-            raise commands.CheckFailure("You don't own this bot!")
+        if not await self.bot._is_owner(inter.author):
+            raise commands.CheckFailure("You are not the owner of this bot!")
+        return True
+        # if self.bot.owner_id in [None, [], set()] and self.bot.owner_ids is None:
+        #     raise commands.CheckFailure(
+        #         "Failing to protect myself (neither owner_id nor owner_ids are defined)"
+        #     )
+        # if self.bot.owner_id in [None, [], set()]:
+        #     raise commands.CheckFailure(
+        #         "You're not the owner of this bot! You must be the owner to execute debug commands!"
+        #     )
+        # if self.bot.owner_id == inter.author.id:
+        #     return True
+        #
+        # try:
+        #     if (
+        #         self.bot.owner_ids not in [None, [], set()]
+        #         and inter.author.id in self.bot.owner_ids
+        #     ):
+        #         return True
+        #     raise commands.CheckFailure("You don't own this bot!")
+        # except AttributeError:
+        #     raise commands.CheckFailure("You don't own this bot!")
 
     @commands.is_owner()
     @checks.trusted_users_only()
@@ -65,20 +68,13 @@ class DebugCog(HelperCog):
         """/sql [query: str]
         A debug command to run SQL!
         You must own this bot to run this command!"""
-        if (
-            self.bot.owner_ids not in [None, [], set()]
-            and inter.author.id not in self.bot.owner_ids
-        ):
-            await inter.send("You don't own this bot...", ephermeral=ephemeral)
-            return
-        if self.bot.owner_id is not None and inter.author.id != self.bot.owner_id:
-            await inter.send("You don't own this bot!!!", ephemeral=ephemeral)
-            return
-        if self.bot.owner_id is None and self.bot.owner_ids is None:
-            return await inter.send(
-                "Neither owner_id or owner_ids is defined... exiting!",
-                ephemeral=ephemeral
-            )
+        try:
+            assert await self.cog_slash_command_check(inter)
+        except AssertionError:
+            await inter.send("I don't believe you own me.")
+            raise
+        except CheckFailure:
+            raise
         try:
             result = await self.cache.run_sql(query)
         except BaseException as e:
@@ -118,21 +114,12 @@ class DebugCog(HelperCog):
         """
         new_stdout = io.StringIO()
         new_stderr = io.StringIO()
-
-        if (
-            self.bot.owner_ids not in [None, [], set()]
-            and inter.author.id not in self.bot.owner_ids
-        ):
-            await inter.send("You don't own this bot...",ephemeral=ephemeral)
-            return
-        if self.bot.owner_id is not None and inter.author.id != self.bot.owner_id:
-            await inter.send("You don't own this bot!!!",ephemeral=ephemeral)
-            return
-        if self.bot.owner_id is None and self.bot.owner_ids is None:
-            return await inter.send(
-                "Neither owner_id or owner_ids is defined... exiting!",
-                ephemeral=ephemeral
-            )
+        try:
+            if not await self.cog_slash_command_check(inter):
+                await inter.send("I know that you don't own me. You cannot use /eval. Goodbye.")
+                return
+        except CheckFailure:
+            raise
 
         # the administrator permission requiring was removed
         code_ = "\n".join(code.split("\\n"))  # Split the code by `\n`

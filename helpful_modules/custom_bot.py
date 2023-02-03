@@ -293,3 +293,22 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
     def initialize_stats(self):
         self.total_stats = self.storer.return_stats()
         self.this_session = CommandStats(usages=[], unique_users=set(), total_cmds=0)
+
+    async def _is_owner(self, user: disnake.User) -> bool:
+        """Helper function to determine whether user qualifies as an owner"""
+        if await self.is_owner(user):
+            return True
+        if self.owner_ids is None or self.owner_id in [None, [], set()]:
+            return False
+        if self.bot.owner_id == user.id:
+            return True
+        try:
+            if (
+                self.bot.owner_ids not in [None, [], set()]
+                and inter.author.id in self.bot.owner_ids
+            ):
+                return True
+            return False # nope
+        except AttributeError:
+            # not an owner
+            return False

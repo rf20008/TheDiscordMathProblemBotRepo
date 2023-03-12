@@ -179,5 +179,4 @@ stderr: ```{new_stderr.getvalue()} ```"""
         new_stderr.close()
         return
 
-    @commands.is_owner
     

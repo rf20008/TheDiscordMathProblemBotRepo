@@ -2,6 +2,7 @@
 import random
 import typing
 from copy import copy
+import warnings
 
 import disnake
 from disnake import *
@@ -36,9 +37,10 @@ class DeveloperCommands(HelperCog):
     async def force_load_files(
         self, inter: disnake.ApplicationCommandInteraction
     ) -> None:
+        warnings.warn("Since I have been migrated from using files to a SQL database, this command is deprecated!")
         """Forcefully load files. You must be a trusted user to do this command.
         This command does not take any user-provided arguments."""
-
+    
         if inter.author.id not in self.bot.trusted_users:
             await inter.send(
                 ErrorEmbed(

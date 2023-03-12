@@ -227,6 +227,7 @@ bot.add_cog(DeveloperCommands(bot))
 bot.add_cog(ProblemsCog(bot))
 bot.add_cog(QuizCog(bot))
 bot.add_cog(MiscCommandsCog(bot))
+bot.add_cog(HelpCog(bot))
 bot.CONSTANTS = bot_constants
 bot.add_check(checks.is_not_blacklisted())
 bot.add_cog(InterestingComputationCog(bot))
@@ -239,6 +240,7 @@ async def on_connect():
     """Run when the bot connects"""
     print("The bot has connected to Discord successfully.")
     await asyncio_sleep(0.5)
+    await bot.get_cog("HelpCog").update_cached_command_dict()
     await bot.change_presence(
         status=disnake.Status.idle,
     )
@@ -272,7 +274,7 @@ async def on_error(event, *args, **kwargs):
 
     error_traceback_as_obj = "\n".join(traceback.format_exception(*error))
     # Log the error?
-    log_error(error[1])
+    await log_error(error[1])
     # We don't have an interaction/context, so I can't tell the user that an error happened
     print("Oh no! An exception occurred!", flush=True, file=stdout)
 

@@ -2,8 +2,12 @@ import datetime
 import time
 import traceback
 
-
-def log_error(error, file_path=""):
+async def log_error(error, file_path = "", send_to_webhook = False):
+    log_error_to_file(error, file_path)
+    if send_to_webhook:
+        raise NotImplementedError("Not done yet")
+def log_error_to_file(error, file_path=""):
+    "Log the error to a file"
     if not isinstance(file_path, str):
         raise TypeError("file_path is not a string")
     if not isinstance(error, BaseException):
@@ -34,15 +38,13 @@ def log_error(error, file_path=""):
             + str(now.day)
             + ".txt"
         )
-    e = traceback.format_exception(type(error), error, tb=error.__traceback__)
+    err_msg = traceback.format_exception(type(error), error, tb=error.__traceback__)
+    msg = time.asctime() + "\n\n" + "".join([str(item) for item in err_msg]) + "\n\n"
+    
     try:
         with open(file_path, "a") as f:
-            f.write(time.asctime())
-            f.write("\n" * 2)
-            f.write("".join([str(item) for item in e]))
-            f.write("\n" * 2)
+            f.write(msg)
     except Exception as exc:
         raise Exception(
             "***File path not found.... or maybe something else happened.... anyway please report this :)***"
         ) from exc
-    return e

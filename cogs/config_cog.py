@@ -172,14 +172,13 @@ class GuildConfigCog(HelperCog):
             default=problems_module.GuildData.default(guild_id=inter.guild_id),
         )
         try:
-            data.mod_check.whitelisted_users.remove(user.id)
+            data.mod_check.whitelisted_users.remove(user.id) # potentially O(N) operation
             await self.cache.set_guild_data(inter.guild_id, data=data)
             await inter.send("Data sent!")
             return
         except ValueError:
             await inter.send("This user is not whitelisted")
-            raise  # for debugging purposes only
-
+            return
     @modify_mod_check.sub_command(
         description="add_blacklisted_user",
     )

@@ -31,7 +31,7 @@ class HelpCog(HelperCog):
                 raise TypeError(f"I expected all of my commands to be instances of InvokableSlashCommand, InvokableMessageCommand, or InvokableUserCommand; however, one my commands is {command} of type {command.__class__.__name__}.")
 
             if isinstance(command, commands.InvokableSlashCommand):
-                new_cached_command_dict["commands"][command.cog.qualified_name] = command
+                new_cached_command_dict["slash"][command.cog.qualified_name] = command
             elif isinstance(command, commands.InvokableUserCommand):
                 new_cached_command_dict["user"][command.cog.qualified_name] = command
             else:
@@ -40,10 +40,12 @@ class HelpCog(HelperCog):
         self.updater.update_my_file()
 
     @commands.slash_command(name="help", description = "This is the beginnings of the help command")
-    async def help(self, inter: disnake.ApplicationCommandInteraction, cmd: str):
+    async def help(self, inter: disnake.ApplicationCommandInteraction, cmd: str, cmd_type: str = ""):
         if str=="":
             return await inter.send("Unfortunately, you need to provide a command so I can help you!")
-        raise
+        command = None
+        try:
+            command = new_cached_coma
     @commands.cooldown(1, 1, commands.BucketType.user)
     @commands.slash_command(
         name="documentation",

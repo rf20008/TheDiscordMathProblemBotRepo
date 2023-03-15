@@ -1,0 +1,2 @@
+language = "python3"
+run = "clear; git pull origin beta; (python3.11 --version || install-pkg python3.11); poetry install; python3.11 -m pip install -U git+https://github.com/DisnakeDev/disnake.git@master; python3.8 -m pip install -U pip; python3.11 -m pip install -U pip; python3.11 -m pip install more-itertools; python3.11 main.py"

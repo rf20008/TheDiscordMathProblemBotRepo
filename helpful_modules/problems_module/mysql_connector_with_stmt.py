@@ -5,7 +5,7 @@ import aiomysql
 # Licensed under GPLv3 (or later)
 
 
-@contextlib.contextmanager # type: ignore
+@contextlib.contextmanager  # type: ignore
 def mysql_connection(*args, **kwargs) -> aiomysql.Connection:
     """A custom with statement to connect to a MySQL database.
     This makes connecting to MYSQL possible within a context wrapper. This is a wrapper around MySQL

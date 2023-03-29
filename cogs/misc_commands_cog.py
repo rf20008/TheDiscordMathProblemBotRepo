@@ -636,7 +636,6 @@ class MiscCommandsCog(HelperCog):
         await channel.send(embed=embed, content=content)
         await inter.send("Your request has been submitted!")
 
-    
     @commands.slash_command(
         name="blacklist",
         description="Blacklist someone from the bot!",

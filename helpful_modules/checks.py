@@ -4,8 +4,9 @@ import time
 from .custom_bot import TheDiscordMathProblemBot
 from .problems_module.user_data import UserData
 from .StatsTrack import CommandUsage, CommandStats, StreamWrapperStorer
+
 bot = None
-MAX_LIMIT = 120_000 # Nothing longer than 120,000 characters
+MAX_LIMIT = 120_000  # Nothing longer than 120,000 characters
 MAX_NUM = 1
 for i in range(30):
     MAX_NUM *= 10
@@ -180,26 +181,29 @@ def guild_owners_or_trusted_users_only():
 
     return commands.check(predicate)
 
+
 def nothing_too_long():
     async def predicate(inter: disnake.ApplicationCommandInteraction):
         for item, l in inter.filled_options:
             try:
                 if len(l) > MAX_LIMIT:
-                    raise commands.CheckFailure(f"You're not allowed to send things longer than {MAX_LIMIT} characters.")
+                    raise commands.CheckFailure(
+                        f"You're not allowed to send things longer than {MAX_LIMIT} characters."
+                    )
                 else:
                     continue
             except commands.CheckFailure:
-                raise # Don't catch this error
+                raise  # Don't catch this error
             except TypeError:
                 # Not something we can find the length of
-                pass # Don't do anything
+                pass  # Don't do anything
 
         return True
 
     return commands.check(predicate)
 
 
-def no_insanely_huge_numbers_check(max_num = MAX_NUM):
+def no_insanely_huge_numbers_check(max_num=MAX_NUM):
     async def predicate(inter: disnake.ApplicationCommandInteraction):
         for _, it in inter.filled_options.items():
             if not isinstance(it, (float, str, int)):
@@ -219,7 +223,9 @@ def no_insanely_huge_numbers_check(max_num = MAX_NUM):
                     except:
                         pass
         return True
+
     return commands.check(predicate)
+
 
 def cmds_cnt():
     """Count the number of commands used and store it in storer. Storer must support storer.writeStats(CommandStats) and storer.appendStats(CommandStats"""
@@ -227,8 +233,13 @@ def cmds_cnt():
     async def predicate(inter):
         # increment both total_stats
         # and this_session
-        #and then set these objects to
-        inter.bot.total_stats.update(CommandUsage(inter.user.id, inter.data.name, time.time())) # warning
-        inter.bot.this_session.update(CommandUsage(inter.user.id, inter.data.name, time.time()))  # warning
+        # and then set these objects to
+        inter.bot.total_stats.update(
+            CommandUsage(inter.user.id, inter.data.name, time.time())
+        )  # warning
+        inter.bot.this_session.update(
+            CommandUsage(inter.user.id, inter.data.name, time.time())
+        )  # warning
         return True
+
     return commands.check(predicate)

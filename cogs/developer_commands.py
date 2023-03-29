@@ -8,8 +8,12 @@ import disnake
 from disnake import *
 from disnake.ext import commands
 
-from helpful_modules import (checks, cooldowns, problems_module,
-                             the_documentation_file_loader)
+from helpful_modules import (
+    checks,
+    cooldowns,
+    problems_module,
+    the_documentation_file_loader,
+)
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules.custom_embeds import *
 from helpful_modules.save_files import FileSaver
@@ -37,10 +41,12 @@ class DeveloperCommands(HelperCog):
     async def force_load_files(
         self, inter: disnake.ApplicationCommandInteraction
     ) -> None:
-        warnings.warn("Since I have been migrated from using files to a SQL database, this command is deprecated!")
+        warnings.warn(
+            "Since I have been migrated from using files to a SQL database, this command is deprecated!"
+        )
         """Forcefully load files. You must be a trusted user to do this command.
         This command does not take any user-provided arguments."""
-    
+
         if inter.author.id not in self.bot.trusted_users:
             await inter.send(
                 ErrorEmbed(
@@ -205,7 +211,7 @@ class DeveloperCommands(HelperCog):
                 await self.bot.cache.get_guild_problems(inter.guild)
             ),
         }
-        correct_permissions = { # todo: don't hardcode
+        correct_permissions = {  # todo: don't hardcode
             "Read Message History": "✅" if my_permissions.read_messages else "❌",
             "Read Messages": "✅"
             if my_permissions.read_messages

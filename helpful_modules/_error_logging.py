@@ -2,10 +2,13 @@ import datetime
 import time
 import traceback
 
-async def log_error(error, file_path = "", send_to_webhook = False):
+
+async def log_error(error, file_path="", send_to_webhook=False):
     log_error_to_file(error, file_path)
     if send_to_webhook:
         raise NotImplementedError("Not done yet")
+
+
 def log_error_to_file(error, file_path=""):
     "Log the error to a file"
     if not isinstance(file_path, str):
@@ -40,7 +43,7 @@ def log_error_to_file(error, file_path=""):
         )
     err_msg = traceback.format_exception(type(error), error, tb=error.__traceback__)
     msg = time.asctime() + "\n\n" + "".join([str(item) for item in err_msg]) + "\n\n"
-    
+
     try:
         with open(file_path, "a") as f:
             f.write(msg)

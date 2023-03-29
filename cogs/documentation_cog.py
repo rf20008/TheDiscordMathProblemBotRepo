@@ -4,8 +4,17 @@ from disnake import OptionChoice, Option, OptionType
 import typing
 from typing import Optional
 import aiofiles
-from helpful_modules import custom_bot, custom_embeds, _error_logging, checks, dict_factory, FileDictionaryReader
+from helpful_modules import (
+    custom_bot,
+    custom_embeds,
+    _error_logging,
+    checks,
+    dict_factory,
+    FileDictionaryReader,
+)
 import json
+from collections import defaultdict
+
 try:
     import orjson as json
 except (ImportError, ModuleNotFoundError):
@@ -13,54 +22,86 @@ except (ImportError, ModuleNotFoundError):
 from .helper_cog import HelperCog
 
 FILENAME = "help.json"
+
+
 class HelpCog(HelperCog):
     def __init__(self, bot):
-        self.bot=bot
+        self.bot = bot
         self.cache = bot.cache
         self.cached_command_dict = {}
-        self.updater = FileDictionaryReader.AsyncFileDict(FILENAME)
 
     @tasks.loop(seconds=86400)
     async def task_update_cached_command_dict(self):
-        await self.update_cached_command_dict()
-    async def update_cached_command_dict(self):
-        new_cached_command_dict = {"slash": {}, "user": {}, "message": {}}
+        self.update_cached_command_dict()
+
+    def update_cached_command_dict(self):
+        new_cached_command_dict = {
+            "slash": defaultdict(default_factory=lambda: []),
+            "user": defaultdict(default_factory=lambda: []),
+            "message": defaultdict(default_factory=lambda: []),
+        }
         commands_existing = self.bot.application_commands
         for command in commands_existing:
-            if not isinstance(command, (commands.InvokableSlashCommand, commands.InvokableMessageCommand, commands.InvokableUserCommand)):
-                raise TypeError(f"I expected all of my commands to be instances of InvokableSlashCommand, InvokableMessageCommand, or InvokableUserCommand; however, one my commands is {command} of type {command.__class__.__name__}.")
+            if not isinstance(
+                command,
+                (
+                    commands.InvokableSlashCommand,
+                    commands.InvokableMessageCommand,
+                    commands.InvokableUserCommand,
+                ),
+            ):
+                raise TypeError(
+                    f"I expected all of my commands to be instances of InvokableSlashCommand, InvokableMessageCommand, or InvokableUserCommand; however, one my commands is {command} of type {command.__class__.__name__}."
+                )
 
             if isinstance(command, commands.InvokableSlashCommand):
-                new_cached_command_dict["slash"][command.cog.qualified_name] = command
+                new_cached_command_dict["slash"][command.cog.qualified_name].append(
+                    command
+                )
             elif isinstance(command, commands.InvokableUserCommand):
-                new_cached_command_dict["user"][command.cog.qualified_name] = command
+                new_cached_command_dict["user"][command.cog.qualified_name].append(
+                    command
+                )
             else:
-                new_cached_command_dict["message"][command.cog.qualified_name] = command
-        self.updater.dict = new_cached_command_dict
-        await self.updater.update_my_file()
+                new_cached_command_dict["message"][command.cog.qualified_name].append(
+                    command
+                )
 
-    @commands.slash_command(name="help", description = "This is the beginnings of the help command")
-    async def help(self, inter: disnake.ApplicationCommandInteraction, cmd: str, cmd_type: str):
+        self.cached_command_dict = new_cached_command_dict
+
+    @commands.slash_command(
+        name="help", description="This is the beginnings of the help command"
+    )
+    async def help(
+        self, inter: disnake.ApplicationCommandInteraction, cmd: str, cmd_type: str
+    ):
         """/help cmd:str cmd_type: str
         Get help!
         cmd_type should be "slash", "user", or "message".
         If you post a command that does not exist then I will attempt to give you a list of all my commands! Otherwise I will give you the docstring if it exists.
-        # """
+        #"""
         if cmd_type not in ("slash", "user", "msg"):
-            return await inter.send("The only supported cmd_types are \"slash\", \"user\", and \"msg\".")
-        if str=="":
-            return await inter.send("Unfortunately, you need to provide a command so I can help you!")
+            return await inter.send(
+                'The only supported cmd_types are "slash", "user", and "msg".'
+            )
+        if str == "":
+            return await inter.send(
+                "Unfortunately, you need to provide a command so I can help you!"
+            )
         command = None
         try:
             command = self.cached_command_dict[cmd_type][cmd]
             return await inter.send(command.callback.__doc__)
         except KeyError:
             msg = "Your command was not found. Here is a list of my commands!"
-            for command in self.cached_command_dict[cmd_type]:
-                msg += command.name + "\n" + command.description
+            for cogName, cogCommands in self.cached_command_dict[cmd_type].items():
+                msg += f"Cog {cogName}\n"
+                for command in cogCommands:
+                    msg += "\t" + command.name + "\n" + command.description
 
             await inter.send(msg)
             return
+
     @commands.cooldown(1, 1, commands.BucketType.user)
     @commands.slash_command(
         name="documentation",
@@ -95,7 +136,7 @@ class HelpCog(HelperCog):
             "function_help",
             "privacy_policy",
             "terms_of_service",
-            "I just want general help"
+            "I just want general help",
         ],
         help_obj: str = None,
     ) -> typing.Optional[disnake.Message]:
@@ -116,7 +157,7 @@ class HelpCog(HelperCog):
                     "I can't help you with a command or function unless you tell me what you want help on!"
                 )
             )
-        
+
         if documentation_type == "documentation_link":
             await inter.send(
                 embed=SuccessEmbed(
@@ -186,9 +227,14 @@ class HelpCog(HelperCog):
             raise NotImplementedError(
                 "This hasn't been implemented yet. Please contribute something!"
             )
+
     async def cog_load(self):
         await self.update_cached_command_dict()
+
+
 def setup(bot: custom_bot.TheDiscordMathProblemBot):
     bot.add_cog(HelpCog(bot))
+
+
 def teardown(bot: custom_bot.TheDiscordMathProblemBot):
     bot.remove_cog("HelpCog")

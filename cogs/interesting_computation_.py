@@ -51,7 +51,9 @@ class InterestingComputationCog(HelperCog):
             for i in range(len(self.moduli)):
                 num = product // self.moduli[i]
                 # compute the multiplicative number of product/b_i mod b_i
-                return_val = threads_or_useful_funcs.extended_gcd(product, self.moduli[i]) # replace with pow(product, -1, self.moduli[i]) since pow can compute modular inverses
+                return_val = threads_or_useful_funcs.extended_gcd(
+                    product, self.moduli[i]
+                )  # replace with pow(product, -1, self.moduli[i]) since pow can compute modular inverses
                 try:
                     return_val = pow(product, -1, self.moduli[i])
                 except ValueError:
@@ -89,15 +91,14 @@ class InterestingComputationCog(HelperCog):
             if i <= 0 or i > 10**30:
                 return inter.send("All the remainders must be positive")
 
-                
         # linear time solution to check for relatively prime:
-        #compute a_1a_2a_3...a_n=C
-        #then for each n from 1 to n:
-        #compute C/a_i mod a_i (call it D)
-        #if gcd(a_i, D) != 1 then they are not pairwise relatively prime
+        # compute a_1a_2a_3...a_n=C
+        # then for each n from 1 to n:
+        # compute C/a_i mod a_i (call it D)
+        # if gcd(a_i, D) != 1 then they are not pairwise relatively prime
         # proof: if a_1 is relatively prime to a_2, a_3, a_4, ..., a_n then it is relatively prime to a_2a_3a_4...a_n
-                
-        for num1,num2 in more_itertools.distinct_combinations(moduli, 2):
+
+        for num1, num2 in more_itertools.distinct_combinations(moduli, 2):
             if gcd(moduli[i], moduli[j]) != 1:
                 return await inter.send(
                     embed=ErrorEmbed(
@@ -118,7 +119,9 @@ class InterestingComputationCog(HelperCog):
         try:
             nums = [int(item) for item in numsA.split()]
         except ValueError:
-            await inter.send(embed=ErrorEmbed("Could not convert nums to a list of numbers!"))
+            await inter.send(
+                embed=ErrorEmbed("Could not convert nums to a list of numbers!")
+            )
             raise
         if len(nums) >= 100:
             return await inter.send(embed=ErrorEmbed("Too many nums!"))

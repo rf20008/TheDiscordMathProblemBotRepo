@@ -39,10 +39,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         cache = kwargs.pop("cache")
         self.cache = (
             cache
-            if isinstance(
-                cache,
-                helpful_modules.problems_module.MathProblemCache
-            )
+            if isinstance(cache, helpful_modules.problems_module.MathProblemCache)
             else False
         )
         if self.cache is False:
@@ -127,8 +124,9 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
     async def maybe_send_closing_message(self):
         guild = self.support_server
         channel = guild.get_channel(ANNOUNCEMENTS_CHANNEL)
-        await channel.send_message(f"This process will stop functioning in {TIME_TO_WAIT} seconds (if waiting is enabled")
-
+        await channel.send_message(
+            f"This process will stop functioning in {TIME_TO_WAIT} seconds (if waiting is enabled"
+        )
 
     def add_closing_thing(self, thing: FunctionType) -> None:
         if asyncio.iscoroutinefunction(thing):
@@ -141,7 +139,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
             raise TypeError()
 
     async def is_trusted(
-            self, user: typing.Union[disnake.User, disnake.Member]
+        self, user: typing.Union[disnake.User, disnake.Member]
     ) -> bool:
         return await self.is_trusted_by_id(user.id)
 
@@ -164,7 +162,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         return data.blacklisted
 
     async def is_user_blacklisted(
-            self, user: typing.Union[disnake.User, disnake.Member]
+        self, user: typing.Union[disnake.User, disnake.Member]
     ) -> bool:
         return await self.is_blacklisted_by_user_id(user.id)
 
@@ -173,12 +171,13 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
 
     async def is_blacklisted_by_guild_id(self, guild_id: int) -> bool:
         data: GuildData = await self.cache.get_guild_data(
-            guild_id=guild_id, default=problems_module.GuildData.default(guild_id=guild_id)
+            guild_id=guild_id,
+            default=problems_module.GuildData.default(guild_id=guild_id),
         )
         return data.blacklisted
 
     async def notify_guild_on_guild_leave_because_guild_blacklist(
-            self, guild: disnake.Guild
+        self, guild: disnake.Guild
     ) -> None:
         """Notify the guild about the bot leaving the guild because the guild is blacklisted.
         Throws RuntimeError if the guild is not actually blacklisted.
@@ -231,8 +230,8 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
                     if channel.permissions_for(role).view_channel
                 ]
             if (
-                    len(channels_that_mods_can_see) == 0
-                    and len(channels_that_we_could_send_to) != 0
+                len(channels_that_mods_can_see) == 0
+                and len(channels_that_we_could_send_to) != 0
             ):
                 # No channels that mods can see, but we could send to some channels
                 channel_to_send_to = random.choice(channels_that_we_could_send_to)
@@ -264,7 +263,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
     #       await self.notify_guild_on_guild_leave_because_guild_blacklist(inter.guild)
 
     def task(
-            self,
+        self,
     ) -> typing.Callable[
         [typing.Callable[[typing.Any], typing.Any], typing.Any],
         typing.Callable[[typing.Any], typing.Any],
@@ -313,7 +312,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
                 and inter.author.id in self.bot.owner_ids
             ):
                 return True
-            return False # nope
+            return False  # nope
         except AttributeError:
             # not an owner
             return False

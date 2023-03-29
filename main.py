@@ -18,17 +18,21 @@ from sys import argv, exc_info, exit, stdout
 from disnake.ext import commands
 
 from cogs import *
-from helpful_modules import (checks, custom_embeds, problems_module,
-                             return_intents, save_files,
-                             the_documentation_file_loader)
+from helpful_modules import (
+    checks,
+    custom_embeds,
+    problems_module,
+    return_intents,
+    save_files,
+    the_documentation_file_loader,
+)
 from helpful_modules.constants_loader import *
 from helpful_modules.cooldowns import check_for_cooldown
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules.threads_or_useful_funcs import *
 from helpful_modules.StatsTrack import StreamWrapperStorer, CommandStats, CommandUsage
+
 # Imports - My own files
-
-
 
 
 if (
@@ -56,8 +60,8 @@ if DISCORD_TOKEN is None:
 should_we_connect = True
 if len(argv) >= 3:
     if argv[2] == "DO_NOT_CONNECT":
-        should_we_connect=False
- 
+        should_we_connect = False
+
 TRFHB = handlers.TimedRotatingFileHandler(
     filename="logs/bot.log", when="midnight", encoding="utf-8", backupCount=300
 )  # TimedRotatingFileHandler(for the)Bot
@@ -167,7 +171,9 @@ async def on_ready(bot: TheDiscordMathProblemBot):
     print(
         f"My owner id is {bot.owner_id if bot.owner_id is not None else app_info.owner.id}!"
     )
-    print(f"I am able to connect {bot.session_start_limit.total} times before being prohibited today.")
+    print(
+        f"I am able to connect {bot.session_start_limit.total} times before being prohibited today."
+    )
     if bot.owner_id is None and app_info.owner.id is not None:
         bot.owner_id = app_info.owner.id
 
@@ -177,7 +183,9 @@ async def on_ready(bot: TheDiscordMathProblemBot):
 # Bot creation
 
 asyncio.set_event_loop(asyncio.new_event_loop())  # Otherwise, weird errors will happen
-my_amazing_storer = StreamWrapperStorer(open("storer.json", "w"), reading=open("storer_old.json", "r"))
+my_amazing_storer = StreamWrapperStorer(
+    open("storer.json", "w"), reading=open("storer_old.json", "r")
+)
 bot = TheDiscordMathProblemBot(
     storer=my_amazing_storer,
     intents=return_intents.return_intents(),
@@ -240,7 +248,7 @@ async def on_connect():
     """Run when the bot connects"""
     print("The bot has connected to Discord successfully.")
     await asyncio_sleep(0.5)
-    await bot.get_cog("HelpCog").update_cached_command_dict()
+    bot.get_cog("HelpCog").update_cached_command_dict()
     await bot.change_presence(
         status=disnake.Status.idle,
     )

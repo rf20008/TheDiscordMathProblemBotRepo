@@ -4,15 +4,19 @@ from ...threads_or_useful_funcs import assert_type_or_throw_exception
 from ..errors import MathProblemsModuleException
 from warnings import warn
 
+
 @dataclass
 class QuizSubmissionAnswer:
     """A class that represents an answer for a singular problem. This also has metadata."""
+
     answer: str
     problem_id: Optional[int]
     quiz_id: int
     grade: int
 
-    def __init__(self, answer: str = "", problem_id: Optional[int] = None, quiz_id: int = -1):
+    def __init__(
+        self, answer: str = "", problem_id: Optional[int] = None, quiz_id: int = -1
+    ):
         """
         Initialize a QuizSubmissionAnswer.
         Parameters
@@ -46,13 +50,14 @@ class QuizSubmissionAnswer:
 
 class QuizSubmission:
     """A class that represents someone's submission to a graded quiz"""
+
     mutable: bool
     user_id: Optional[int]
-    cache: "MathProblemCache" # type: ignore
+    cache: "MathProblemCache"  # type: ignore
     quiz_id: Optional[int]
     answers: Dict[int, QuizSubmissionAnswer]
 
-    def __init__(self, user_id: int, quiz_id: int, cache: "MathProblemCache"): # type: ignore
+    def __init__(self, user_id: int, quiz_id: int, cache: "MathProblemCache"):  # type: ignore
         """
         Generate a QuizSubmission given the parameters given!
         Parameters
@@ -84,10 +89,9 @@ class QuizSubmission:
             This is the quiz that t"""
         warnings.warn(
             message="This function has been deprecated! You must use get_my_quiz (which is also deprecated for type-hinting purposes)",
-            category = DeprecationWarning
+            category=DeprecationWarning,
         )
         raise MathProblemsModuleException("This function is not usable!")
-
 
     async def get_my_quiz(self):
         """Return my Quiz! This function is deprecated for type-hinting purposes.
@@ -118,7 +122,6 @@ class QuizSubmission:
             raise RuntimeError("This instance is not mutable")
         self.answers[problem_id].answer = answer
 
-
     def to_dict(self):
         t = {
             "mutable": self.mutable,
@@ -143,7 +146,7 @@ class QuizSubmission:
         c.mutable = dict_["mutable"]
         return c
 
-    async def submit(self, cache: "MathProblemCache") -> True: # type: ignore
+    async def submit(self, cache: "MathProblemCache") -> True:  # type: ignore
 
         self.mutable = False
         if self in self.quiz.submissions:

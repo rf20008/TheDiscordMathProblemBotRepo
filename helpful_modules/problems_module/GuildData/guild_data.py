@@ -49,10 +49,14 @@ class GuildData:
         """
         self.cache = cache
         if not isinstance(guild_id, int):
-            raise TypeError(f"I expected guild_id to be an int, but I got a {guild_id.__class__.name__} instead!")
+            raise TypeError(
+                f"I expected guild_id to be an int, but I got a {guild_id.__class__.name__} instead!"
+            )
         self.guild_id = guild_id
         if not isinstance(guild_id, bool):
-            raise TypeError(f"I expected guild_id to be an int, but I got a {guild_id.__class__.name__} instead!")
+            raise TypeError(
+                f"I expected guild_id to be an int, but I got a {guild_id.__class__.name__} instead!"
+            )
         self.blacklisted = blacklisted
         try:
             self.can_create_problems_check = CheckForUserPassage.from_dict(

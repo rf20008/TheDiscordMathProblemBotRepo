@@ -14,6 +14,7 @@ from helpful_modules.custom_embeds import ErrorEmbed, SimpleEmbed, SuccessEmbed
 from helpful_modules.threads_or_useful_funcs import get_log
 from .helper_cog import HelperCog
 from .interesting_computation_ import InterestingComputationCog
+
 CRTC = InterestingComputationCog.ChineseRemainderTheoremComputer
 log = get_log(__name__)
 
@@ -24,7 +25,9 @@ class DebugCog(HelperCog):
     def __init__(self, bot: TheDiscordMathProblemBot):
         super().__init__(bot)
 
-    async def cog_slash_command_check(self, inter: disnake.ApplicationCommandInteraction):
+    async def cog_slash_command_check(
+        self, inter: disnake.ApplicationCommandInteraction
+    ):
         """A check that makes sure only bot owners can use this cog!"""
         if not await self.bot._is_owner(inter.author):
             raise commands.CheckFailure("You are not the owner of this bot!")
@@ -64,7 +67,12 @@ class DebugCog(HelperCog):
             )
         ],
     )
-    async def sql(self, inter: disnake.ApplicationCommandInteraction, query: str, ephemeral: bool = False):
+    async def sql(
+        self,
+        inter: disnake.ApplicationCommandInteraction,
+        query: str,
+        ephemeral: bool = False,
+    ):
         """/sql [query: str]
         A debug command to run SQL!
         You must own this bot to run this command!"""
@@ -78,7 +86,9 @@ class DebugCog(HelperCog):
         try:
             result = await self.cache.run_sql(query)
         except BaseException as e:
-            await inter.send("An exception occurred while running the SQL!", ephemeral=ephemeral)
+            await inter.send(
+                "An exception occurred while running the SQL!", ephemeral=ephemeral
+            )
             raise
 
         await inter.send(f"Result: {result}", ephemeral=ephemeral)
@@ -97,14 +107,16 @@ class DebugCog(HelperCog):
                 required=True,
             ),
             disnake.Option(
-                name = "ephemeral",
-                description = "Whether the result of the code should be printed ephemerally",
+                name="ephemeral",
+                description="Whether the result of the code should be printed ephemerally",
                 type=disnake.OptionType.boolean,
-                required=False
-            )
+                required=False,
+            ),
         ],
     )
-    async def eval(self, inter: disnake.ApplicationCommandInteraction, code: str, ephemeral=False):
+    async def eval(
+        self, inter: disnake.ApplicationCommandInteraction, code: str, ephemeral=False
+    ):
         """/eval [code: str]
         Evaluate arbitrary python code.
         Any instances of `\n` in code and stdin will be replaced with a newline character!
@@ -116,7 +128,9 @@ class DebugCog(HelperCog):
         new_stderr = io.StringIO()
         try:
             if not await self.cog_slash_command_check(inter):
-                await inter.send("I know that you don't own me. You cannot use /eval. Goodbye.")
+                await inter.send(
+                    "I know that you don't own me. You cannot use /eval. Goodbye."
+                )
                 return
         except CheckFailure:
             raise
@@ -173,10 +187,8 @@ class DebugCog(HelperCog):
 stdout: ```{new_stdout.getvalue()} ```
 stderr: ```{new_stderr.getvalue()} ```"""
             ),
-            ephemeral=ephemeral
+            ephemeral=ephemeral,
         )
         new_stdout.close()
         new_stderr.close()
         return
-
-    

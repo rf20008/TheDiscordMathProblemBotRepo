@@ -12,11 +12,15 @@ from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules.custom_embeds import ErrorEmbed, SuccessEmbed
 from helpful_modules.problems_module import *
 from helpful_modules.problems_module import MathProblemCache, Quiz, QuizProblem
-from helpful_modules.problems_module.quizzes import (QuizDescription,
-                                                     QuizSolvingSession,
-                                                     QuizSubmission)
+from helpful_modules.problems_module.quizzes import (
+    QuizDescription,
+    QuizSolvingSession,
+    QuizSubmission,
+)
 from helpful_modules.problems_module.quizzes.related_enums import (
-    QuizIntensity, QuizTimeLimit)
+    QuizIntensity,
+    QuizTimeLimit,
+)
 from helpful_modules.threads_or_useful_funcs import generate_new_id, get_log
 
 from ..helper_cog import HelperCog

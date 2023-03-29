@@ -1,12 +1,10 @@
 from typing import Optional
 
 import disnake
-from disnake import (Guild, GuildCommandInteraction, Member, Permissions, Role,
-                     User)
+from disnake import Guild, GuildCommandInteraction, Member, Permissions, Role, User
 from disnake.ext import commands, tasks
 
-from helpful_modules import (checks, problems_module,
-                             the_documentation_file_loader)
+from helpful_modules import checks, problems_module, the_documentation_file_loader
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules.problems_module import GuildData, MathProblemCache
 from helpful_modules.threads_or_useful_funcs import get_log
@@ -172,13 +170,16 @@ class GuildConfigCog(HelperCog):
             default=problems_module.GuildData.default(guild_id=inter.guild_id),
         )
         try:
-            data.mod_check.whitelisted_users.remove(user.id) # potentially O(N) operation
+            data.mod_check.whitelisted_users.remove(
+                user.id
+            )  # potentially O(N) operation
             await self.cache.set_guild_data(inter.guild_id, data=data)
             await inter.send("Data sent!")
             return
         except ValueError:
             await inter.send("This user is not whitelisted")
             return
+
     @modify_mod_check.sub_command(
         description="add_blacklisted_user",
     )

@@ -20,7 +20,7 @@ from .the_documentation_file_loader import DocumentationFileLoader
 
 log = logging.getLogger(__name__)
 
-TYPE_CLASS = type(int) # the class 'type'
+TYPE_CLASS = type(int)  # the class 'type'
 
 
 def generate_new_id():
@@ -35,6 +35,7 @@ def get_git_revision_hash() -> str:
         .decode("ascii")
         .strip()[:7]
     )  # [7:] is here because of the commit hash, the rest of this function is from stack overflow
+
 
 def async_wrap(func):
     """Turn a sync function into an asynchronous function
@@ -163,10 +164,10 @@ def _generate_special_id(guild_id, quiz_id, user_id, attempt_num):
 
 
 def assert_type_or_throw_exception(
-        thing: Any,
-        type: TYPE_CLASS,
-        msg: str = "Wrong type provided!",
-        exc_type: BaseException = TypeError
+    thing: Any,
+    type: TYPE_CLASS,
+    msg: str = "Wrong type provided!",
+    exc_type: BaseException = TypeError,
 ):
     """
     Assert that `thing` is of type `type` or throw an exception.

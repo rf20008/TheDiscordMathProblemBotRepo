@@ -19,7 +19,7 @@ class HelpCog(HelperCog):
         self.cache = bot.cache
         self.cached_command_dict = {}
         self.updater = FileDictionaryReader.AsyncFileDict(FILENAME)
-        
+
     @tasks.loop(seconds=86400)
     async def task_update_cached_command_dict(self):
         await self.update_cached_command_dict()
@@ -37,15 +37,30 @@ class HelpCog(HelperCog):
             else:
                 new_cached_command_dict["message"][command.cog.qualified_name] = command
         self.updater.dict = new_cached_command_dict
-        self.updater.update_my_file()
+        await self.updater.update_my_file()
 
     @commands.slash_command(name="help", description = "This is the beginnings of the help command")
-    async def help(self, inter: disnake.ApplicationCommandInteraction, cmd: str, cmd_type: str = ""):
+    async def help(self, inter: disnake.ApplicationCommandInteraction, cmd: str, cmd_type: str):
+        """/help cmd:str cmd_type: str
+        Get help!
+        cmd_type should be "slash", "user", or "message".
+        If you post a command that does not exist then I will attempt to give you a list of all my commands! Otherwise I will give you the docstring if it exists.
+        # """
+        if cmd_type not in ("slash", "user", "msg"):
+            return await inter.send("The only supported cmd_types are \"slash\", \"user\", and \"msg\".")
         if str=="":
             return await inter.send("Unfortunately, you need to provide a command so I can help you!")
         command = None
         try:
-            command = new_cached_coma
+            command = self.cached_command_dict[cmd_type][cmd]
+            return await inter.send(command.callback.__doc__)
+        except KeyError:
+            msg = "Your command was not found. Here is a list of my commands!"
+            for command in self.cached_command_dict[cmd_type]:
+                msg += command.name + "\n" + command.description
+
+            await inter.send(msg)
+            return
     @commands.cooldown(1, 1, commands.BucketType.user)
     @commands.slash_command(
         name="documentation",
@@ -171,7 +186,8 @@ class HelpCog(HelperCog):
             raise NotImplementedError(
                 "This hasn't been implemented yet. Please contribute something!"
             )
-
+    async def cog_load(self):
+        await self.update_cached_command_dict()
 def setup(bot: custom_bot.TheDiscordMathProblemBot):
     bot.add_cog(HelpCog(bot))
 def teardown(bot: custom_bot.TheDiscordMathProblemBot):

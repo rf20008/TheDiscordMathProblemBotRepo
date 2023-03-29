@@ -12,6 +12,7 @@ from disnake.ext import commands, tasks
 
 import helpful_modules
 from helpful_modules import problems_module
+from ._error_logging import log_error
 from helpful_modules.constants_loader import BotConstants
 from helpful_modules.problems_module.cache import MathProblemCache
 from helpful_modules.restart_the_bot import RestartTheBot
@@ -102,21 +103,25 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         task.start()
 
     async def close(self):
-        self.is_closing = True
+        try:
+            self.is_closing = True
 
-        await self.maybe_send_closing_message()
-        if WAIT:
-            await asyncio.sleep(TIME_TO_WAIT)
-        for cog_name in list(self.cogs):
-            self.remove_cog(cog_name)
-        for extension in list(self.extensions):
-            self.unload_extension(extension)
-        for task in self.tasks:
-            task.stop()
-        await asyncio.sleep(5)
-        self.storer.close()
-        await asyncio.gather(*self.closing_things)
-        self.is_closing = False
+            await self.maybe_send_closing_message()
+            if WAIT:
+                await asyncio.sleep(TIME_TO_WAIT)
+            for cog_name in list(self.cogs):
+                self.remove_cog(cog_name)
+            for extension in list(self.extensions):
+                self.unload_extension(extension)
+            for task in self.tasks:
+                task.stop()
+            await asyncio.sleep(5)
+            self.storer.close()
+            await asyncio.gather(*self.closing_things)
+            self.is_closing = False
+        except Exception as e:
+            print(f"An exception of {e} happened while the bot was trying to close.")
+            await log_error(e)
         await super().close()
 
     async def maybe_send_closing_message(self):

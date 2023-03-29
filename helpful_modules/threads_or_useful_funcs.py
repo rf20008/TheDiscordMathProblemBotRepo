@@ -99,7 +99,7 @@ async def base_on_error(
         "\n".join(traceback.format_exception(error)),  # python 3.10 only!
         file=stderr,
     )
-    log_error(error)  # Log the error
+    await log_error(error)  # Log the error
     error_msg = """An error occurred!
     
     Steps you should do:

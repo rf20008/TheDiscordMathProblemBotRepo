@@ -15,6 +15,11 @@ from helpful_modules import (
 import json
 from collections import defaultdict
 
+TYPES_TO_NAMES = {
+    commands.InvokableUserCommand: "user",
+    commands.InvokableSlashCommand: "slash",
+    commands.InvokableMessageCommand: "msg",
+}
 try:
     import orjson as json
 except (ImportError, ModuleNotFoundError):
@@ -36,9 +41,9 @@ class HelpCog(HelperCog):
 
     def update_cached_command_dict(self):
         new_cached_command_dict = {
-            "slash": defaultdict(default_factory=lambda: []),
-            "user": defaultdict(default_factory=lambda: []),
-            "message": defaultdict(default_factory=lambda: []),
+            "slash": {},
+            "user": {},
+            "message": {},
         }
         commands_existing = self.bot.application_commands
         for command in commands_existing:
@@ -51,26 +56,23 @@ class HelpCog(HelperCog):
                 ),
             ):
                 raise TypeError(
-                    f"I expected all of my commands to be instances of InvokableSlashCommand, InvokableMessageCommand, or InvokableUserCommand; however, one my commands is {command} of type {command.__class__.__name__}."
+                    f"I expected all of my commands to be instances of InvokableSlashCommand, InvokableMessageCommand, or InvokableUserCommand; "
+                    "however, one my commands is {command} of type {command.__class__.__name__}."
                 )
 
-            if isinstance(command, commands.InvokableSlashCommand):
-                new_cached_command_dict["slash"][command.cog.qualified_name].append(
-                    command
-                )
-            elif isinstance(command, commands.InvokableUserCommand):
-                new_cached_command_dict["user"][command.cog.qualified_name].append(
-                    command
-                )
-            else:
-                new_cached_command_dict["message"][command.cog.qualified_name].append(
-                    command
-                )
-
+            try:
+                new_cached_command_dict[TYPES_TO_NAMES[type(command)]][
+                    command.cog.qualified_name
+                ].append(command)
+            except KeyError:
+                new_cached_command_dict[TYPES_TO_NAMES[type(command)]][
+                    command.cog.qualified_name
+                ] = [command]
         self.cached_command_dict = new_cached_command_dict
 
     @commands.slash_command(
-        name="help", description="This is the beginnings of the help command"
+        name="help",
+        description="This is the beginnings of the help command. If you do not specify a command I will DM you.",
     )
     async def help(
         self, inter: disnake.ApplicationCommandInteraction, cmd: str, cmd_type: str
@@ -78,7 +80,7 @@ class HelpCog(HelperCog):
         """/help cmd:str cmd_type: str
         Get help!
         cmd_type should be "slash", "user", or "message".
-        If you post a command that does not exist then I will attempt to give you a list of all my commands! Otherwise I will give you the docstring if it exists.
+        If you post a command that does not exist then I will attempt to give you a list of all my commands in a DM! Otherwise I will give you the docstring if it exists.
         #"""
         if cmd_type not in ("slash", "user", "msg"):
             return await inter.send(
@@ -97,9 +99,13 @@ class HelpCog(HelperCog):
             for cogName, cogCommands in self.cached_command_dict[cmd_type].items():
                 msg += f"Cog {cogName}\n"
                 for command in cogCommands:
-                    msg += "\t" + command.name + "\n" + command.description
-
-            await inter.send(msg)
+                    msg += "\t" + command.name + "\n\t\t" + command.description + "\n"
+            try:
+                await inter.user.send(msg)
+                await inter.send("I have sent you a DM with all my commands!")
+            except disnake.Forbidden:
+                msg = "I could not DM you! Maybe your DMs are closed...\n" + msg
+                await inter.send(msg)
             return
 
     @commands.cooldown(1, 1, commands.BucketType.user)

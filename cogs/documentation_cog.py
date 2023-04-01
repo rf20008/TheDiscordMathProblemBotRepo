@@ -84,16 +84,16 @@ class HelpCog(HelperCog):
         #"""
         if cmd_type not in ("slash", "user", "msg"):
             return await inter.send(
-                'The only supported cmd_types are "slash", "user", and "msg".'
+                custom_embeds.ErrorEmbed('The only supported cmd_types are "slash", "user", and "msg".')
             )
         if str == "":
             return await inter.send(
-                "Unfortunately, you need to provide a command so I can help you!"
+                custom_embeds.ErrorEmbed("Unfortunately, you need to provide a command so I can help you!")
             )
         command = None
         try:
             command = self.cached_command_dict[cmd_type][cmd]
-            return await inter.send(command.callback.__doc__)
+            return await inter.send(custom_embeds.(command.callback.__doc__))
         except KeyError:
             msg = "Your command was not found. Here is a list of my commands!"
             for cogName, cogCommands in self.cached_command_dict[cmd_type].items():
@@ -103,9 +103,10 @@ class HelpCog(HelperCog):
             try:
                 await inter.user.send(msg)
                 await inter.send("I have sent you a DM with all my commands!")
-            except disnake.Forbidden:
+            except disnake.Forbidden as e:
                 msg = "I could not DM you! Maybe your DMs are closed...\n" + msg
-                await inter.send(msg)
+                await inter.send(ErrorEmbed(msg))
+                raise e
             return
 
     @commands.cooldown(1, 1, commands.BucketType.user)

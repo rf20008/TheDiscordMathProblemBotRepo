@@ -102,7 +102,6 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
     async def close(self):
         try:
             self.is_closing = True
-
             await self.maybe_send_closing_message()
             if WAIT:
                 await asyncio.sleep(TIME_TO_WAIT)
@@ -119,6 +118,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         except Exception as e:
             print(f"An exception of {e} happened while the bot was trying to close.")
             await log_error(e)
+            await asyncio.sleep(3)
         await super().close()
 
     async def maybe_send_closing_message(self):

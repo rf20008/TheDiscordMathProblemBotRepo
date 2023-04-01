@@ -34,6 +34,7 @@ class HelpCog(HelperCog):
         self.bot = bot
         self.cache = bot.cache
         self.cached_command_dict = {}
+        self.precomputed_command_list_msg = ""
 
     @tasks.loop(seconds=86400)
     async def task_update_cached_command_dict(self):
@@ -69,6 +70,13 @@ class HelpCog(HelperCog):
                     command.cog.qualified_name
                 ] = [command]
         self.cached_command_dict = new_cached_command_dict
+        msg = "Your command was not found. Here is a list of my commands!"
+        for cogName, cogCommands in self.cached_command_dict[cmd_type].items():
+            msg += f"Cog {cogName}\n"
+            for command in cogCommands:
+                msg += "\t" + command.name + "\n\t\t" + command.description + "\n"
+        self.precomputed_command_list_msg = msg
+
 
     @commands.slash_command(
         name="help",
@@ -95,16 +103,11 @@ class HelpCog(HelperCog):
             command = self.cached_command_dict[cmd_type][cmd]
             return await inter.send(custom_embeds.(command.callback.__doc__))
         except KeyError:
-            msg = "Your command was not found. Here is a list of my commands!"
-            for cogName, cogCommands in self.cached_command_dict[cmd_type].items():
-                msg += f"Cog {cogName}\n"
-                for command in cogCommands:
-                    msg += "\t" + command.name + "\n\t\t" + command.description + "\n"
             try:
-                await inter.user.send(msg)
+                await inter.user.send(custom_embeds.SuccessEmbed(self.precomputed_command_list_msg))
                 await inter.send("I have sent you a DM with all my commands!")
             except disnake.Forbidden as e:
-                msg = "I could not DM you! Maybe your DMs are closed...\n" + msg
+                msg = "I could not DM you! Maybe your DMs are closed...\n" + self.precomputed_command_list_msg
                 await inter.send(ErrorEmbed(msg))
                 raise e
             return

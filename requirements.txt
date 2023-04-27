@@ -7,6 +7,7 @@ mpmath >= 1.2.1
 more-itertools >= 8.14.0
 aiomysql >= 0.1.1
 pymysql >= 1.0.2
+psutil>=5.9.5
 aiofiles >= 22.1.0
 git+git://github.com/omnilib/aiosqlite.git@main
 git+git://github.com/DisnakeDev/disnake.git@main

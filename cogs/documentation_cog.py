@@ -101,7 +101,7 @@ class HelpCog(HelperCog):
         command = None
         try:
             command = self.cached_command_dict[cmd_type][cmd]
-            return await inter.send(custom_embeds.(command.callback.__doc__))
+            return await inter.send(custom_embeds.SuccessEmbed(command.callback.__doc__))
         except KeyError:
             try:
                 await inter.user.send(custom_embeds.SuccessEmbed(self.precomputed_command_list_msg))

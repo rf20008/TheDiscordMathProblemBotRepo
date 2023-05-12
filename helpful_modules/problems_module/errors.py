@@ -139,3 +139,7 @@ class InvalidDictionaryInDatabaseException(MathProblemsModuleException):
         return cls(
             f"""I expected a dictionary here, but instead I got {invalid_data} -- OH NO!"""
         )
+
+
+class PMDeprecationWarning(DeprecationWarning):
+    """Raised when someone tries to use a feature of the problems module that is deprecated"""

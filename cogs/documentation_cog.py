@@ -70,12 +70,14 @@ class HelpCog(HelperCog):
                     command.cog.qualified_name
                 ] = [command]
         self.cached_command_dict = new_cached_command_dict
-        msg = "Your command was not found. Here is a list of my commands!"
-        for cogName, cogCommands in self.cached_command_dict[cmd_type].items():
-            msg += f"Cog {cogName}\n"
-            for command in cogCommands:
-                msg += "\t" + command.name + "\n\t\t" + command.description + "\n"
-        self.precomputed_command_list_msg = msg
+        msg = "`Your command was not found. Here is a list of my commands!\n```"
+        for cmd_type in ["slash", "user", "message"]:
+            msg += f"{cmd_type.title()} commands:\n"
+            for cogName, cogCommands in self.cached_command_dict[cmd_type].items():
+                msg += f"    Cog {cogName}\n"
+                for command in cogCommands:
+                    msg += (" " * 8) + command.name + "\n\t" + (" " * 8) + command.description + "\n"
+        self.precomputed_command_list_msg = msg + "```"
 
 
     @commands.slash_command(
@@ -92,23 +94,23 @@ class HelpCog(HelperCog):
         #"""
         if cmd_type not in ("slash", "user", "msg"):
             return await inter.send(
-                custom_embeds.ErrorEmbed('The only supported cmd_types are "slash", "user", and "msg".')
+                embed=custom_embeds.ErrorEmbed('The only supported cmd_types are "slash", "user", and "msg".')
             )
         if str == "":
             return await inter.send(
-                custom_embeds.ErrorEmbed("Unfortunately, you need to provide a command so I can help you!")
+                embed=custom_embeds.ErrorEmbed("Unfortunately, you need to provide a command so I can help you!")
             )
         command = None
         try:
             command = self.cached_command_dict[cmd_type][cmd]
-            return await inter.send(custom_embeds.SuccessEmbed(command.callback.__doc__))
+            return await inter.send(embed=custom_embeds.SuccessEmbed(command.callback.__doc__))
         except KeyError:
             try:
-                await inter.user.send(custom_embeds.SuccessEmbed(self.precomputed_command_list_msg))
+                await inter.user.send(embed=custom_embeds.SuccessEmbed(self.precomputed_command_list_msg))
                 await inter.send("I have sent you a DM with all my commands!")
             except disnake.Forbidden as e:
                 msg = "I could not DM you! Maybe your DMs are closed...\n" + self.precomputed_command_list_msg
-                await inter.send(ErrorEmbed(msg))
+                await inter.send(embed=ErrorEmbed(msg))
                 raise e
             return
 

@@ -10,21 +10,23 @@ import disnake
 
 from .errors import *
 
+ANSWER_CHAR_LIMIT = 1000
+QUESTION_CHAR_LIMIT = 2000
 
 class BaseProblem:
     """For readability purposes :) This also isn't an ABC."""
 
     def __init__(
-        self,
-        question: str,
-        id: int,
-        author: int,
-        answer: str = None,
-        guild_id: typing.Optional[int] = None,
-        voters: list = None,
-        solvers: list = None,
-        cache=None,
-        answers: list = None,
+            self,
+            question: str,
+            id: int,
+            author: int,
+            answer: str = None,
+            guild_id: typing.Optional[int] = None,
+            voters: list = None,
+            solvers: list = None,
+            cache=None,
+            answers: list = None,
     ):
         if voters is None:
             voters = []
@@ -39,7 +41,7 @@ class BaseProblem:
         if not isinstance(question, str):
             raise TypeError("question is not a string")
         if (
-            not isinstance(answer, str) and answer is not None
+                not isinstance(answer, str) and answer is not None
         ):  # answer is None because of answers
             raise TypeError("answer is not a string")
         if not isinstance(author, int):
@@ -55,15 +57,15 @@ class BaseProblem:
             warnings.warn("_cache is None. This may cause errors", RuntimeWarning)
         # if not isinstance(cache,MathProblemCache) and cache is not None:
         #    raise TypeError("_cache is not a MathProblemCache.")
-        if len(question) > 250:
+        if len(question) > QUESTION_CHAR_LIMIT:
             raise TooLongQuestion(
-                f"Your question is {len(question) - 250} characters too long. Questions may be up to 250 characters long."
+                f"Your question is {len(question) - QUESTION_CHAR_LIMIT} characters too long. Questions may be up to 250 characters long."
             )
         self.question = question
         if answer is not None:
-            if len(answer) > 100:
+            if len(answer) > ANSWER_CHAR_LIMIT:
                 raise TooLongAnswer(
-                    f"Your answer is {len(question) - 100} characters too long. Answers may be up to 100 characters long."
+                    f"Your answer is {len(answer) - ANSWER_CHAR_LIMIT} characters too long. Answers may be up to 100 characters long."
                 )
             self.answer = answer
         self.id = id
@@ -75,15 +77,15 @@ class BaseProblem:
         self.answers = answers
 
     async def edit(
-        self,
-        question: str = None,
-        answer: str | None = None,
-        id: int | None = None,
-        guild_id: Optional[int] = None,
-        voters: typing.Optional[typing.List[str]] = None,
-        solvers: typing.Optional[typing.List[str]] = None,
-        author: typing.Optional[int] = None,
-        answers: typing.Optional[typing.Union[int, str, bool]] = None,
+            self,
+            question: str = None,
+            answer: Optional[str] = None,
+            id: Optional[int] = None,
+            guild_id: Optional[int] = None,
+            voters: typing.Optional[typing.List[str]] = None,
+            solvers: typing.Optional[typing.List[str]] = None,
+            author: typing.Optional[int] = None,
+            answers: typing.Optional[typing.Union[int, str, bool]] = None,
     ) -> None:
         """Edit a problem. The edit is in place."""
         if answers is not None and not isinstance(answers, list):
@@ -110,59 +112,32 @@ class BaseProblem:
         if not isinstance(solvers, list) and solvers is not None:
             raise TypeError("solvers is not a list")
         if (
-            id is not None
-            or guild_id is not None
-            or voters is not None
-            or solvers is not None
-            or author is not None
+                id is not None
+                or guild_id is not None
+                or voters is not None
+                or solvers is not None
+                or author is not None
         ):
             warnings.warn(
                 "You are changing one of the attributes that you should not be changing.",
                 category=RuntimeWarning,
             )
-        if question is not None:
-            if (
-                self._cache is not None
-                and len(question) > self._cache.max_question_length
-            ) or (len(question) > 250 and self._cache is None):
-                if self._cache is not None:
-                    raise TooLongQuestion(
-                        f"Your question is {len(question) - self._cache.max_question_length} characters too long. Questions may be up to {self._cache.max_question_length} characters long."
-                    )
-                else:
-                    raise TooLongQuestion(
-                        f"Your question is {len(question) - 250} characters too long. Questions may be up to 250 characters long."
-                    )
-            self.question = question
-        if (
-            answer is not None
-            and (
-                self._cache is not None
-                and len(answer) > self._cache.max_question_length
+        if question is not None and len(question) > QUESTION_CHAR_LIMIT:
+            raise TooLongQuestion(
+                f"Your question is {len(question) - QUESTION_CHAR_LIMIT} characters too long. Questions may be up to {QUESTION_CHAR_LIMIT} characters long."
             )
-            or (len(answer) > 100 and self._cache is None)
-        ):
-            if self._cache is not None:
-                raise TooLongAnswer(
-                    f"Your answer is {len(question) - self._cache.max_answer_length} characters too long. Answers may be up to {self._cache.max_answer_length} characters long."
-                )
-            else:
-                raise TooLongAnswer(
-                    f"Your answer is {len(question) - 100} characters too long. Answers may be up to 100 characters long."
-                )
+        self.question = question
+        if answer is not None and len(answer) > ANSWER_CHAR_LIMIT:
+            raise TooLongAnswer(f"Your question is {len(answer) - ANSWER_CHAR_LIMIT} characters too long. Questions may be up to {ANSWER_CHAR_LIMIT} characters.")
         for answer in answers:
-            if answer is None:
-                raise TypeError("Uh oh!")
-            if self._cache is not None:
-                if len(answer) > 100:
-                    raise TooLongAnswer(
-                        f"Answer #{answer} is {len(answers[answer]) - 100} characters too long. Answers can be up to a 100 characters long"
-                    )
-            else:
-                if len(answer) > self._cache.max_answer_length:
-                    raise TooLongAnswer(
-                        f"Answer #{answer} is {len(answers[answer]) - self._cache.max_answer_length} characters too long. Answers can be up to {self._cache.max_answer_length} characters long."
-                    )
+            if answer is None or not isinstance(answer, str):
+                raise TypeError("One of your answers is `None` or not a string.")
+
+            if len(answer) > ANSWER_CHAR_LIMIT:
+                raise TooLongAnswer(
+                    f"Answer #{answer} is {len(answers[answer]) - ANSWER_CHAR_LIMIT} characters too long. Answers can be up to a {ANSWER_CHAR_LIMIT} characters long"
+                )
+        self.answers = answers
         if answer is not None:
             self.answer = answer
         if id is not None:
@@ -176,10 +151,12 @@ class BaseProblem:
         if author is not None:
             self.author = author
 
-        await self.update_self()
-
     async def update_self(self):
         """A helper method to update the cache with my version"""
+        warnings.warn(
+            "This method no longer automatically updates the problem. You must be in an async context and update the problem in the cache yourself.",
+            PMDeprecationWarning
+        )
         if self._cache is not None:
             await self._cache.update_problem(self.id, self)
 
@@ -223,7 +200,7 @@ class BaseProblem:
         problem = _dict
         guild_id = problem["guild_id"]
         if (
-            guild_id is None
+                guild_id is None
         ):  # Remove the guild_id null (used for global problems), which is not used any more because of conflicts with sql.
             problem = cls(
                 question=problem["question"],
@@ -270,22 +247,28 @@ class BaseProblem:
     def add_voter(self, voter: typing.Union[disnake.User, disnake.Member]):
         """Adds a voter. Voter must be a disnake.User object or disnake.Member object."""
         if not isinstance(voter, disnake.User) and not isinstance(
-            voter, disnake.Member
+                voter, disnake.Member
         ):
             raise TypeError("User is not a User object")
         if not self.is_voter(voter):
             self.voters.append(voter.id)
-        asyncio.run(self.update_self())
+        warnings.warn(
+            "This method no longer automatically updates the problem. You must be in an async context and update the problem in the cache yourself.",
+            PMDeprecationWarning
+        )
 
-    async def add_solver(self, solver: typing.Union[disnake.User, disnake.Member]):
+    def add_solver(self, solver: typing.Union[disnake.User, disnake.Member]):
         """Adds a solver. Solver must be a disnake.User object or disnake.Member object."""
         if not isinstance(solver, disnake.User) and not isinstance(
-            solver, disnake.Member
+                solver, disnake.Member
         ):
             raise TypeError("Solver is not a User object")
         if not self.is_solver(solver):
             self.solvers.append(solver.id)
-            await self.update_self()
+            warnings.warn(
+                "This method no longer automatically updates the problem. You must be in an async context and update the problem in the cache yourself.",
+                PMDeprecationWarning
+            )
 
     def add_answer(self, answer: str):
         """Add an answer"""
@@ -310,15 +293,21 @@ class BaseProblem:
     def check_answer_and_add_checker(self, answer, potential_solver):
         """Checks the answer. If it's correct, it adds potentialSolver to the solvers."""
         if not isinstance(potential_solver, disnake.User) and not isinstance(
-            potential_solver, disnake.Member
+                potential_solver, disnake.Member
         ):
             raise TypeError("potentialSolver is not a User object")
-        if self.check_answer(answer):
+        if answer in self.answers:
             self.add_solver(potential_solver)
-            asyncio.run(self.update_self())
+            warnings.warn(
+                "This method no longer automatically updates the problem. You must be in an async context and update the problem in the cache yourself.",
+                PMDeprecationWarning
+            )
 
     def check_answer(self, answer):
         """Checks the answer. Returns True if it's correct and False otherwise."""
+        warnings.warn(
+            "This method is deprecated. please use .",
+            PMDeprecationWarning)
         return answer in self.get_answers()
 
     def my_id(self):
@@ -395,6 +384,6 @@ class BaseProblem:
             solvers=deepcopy(self.solvers),
             author=deepcopy(self.author),
             id=deepcopy(self.id),
-            guild_id=deepcopy(self.guild_id),
+            guild_id=deepcopy(int(self.guild_id)),
             cache=self._cache,
         )

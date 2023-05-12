@@ -18,9 +18,7 @@ from helpful_modules.custom_buttons import *
 from helpful_modules.custom_embeds import SimpleEmbed
 from helpful_modules.save_files import FileSaver
 from helpful_modules.threads_or_useful_funcs import get_git_revision_hash
-
 from .helper_cog import HelperCog
-
 
 mb = lambda us: round(us/(1000000), ndigits=3)
 
@@ -72,7 +70,7 @@ class MiscCommandsCog(HelperCog):
         embed = embed.add_field(
             name = "Memory Usage",
             value = f"""Used/Available+Used Memory: {used}MB/{used+avail}MB 
-            (percentage: {round(100*used/(used+avail), ndigits=3)}%) (perc reported: {perc}) Total memory available: {total}""",
+            (percentage: {round(100*used/(used+avail), ndigits=3)}%) (perc reported: {perc}) Total memory available: {total}MB""",
             inline=False
         )
         embed = embed.add_field(
@@ -81,6 +79,7 @@ class MiscCommandsCog(HelperCog):
             inline=False,
         )
         current_version_info = version_info
+        print(current_version_info)
         python_version_as_str = f"Python {current_version_info.major}.{current_version_info.minor}.{current_version_info.micro}{current_version_info.releaselevel}"
 
         embed = embed.add_field(
@@ -104,7 +103,8 @@ class MiscCommandsCog(HelperCog):
             embed = embed.add_field(
                 name="License",
                 value="""This bot is licensed under GPLv3. 
-                Please see [the official GPLv3 website that explains the GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html) for more details.""",
+                Please see [the official GPLv3 website that explains the GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html) for more details.
+                Note that there are previous licenses, including the CC-BY-SA 4.0 and the MIT license; I believe these are superseded by the GPL license but I'm not sure.""",
             )
             embed = embed.add_field(
                 name="Uptime",
@@ -145,7 +145,7 @@ class MiscCommandsCog(HelperCog):
         for user_id in trusted_users:
             try:
                 user = await self.bot.fetch_user(user_id)
-                __trusted_users += f"""{user.name}#{user.discriminator}
+                __trusted_users += f"""{user.name}
             """
             except (disnake.NotFound, disnake.NotFound):
                 # A user with this ID does not exist
@@ -157,7 +157,6 @@ class MiscCommandsCog(HelperCog):
                         vote_threshold=self.bot.vote_threshold,
                         trusted_users_list=self.bot.trusted_users,
                     )
-                    f.goodbye()  # This should delete it
                     try:
                         del f
                     except NameError:
@@ -310,8 +309,9 @@ class MiscCommandsCog(HelperCog):
     async def user_data(self, inter: disnake.ApplicationCommandInteraction):
         """The base command to interact with your user data. This doesn't do anything (you need to call a subcommand)"""
         print(
-            f"The user_data command has been invoked by {inter.author.name}#{inter.author.discriminator}"
+            f"The user_data command has been invoked by {inter.author.name}"
         )
+        raise RuntimeError("This is not supposed to be executed without a subcommand")
 
     @disnake.ext.commands.cooldown(1, 500, commands.BucketType.user)  # To prevent abuse
     @user_data.sub_command(

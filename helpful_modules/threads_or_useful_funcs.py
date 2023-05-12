@@ -2,6 +2,7 @@ import logging
 import random
 import subprocess
 import traceback
+import datetime
 from copy import deepcopy
 from logging import handlers
 from sys import exc_info, stderr
@@ -79,9 +80,9 @@ async def base_on_error(
         # This is a cooldown exception
         cooldown = error.cooldown
         content = (
-            f"This command is on cooldown; please retry in {cooldown.per} seconds."
+            f"This command is on cooldown; please retry **{disnake.utils.format_dt(disnake.utils.utcnow() + datetime.timedelta(seconds=error.retry_after), style='R')}**."
         )
-        return {"content": content}
+        return {"content": content, "delete_after": error.retry_after}
     if isinstance(error, (disnake.Forbidden,)):
         extra_content = """There was a 403 error. This means either
         1) You didn't give me enough permissions to function correctly, or
@@ -128,7 +129,8 @@ async def base_on_error(
         plain_text += error_traceback
         plain_text += f"```Time: {str(asctime())} Commit hash: {get_git_revision_hash()} The stack trace is shown for debugging purposes. The stack trace is also logged (and pushed), but should not contain identifying information (only code which is on github)"
 
-        plain_text += f"Error that occurred while attempting to send it as an embed: {''.join(traceback.format_exception(e))}"
+        plain_text += f"Error that occurred while attempting to send it as an embed:"
+        plain_text += disnake.utils.escape_markdown(''.join(traceback.format_exception(e)))[:-(1650-len(plain_text))]
         the_new_exception = deepcopy(e)
         the_new_exception.__cause__ = error
         if len(plain_text) > 2000:

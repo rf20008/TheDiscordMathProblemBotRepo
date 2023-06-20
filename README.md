@@ -1,6 +1,5 @@
 [![Number of source lines of code](https://img.shields.io/tokei/lines/github/rf20008/TheDiscordMathProblemBotRepo)](https://img.shields.io)
 <!---TODO: rewrite--->
-
 # Quick links / Table of Contents
 
 ## Quick links
@@ -23,7 +22,8 @@ Self-host my bot <br>
 Attribution/Contributors
 
 # If you run into issues
-If you run into any issues create an issue or DM me (ay136416#2707). 
+If you run into any issues create an issue or DM me (ay136416#2707).
+However, this bot is mainly for **my fun** and may not be supported that often.
 
 # Announcements
 

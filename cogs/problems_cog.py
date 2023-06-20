@@ -773,7 +773,8 @@ class ProblemsCog(HelperCog):
                 ephemeral=True,
             )
             problem.solvers.append(inter.author.id)
-            await problem.update_self()
+            await self.cache.update_problem(problem, problem.id)
+
             return
 
     @commands.slash_command(
@@ -824,13 +825,12 @@ class ProblemsCog(HelperCog):
                 embed=ErrorEmbed("This problem doesn't exist!"), ephemeral=True
             )
             return
-        await problem.add_voter(
-            inter.author
-        )  # Add the voter. Must be awaited because updating it in the cache is a coroutine.
+        problem.voters.append(inter.author.id)
+        await self.cache.update_problem(problem.id, problem)
         string_to_print = "You successfully voted for the problem's deletion! As long as this problem is not deleted, you can always un-vote. There are "
         string_to_print += f"{problem.get_num_voters()}/{self.bot.vote_threshold} votes on this problem!"  # Tell the user how many votes there are now
         await inter.send(
-            embed=SuccessEmbed(string_to_print, title="You Successfully voted"),
+            embed=SuccessEmbed(string_to_print, title="You Successfully Voted"),
             ephemeral=True,
         )
         if (

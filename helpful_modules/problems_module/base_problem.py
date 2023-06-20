@@ -35,6 +35,7 @@ class BaseProblem:
         if answers is None:
             answers = []
         if guild_id is not None and not isinstance(guild_id, str):
+            print(guild_id)
             raise TypeError("guild_id is not an string")
         if not isinstance(id, int):
             raise TypeError("id is not an integer")
@@ -341,7 +342,11 @@ class BaseProblem:
     def get_author(self):
         """Returns self.author"""
         return self.author
-
+    @property
+    def _int_guild_id(self):
+        if self.guild_id:
+            return self.guild_id
+        return -1
     def is_author(self, user: typing.Union[disnake.User, disnake.Member]):
         """Returns if the user is the author"""
         if not isinstance(user, disnake.User) and not isinstance(user, disnake.Member):
@@ -384,6 +389,6 @@ class BaseProblem:
             solvers=deepcopy(self.solvers),
             author=deepcopy(self.author),
             id=deepcopy(self.id),
-            guild_id=deepcopy(int(self.guild_id)),
+            guild_id=deepcopy(self.guild_id),
             cache=self._cache,
         )

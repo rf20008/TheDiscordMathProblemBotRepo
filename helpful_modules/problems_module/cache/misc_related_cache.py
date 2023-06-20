@@ -136,6 +136,7 @@ class MathProblemCache(UserDataRelatedCache):
                     except KeyError:
                         quiz_sessions_dict[session.quiz_id] = [session]
         try:
+            print(guild_problems[None])
             global_problems = deepcopy(
                 guild_problems[None]
             )  # Must deepcopy or weird warnings will occur

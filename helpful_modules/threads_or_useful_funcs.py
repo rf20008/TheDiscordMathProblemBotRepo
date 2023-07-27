@@ -3,10 +3,13 @@ import random
 import subprocess
 import traceback
 import datetime
+import asyncio
+import types
 from copy import deepcopy
+from functools import partial, wraps
 from logging import handlers
 from sys import exc_info, stderr
-from time import asctime, sleep
+from time import asctime
 from typing import Optional, Any
 
 import disnake
@@ -26,7 +29,7 @@ TYPE_CLASS = type(int)  # the class 'type'
 
 def generate_new_id():
     """Generate a random number from 0 to 2**53-1"""
-    return random.randint(0, 2**53 - 1)
+    return random.randint(0, 2 ** 53 - 1)
 
 
 def get_git_revision_hash() -> str:
@@ -68,7 +71,7 @@ def loading_documentation_thread():
 
 
 async def base_on_error(
-    inter: disnake.ApplicationCommandInteraction, error: BaseException
+        inter: disnake.ApplicationCommandInteraction, error: BaseException
 ):
     """The base on_error event. Call this and use the dictionary as keyword arguments to print to the user"""
     error_traceback = "\n".join(traceback.format_exception(error))
@@ -78,7 +81,6 @@ async def base_on_error(
         raise
     if isinstance(error, (OnCooldown, disnake.ext.commands.CommandOnCooldown)):
         # This is a cooldown exception
-        cooldown = error.cooldown
         content = (
             f"This command is on cooldown; please retry **{disnake.utils.format_dt(disnake.utils.utcnow() + datetime.timedelta(seconds=error.retry_after), style='R')}**."
         )
@@ -130,7 +132,7 @@ async def base_on_error(
         plain_text += f"```Time: {str(asctime())} Commit hash: {get_git_revision_hash()} The stack trace is shown for debugging purposes. The stack trace is also logged (and pushed), but should not contain identifying information (only code which is on github)"
 
         plain_text += f"Error that occurred while attempting to send it as an embed:"
-        plain_text += disnake.utils.escape_markdown(''.join(traceback.format_exception(e)))[:-(1650-len(plain_text))]
+        plain_text += disnake.utils.escape_markdown(''.join(traceback.format_exception(e)))[:-(1650 - len(plain_text))]
         the_new_exception = deepcopy(e)
         the_new_exception.__cause__ = error
         if len(plain_text) > 2000:
@@ -166,10 +168,10 @@ def _generate_special_id(guild_id, quiz_id, user_id, attempt_num):
 
 
 def assert_type_or_throw_exception(
-    thing: Any,
-    type: TYPE_CLASS,
-    msg: str = "Wrong type provided!",
-    exc_type: BaseException = TypeError,
+        thing: Any,
+        err_type: TYPE_CLASS,
+        msg: str = "Wrong type provided!",
+        exc_type: Exception = TypeError,
 ):
     """
     Assert that `thing` is of type `type` or throw an exception.
@@ -180,10 +182,48 @@ def assert_type_or_throw_exception(
     type: `py:class:type`
         A thing to test the type against
     msg: str
-        The message of the error that will be raised if the thing is not of type type
+        The message of the error that will be raised if the thing is not of type
     exc_type: BaseException
         The exception type thrown. Defaults to `py:class:TypeError`.
     """
-    if not isinstance(thing, type):
+    if not isinstance(thing, err_type):
         raise exc_type(msg)
     return
+
+
+def extended_gcd(a, b):
+    if a == 0:
+        return (b, 0, 1)
+    else:
+        gcd, x1, y1 = extended_gcd(b % a, a)
+        x = y1 - (b // a) * x1
+        y = x1
+        return (gcd, x, y)
+
+
+def miller_rabin(n, k=100):
+    if not isinstance(n, int) or n < 2:
+        raise ValueError("no; n is not an int or n<2")
+    if n % 2 == 0:
+        return n == 2
+    s = 0
+    d = n - 1
+    while d & 1 == 0:
+        d = d >> 1
+        s += 1
+    for _ in range(k):
+        a = random.randint(2, n - 2)
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            continue
+        y = x
+        for j in range(s):
+            y = (x * x) % n
+            if y == 1:
+                return False  # n is composite, we have a witness
+            if y == n - 1:
+                break
+            x = y
+        if y != 1:
+            return False
+    return True

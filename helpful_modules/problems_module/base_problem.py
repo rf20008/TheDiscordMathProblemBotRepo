@@ -35,7 +35,6 @@ class BaseProblem:
         if answers is None:
             answers = []
         if guild_id is not None and not isinstance(guild_id, str):
-            print(guild_id)
             raise TypeError("guild_id is not an string")
         if not isinstance(id, int):
             raise TypeError("id is not an integer")

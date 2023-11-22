@@ -3,6 +3,7 @@ import sqlite3
 from helpful_modules.problems_module import BaseProblem
 import traceback, sys
 
+
 class QuizProblem(BaseProblem):
     """A class that represents a Quiz Math Problem"""
 
@@ -68,7 +69,9 @@ class QuizProblem(BaseProblem):
         max_score: int = -1,
     ):
         """Edit a problem!"""
-        await super().edit(question, answer, id, guild_id, voters, solvers, author, answers)
+        await super().edit(
+            question, answer, id, guild_id, voters, solvers, author, answers
+        )
         if not isinstance(quiz, Quiz):
             raise TypeError(
                 f"quiz is of type {quiz.__class.__name}, not Quiz"
@@ -131,5 +134,5 @@ class QuizProblem(BaseProblem):
     async def update_self(self):
         """Update myself"""
         raise DeprecationWarning("THis is being deprecated")
-        #if self.cache is not None:
+        # if self.cache is not None:
         #    await self.quiz.update_self()

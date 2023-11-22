@@ -9,7 +9,6 @@ class AppealType(Enum):
     SUPPORT_SERVER_MISC_PUNISHMENT = 3
     OTHER = 4
 
-
 class Appeal:
     __slots__ = (
         "user_id",

@@ -29,7 +29,7 @@ TYPE_CLASS = type(int)  # the class 'type'
 
 def generate_new_id():
     """Generate a random number from 0 to 2**53-1"""
-    return random.randint(0, 2 ** 53 - 1)
+    return random.randint(0, 2**53 - 1)
 
 
 def get_git_revision_hash() -> str:
@@ -71,7 +71,7 @@ def loading_documentation_thread():
 
 
 async def base_on_error(
-        inter: disnake.ApplicationCommandInteraction, error: BaseException
+    inter: disnake.ApplicationCommandInteraction, error: BaseException
 ):
     """The base on_error event. Call this and use the dictionary as keyword arguments to print to the user"""
     error_traceback = "\n".join(traceback.format_exception(error))
@@ -81,9 +81,7 @@ async def base_on_error(
         raise
     if isinstance(error, (OnCooldown, disnake.ext.commands.CommandOnCooldown)):
         # This is a cooldown exception
-        content = (
-            f"This command is on cooldown; please retry **{disnake.utils.format_dt(disnake.utils.utcnow() + datetime.timedelta(seconds=error.retry_after), style='R')}**."
-        )
+        content = f"This command is on cooldown; please retry **{disnake.utils.format_dt(disnake.utils.utcnow() + datetime.timedelta(seconds=error.retry_after), style='R')}**."
         return {"content": content, "delete_after": error.retry_after}
     if isinstance(error, (disnake.Forbidden,)):
         extra_content = """There was a 403 error. This means either
@@ -132,7 +130,9 @@ async def base_on_error(
         plain_text += f"```Time: {str(asctime())} Commit hash: {get_git_revision_hash()} The stack trace is shown for debugging purposes. The stack trace is also logged (and pushed), but should not contain identifying information (only code which is on github)"
 
         plain_text += f"Error that occurred while attempting to send it as an embed:"
-        plain_text += disnake.utils.escape_markdown(''.join(traceback.format_exception(e)))[:-(1650 - len(plain_text))]
+        plain_text += disnake.utils.escape_markdown(
+            "".join(traceback.format_exception(e))
+        )[: -(1650 - len(plain_text))]
         the_new_exception = deepcopy(e)
         the_new_exception.__cause__ = error
         if len(plain_text) > 2000:
@@ -168,10 +168,10 @@ def _generate_special_id(guild_id, quiz_id, user_id, attempt_num):
 
 
 def assert_type_or_throw_exception(
-        thing: Any,
-        err_type: TYPE_CLASS,
-        msg: str = "Wrong type provided!",
-        exc_type: Exception = TypeError,
+    thing: Any,
+    err_type: TYPE_CLASS,
+    msg: str = "Wrong type provided!",
+    exc_type: Exception = TypeError,
 ):
     """
     Assert that `thing` is of type `type` or throw an exception.

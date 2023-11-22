@@ -143,3 +143,7 @@ class InvalidDictionaryInDatabaseException(MathProblemsModuleException):
 
 class PMDeprecationWarning(DeprecationWarning):
     """Raised when someone tries to use a feature of the problems module that is deprecated"""
+    pass
+
+class LockedCacheException(RuntimeError):
+    """Raised when an operation is done on a locked RedisCache"""

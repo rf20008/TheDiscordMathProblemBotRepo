@@ -8,11 +8,11 @@ from helpful_modules.threads_or_useful_funcs import generate_new_id
 
 from .quiz_problem import QuizProblem
 from .quiz_submissions import QuizSubmission, QuizSubmissionAnswer
-
+from ..dict_convertible import DictConvertible
 # Licensed under GPLv3 (as all other code in this repository is)
 
 
-class QuizSolvingSession:
+class QuizSolvingSession(DictConvertible):
     def __init__(
         self, user_id: int, quiz_id: int, cache, guild_id: int, attempt_num: int
     ):

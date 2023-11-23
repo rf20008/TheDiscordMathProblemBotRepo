@@ -1,11 +1,11 @@
 import typing as t
 from dataclasses import dataclass
-
+from ..dict_convertible import DictConvertible
 from .related_enums import QuizIntensity, QuizTimeLimit
 
 
 @dataclass
-class QuizDescription:
+class QuizDescription(DictConvertible):
     """A dataclass that holds quiz description"""
 
     category: str

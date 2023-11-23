@@ -2,7 +2,7 @@ import typing
 from typing import List
 
 from helpful_modules.problems_module import BaseProblem
-
+from ..dict_convertible import DictConvertible
 from .quiz_description import QuizDescription
 from .quiz_problem import QuizProblem
 from .quiz_submissions import QuizSubmission
@@ -10,7 +10,7 @@ from .QuizSolvingSession import QuizSolvingSession
 from .related_enums import QuizIntensity, QuizTimeLimit
 from ..errors import *
 MAX_PROBLEMS_PER_QUIZ = 100 # todo: lower it - character limits
-class Quiz(list):
+class Quiz(list, DictConvertible):
     """Represents a quiz.
     but it has an additional attribute submissions which is a list of QuizSubmissions"""
 
@@ -22,6 +22,7 @@ class Quiz(list):
         category: QuizIntensity = None,
         description: QuizDescription=None,
     ) -> None:
+        super().__init__()
         """Create a new quiz. id is the quiz id and iter is an iterable of QuizMathProblems"""
         assert isinstance(authors, list)
         assert all([isinstance(author, int) for author in authors])

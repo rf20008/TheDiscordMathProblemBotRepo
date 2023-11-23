@@ -2,9 +2,9 @@ from typing import *
 import sqlite3
 from helpful_modules.problems_module import BaseProblem
 import traceback, sys
+from ..dict_convertible import DictConvertible
 
-
-class QuizProblem(BaseProblem):
+class QuizProblem(BaseProblem, DictConvertible):
     """A class that represents a Quiz Math Problem"""
 
     def __init__(

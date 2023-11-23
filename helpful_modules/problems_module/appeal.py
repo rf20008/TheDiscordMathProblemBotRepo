@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import *
-
-
+from dict_convertible import DictConvertible
+from disnake.utils import format_dt
 class AppealType(Enum):
     BLACKLIST_APPEAL = 0
     GUILD_BLACKLIST_APPEAL = 1
@@ -9,7 +9,7 @@ class AppealType(Enum):
     SUPPORT_SERVER_MISC_PUNISHMENT = 3
     OTHER = 4
 
-class Appeal:
+class Appeal(DictConvertible):
     __slots__ = (
         "user_id",
         "appeal_msg",
@@ -28,7 +28,6 @@ class Appeal:
         timestamp: int,
         appeal_num: int,
         special_id: int,
-        cache: "MathProblemCache",
         type: int,
     ):
         try:
@@ -40,10 +39,9 @@ class Appeal:
         self.timestamp = timestamp
         self.appeal_num = appeal_num
         self.special_id = special_id
-        self.cache = cache
 
     @classmethod
-    def from_dict(cls, data: dict, cache: "MathProblemCache"):
+    def from_dict(cls, data: dict):
         return cls(
             user_id=data["user_id"],
             appeal_msg=data["appeal_msg"],
@@ -51,7 +49,6 @@ class Appeal:
             appeal_num=data["appeal_num"],
             special_id=data["special_id"],
             type=data["type"],
-            cache=cache,
         )
 
     def to_dict(self) -> dict:
@@ -68,7 +65,7 @@ class Appeal:
         return f"""
         Appeal from <@{self.user_id}>:
         type: {str(self.type.name)}
-        timestamp: {disnake.utils.format_dt(self.timestamp)}
+        timestamp: {format_dt(self.timestamp)}
         
         Appeal message: {self.appeal_msg}
         

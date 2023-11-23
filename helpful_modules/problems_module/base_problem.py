@@ -7,14 +7,14 @@ import warnings
 from copy import deepcopy
 from typing import Optional
 import disnake
-
+from dict_convertible import DictConvertible
 from .errors import *
 
 ANSWER_CHAR_LIMIT = 1000
 QUESTION_CHAR_LIMIT = 2000
 
 
-class BaseProblem:
+class BaseProblem(DictConvertible):
     """For readability purposes :) This also isn't an ABC."""
 
     def __init__(

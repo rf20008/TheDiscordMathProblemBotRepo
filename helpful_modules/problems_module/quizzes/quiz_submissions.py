@@ -3,7 +3,7 @@ from typing import Union, Optional, Dict
 from ...threads_or_useful_funcs import assert_type_or_throw_exception
 from ..errors import MathProblemsModuleException
 from warnings import warn
-
+from ..dict_convertible import DictConvertible
 
 @dataclass
 class QuizSubmissionAnswer:
@@ -48,7 +48,7 @@ class QuizSubmissionAnswer:
         return f"<QuizSubmission quiz_id = {self.quiz_id} answer = {self.answer} grade = {self.grade}>"
 
 
-class QuizSubmission:
+class QuizSubmission(DictConvertible):
     """A class that represents someone's submission to a graded quiz"""
 
     mutable: bool

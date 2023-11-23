@@ -8,8 +8,8 @@ from .quiz_problem import QuizProblem
 from .quiz_submissions import QuizSubmission
 from .QuizSolvingSession import QuizSolvingSession
 from .related_enums import QuizIntensity, QuizTimeLimit
-
-
+from ..errors import *
+MAX_PROBLEMS_PER_QUIZ = 100 # todo: lower it - character limits
 class Quiz(list):
     """Represents a quiz.
     but it has an additional attribute submissions which is a list of QuizSubmissions"""
@@ -19,53 +19,47 @@ class Quiz(list):
         id: int,
         authors: List[int],
         quiz_problems: List[QuizProblem],
-        submissions: List[QuizSubmission] = None,
-        existing_sessions=None,  # This is a list of QuizSessions
-        cache=None,
-        description=None,
+        category: QuizIntensity = None,
+        description: QuizDescription=None,
     ) -> None:
         """Create a new quiz. id is the quiz id and iter is an iterable of QuizMathProblems"""
-        assert isinstance(existing_sessions, list) or existing_sessions is None
         assert isinstance(authors, list)
-        self._description = description
+        assert all([isinstance(author, int) for author in authors])
+        self.description = description
         self._time_limit = description.time_limit
         self.license = description.license
         self.intensity = description.intensity
         self.category = category
-        self.category = category
         self.authors = authors
-        self.existing_sessions = (
-            existing_sessions if existing_sessions is not None else []
-        )
-        if not submissions:
-            submissions = []
         self.problems = quiz_problems
         self.sort(key=lambda problem: problem.id)
 
-        self._cache = cache
-        self._submissions = submissions
         self._id = id
 
-    async def add_submission(self, submission: QuizSubmission):
-        assert isinstance(submission, QuizSubmission)
-        submission.mutable = False
-        self._submissions.append(submission)
-        await self.update_self()
+    def add_submission(self, submission: QuizSubmission):
+        """Add a submission to this quiz. Note that this does not
+        automatically update the cache -- you have to do it yourself.
+        Time complexity: O(1)
+        :param submission: the submission
+        :raises NotImplementedError: This function is deliberately left unimplemented - add submissions yourself"""
+        raise NotImplementedError("This function is deliberately left unimplemented - add submissions yourself")
 
-    async def add_problem(
+
+    def add_problem(
         self, problem: QuizProblem, insert_location: typing.Optional[int] = None
     ):
         """Add a problem to this quiz."""
-        if len(self.problems) + 1 > self._cache.max_problems_per_quiz:
+        if len(self.problems) + 1 > MAX_PROBLEMS_PER_QUIZ:
             raise TooManyProblems(
-                f"""There is already the maximum number of problems on this quiz. Therefore, adding a new quiz is prohibited to save memory. 
-            Because this is a FOSS bot, there is no premium version and thus no way to increase the number of problems you can have on a quiz!"""
+                f"""There is already the maximum number of problems on this quiz. Therefore, adding a new problem is prohibited... 
+            Because this is a FOSS bot, there is no premium version and thus no way to increase the number of problems you can have on a quiz!
+            If you want to increase it, you can, if you self-host this bot :)"""
+
             )
         if insert_location is None:
             insert_location = len(self.problems) - 1
-        assert isisntance(problem, QuizProblem)  # Type-checking
+        assert isinstance(problem, QuizProblem)  # Type-checking
         self.problems.insert(problem, insert_location)
-        await self.update_self()
 
     @property
     def quiz_problems(self):
@@ -73,7 +67,7 @@ class Quiz(list):
 
     @property
     def submissions(self):
-        return self._submissions
+        raise AttributeError("This property is being removed! Please use redis to get them...")
 
     @property
     def id(self):
@@ -91,17 +85,18 @@ class Quiz(list):
 
     @classmethod
     def from_dict(cls, _dict: dict):
-        problems_as_type = []
-        submissions = []
-        Problems = _dict["problems"]
-        for p in Problems:
-            problems_as_type.append(QuizProblem.from_dict(p))
+        problems_as_type = list(map(QuizProblem.from_dict, _dict["problems"]))
+        submissions = list(map(QuizSubmission.from_dict, _dict["submissions"]))
         problems_as_type.sort(key=lambda problem: problem.id)
-
-        for s in _dict["submissions"]:
-            submissions.append(QuizSubmission.from_dict(s))  # type: ignore
-        c = cls(quiz_problems=problems_as_type, id=_dict["id"])  # type: ignore
-
+        authors = _dict["authors"]
+        description = QuizDescription.from_dict(_dict["description"])
+        c = cls(
+            quiz_problems=problems_as_type,
+            id=_dict["id"],
+            description=description,
+            authors=authors
+        )  # type: ignore
+        c.description = description
         c._submissions = submissions
         c._id = _dict["id"]
         return c
@@ -110,12 +105,17 @@ class Quiz(list):
         """Convert this instance into a Dictionary!"""
         problems = [problem.to_dict() for problem in self.problems]
         submissions = [submission.to_dict for submission in self.submissions]
-        return {"problems": problems, "submissions": submissions, "id": self._id}
+        return {
+            "problems": problems,
+            "submissions": submissions,
+            "id": self._id,
+            "description": self.description.to_dict(),
+            "authors": self.authors
+        }
 
     async def update_self(self):
         """Update myself!"""
-        await self._cache.update_quiz(self._id, self)
-
+        raise NotImplementedError("Please update this cache yourself!")
     @classmethod
     def from_data(
         cls,

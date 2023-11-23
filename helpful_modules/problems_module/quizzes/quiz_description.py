@@ -12,7 +12,6 @@ class QuizDescription:
     intensity: t.Union[QuizIntensity, int]
     description: str
     license: str
-    cache: "MathProblemCache"
     time_limit: t.Union[int, QuizTimeLimit]
     guild_id: int
     author: int
@@ -41,11 +40,10 @@ class QuizDescription:
         self.time_limit = time_limit
 
     @classmethod
-    def from_dict(cls, data: dict, cache: "MathProblemCache") -> "QuizDescription":
+    def from_dict(cls, data: dict) -> "QuizDescription":
         return cls(
             author=data["author"],
             quiz_id=data["quiz_id"],
-            cache=cache,
             category=data["category"],
             intensity=data["intensity"],
             description=data["description"],

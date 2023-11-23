@@ -1,7 +1,12 @@
 import enum
-
+from dataclasses import dataclass
+from typing import Dict
 # This isn't really used, but it's licensed under GPLv3
-
+DEFAULT_LICENSE = """This quiz is licensed under a license 
+that allows me to do the processing with this quiz that is needed,
+allows you all to see this quiz, answer it, and see the solutions,
+but nothing else.
+"""
 
 class QuizIntensity(float, enum.Enum):
     """An enumeration of quiz"""
@@ -52,3 +57,30 @@ class QuizTimeLimit(int, enum.Enum):
     ONE_WEEK = 604800
     NO_LIMIT = 1 << 100
     UNLIMITED = 1 << 100
+
+
+## @dataclass()
+## class QuizDescription:
+##    license: str = DEFAULT_LICENSE,
+##    time_limit: QuizTimeLimit
+##    intensity: QuizIntensity
+##    string_description: str = "The author of this quiz did not add a description"
+##
+##    def to_dict(self) -> Dict[str, str]:
+##        """Convert this instance into a dictionary."""
+##        return {
+##            "license": self.license,
+##            "time_limit": self.time_limit.value,
+##            "intensity": self.intensity.value,
+##            "string_description": self.string_description,
+##        }
+##
+##    @classmethod
+##    def from_dict(cls, data: Dict[str, str]) -> "QuizDescription":
+##        """Create an instance from a dictionary."""
+##        return cls(
+##            license=data.get("license", DEFAULT_LICENSE),
+##            time_limit=QuizTimeLimit(data.get("time_limit", "")),
+##            intensity=QuizIntensity(data.get("intensity", "")),
+##            string_description=data.get("string_description", ""),
+##        )

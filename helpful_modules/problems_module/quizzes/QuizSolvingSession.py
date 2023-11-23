@@ -20,7 +20,6 @@ class QuizSolvingSession:
         self.quiz_id = quiz_id
         self.special_id = generate_new_id()
         self.is_final = False
-        self.cache: "MathProblemCache" = cache
         self.answers: typing.Dict[int, QuizSubmissionAnswer] = {}
         self.start_time = time.time()
         self._quiz = self._get_quiz()
@@ -102,7 +101,7 @@ class QuizSolvingSession:
             user_id=dict["user_id"],
             quiz_id=dict["quiz_id"],
             guild_id=dict["guild_id"],
-            answers=pickle.loads(dict["answers"]),  # TODO: don't use pickle because RCE
+            answers=list(map(QuizSubmissionAnswer.to_dict, dict["answers"])),  # TODO: don't use pickle because RCE
             special_id=dict["special_id"],
             attempt_num=dict["attempt_num"],
         )

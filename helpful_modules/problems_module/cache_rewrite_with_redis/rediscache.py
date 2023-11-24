@@ -18,6 +18,7 @@ class ProblemsRelatedRedisCache:
         self.password = password
         self.redis = aioredis.from_url(redis_url, encoding = "utf-8", decode_responses=True, password=password)
         self.lock = asyncio.Lock()
+        self._async_file_dict = AsyncFileDict("config.json")
     @property
     def is_locked(self):
         """Return whether the cache is locked"""
@@ -197,60 +198,56 @@ class ProblemsRelatedRedisCache:
         await self.set_key(f"UserData:{thing.user_id}", thing.to_dict())
     async def remove_user_data(self, thing: UserData):
         await self.del_key(f"UserData:{thing.user_id}")
+
+
+
+
+    async def get_permissions_required_for_command(
+            self, command_name
+    ) -> typing.Dict[str, bool]:
+        await self._async_file_dict.read_from_file()
+        return self._async_file_dict.dict["permissions_required"][command_name]
+
+    async def user_meets_permissions_required_to_use_command(
+            self,
+            user_id: int,
+            permissions_required: typing.Optional[typing.Dict[str, bool]] = None,
+            command_name: str | None = None
+    ) -> bool:
+        """Return whether the user meets permissions required to use the command"""
+        if permissions_required is None:
+            permissions_required = await self.get_permissions_required_for_command(
+                command_name
+            )
+
+        await self.update_cache()
+        if "trusted" in permissions_required.keys():
+            if (
+                    await self.get_user_data(
+                        user_id, default=UserData.default(user_id=user_id)
+                    )
+            ).trusted != permissions_required["trusted"]:
+                return False
+
+        if "blacklisted" in permissions_required.keys():
+            if (
+                    (
+                            await self.get_user_data(
+                                user_id, default=UserData.default(user_id=user_id)
+                            )
+                    )
+            ).blacklisted != permissions_required["blacklisted"]:
+                return False
+
+        for key, val in permissions_required.items():
+            try:
+                if self.cached_user_data[user_id].to_dict()[key] != val:
+                    return False
+            except KeyError:
+                pass
+
+        return True
+
 # TODO: the appeals_related_cache, guild_data_related_cache, final_cache
 # TODO: fix the rest of the commands such that this cache can work
 # TODO: get a redis server
-
-
-
-    class PermissionsRequiredRelatedCache(UserDataRelatedCache):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            self._async_file_dict = AsyncFileDict("config.json")
-
-        async def get_permissions_required_for_command(
-                self, command_name
-        ) -> typing.Dict[str, bool]:
-            await self._async_file_dict.read_from_file()
-            return self._async_file_dict.dict["permissions_required"][command_name]
-
-        async def user_meets_permissions_required_to_use_command(
-                self,
-                user_id: int,
-                permissions_required: typing.Optional[typing.Dict[str, bool]] = None,
-                command_name: str | None = None
-        ) -> bool:
-            """Return whether the user meets permissions required to use the command"""
-            if permissions_required is None:
-                permissions_required = await self.get_permissions_required_for_command(
-                    command_name
-                )
-
-            await self.update_cache()
-            if "trusted" in permissions_required.keys():
-                if (
-                        await self.get_user_data(
-                            user_id, default=UserData.default(user_id=user_id)
-                        )
-                ).trusted != permissions_required["trusted"]:
-                    return False
-
-            if "blacklisted" in permissions_required.keys():
-                if (
-                        (
-                                await self.get_user_data(
-                                    user_id, default=UserData.default(user_id=user_id)
-                                )
-                        )
-                ).blacklisted != permissions_required["blacklisted"]:
-                    return False
-
-            for key, val in permissions_required.items():
-                try:
-                    if self.cached_user_data[user_id].to_dict()[key] != val:
-                        return False
-                except KeyError:
-                    pass
-
-            return True
-

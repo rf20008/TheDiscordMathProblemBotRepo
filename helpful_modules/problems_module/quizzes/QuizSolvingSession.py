@@ -1,7 +1,7 @@
-import pickle
 import time
 import typing
 from asyncio import run
+import warnings
 
 from helpful_modules.problems_module.errors import *
 from helpful_modules.threads_or_useful_funcs import generate_new_id
@@ -48,7 +48,7 @@ class QuizSolvingSession(DictConvertible):
 
     def _get_quiz(self) -> "Quiz":
         """Get the quiz for this QuizSubmissionSession and return it"""
-        return run(self.cache.get_quiz(self.quiz_id))
+        raise NotImplementedError("This is being removed")
 
     def add_submission_answer(self, submission_answer: QuizSubmissionAnswer):
         """Add a submission answer to this session!"""
@@ -91,11 +91,10 @@ class QuizSolvingSession(DictConvertible):
         return QuizSession
 
     @classmethod
-    def from_sqlite_dict(cls, dict: dict, cache) -> "QuizSolvingSession":
+    def from_sqlite_dict(cls, dict: dict) -> "QuizSolvingSession":
         """Convert a dict returned from sql into a QuizSolvingSession"""
         _quiz = run(cache.get_quiz(dict["quiz_id"]))
         return cls.better_init(
-            cache=cache,
             start_time=dict["start_time"],
             expire_time=dict["expire_time"],
             user_id=dict["user_id"],
@@ -107,17 +106,16 @@ class QuizSolvingSession(DictConvertible):
         )
 
     @classmethod
-    def from_mysql_dict(cls, dict: dict, cache) -> "QuizSolvingSession":
-        _quiz = run(cache.get_quiz(dict["quiz_id"]))
+    def from_mysql_dict(cls, dict: dict) -> "QuizSolvingSession":
+
         return cls.better_init(
-            cache=cache,
             start_time=dict["start_time"],
             user_id=dict["user_id"],
             quiz_id=dict["quiz_id"],
             guild_id=dict["guild_id"],
             expire_time=dict["expire_time"],
             is_finished=dict["is_finished"],
-            answers=pickle.loads(dict["answers"]),
+            answers=dict["answers"],
             special_id=dict["special_id"],
             attempt_num=dict["attempt_num"],
         )
@@ -135,12 +133,9 @@ class QuizSolvingSession(DictConvertible):
 
     async def update_self(self):
         """Update myself in SQL"""
-        try:
-            await self.cache.update_quiz_session(self.special_id, self)
-        except QuizSessionNotFoundException:
-            await self.cache.add_quiz_session(self)
+        raise NotImplementedError("THIS IS BEING REMOVED!")
 
-    async def add_answer(self, answer_to_add: QuizSubmissionAnswer):
+    def add_answer(self, answer_to_add: QuizSubmissionAnswer):
         """Add an answer"""
         if self.editable:
             raise QuizSessionOvertimeException("Quiz session overtime")
@@ -150,26 +145,25 @@ class QuizSolvingSession(DictConvertible):
         except IndexError:
             raise MathProblemsModuleException("Question number out of range")
 
-        await self.update_self()
+        warnings.warn(DeprecationWarning, "You need to update it manually now")
 
     @property
     def editable(self):
         return (not self.overtime) and (not self.is_final)
 
-    async def modify_answer(self, new_answer: QuizSubmissionAnswer, index: int):
+   def modify_answer(self, new_answer: QuizSubmissionAnswer, index: int):
         if self.editable:
             raise QuizSessionOvertimeException("Quiz session overtime")
 
-        assert isinstance(new, QuizSubmissionAnswer)
+        assert isinstance(new_answer, QuizSubmissionAnswer)
         try:
-            self.answers[answer_to_add.problem_id] = new_answer
+            self.answers[new_answer.problem_id] = new_answer
         except IndexError:
             raise MathProblemsModuleException("Question number out of range")
-        await self.update_self()
+        warnings.warn(DeprecationWarning, "You need to update it manually now")
 
     def get_answer(self, index: int) -> "QuizSubmissionAnswer":
-
         try:
             return self.answers[index]
         except IndexError:
-            raise MathProblemsModuleException("Index out of range")
+            raise IndexError("There is no such index")

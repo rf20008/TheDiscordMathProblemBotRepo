@@ -1,6 +1,14 @@
 import aioredis
-from ..errors import LockedCacheException, ProblemNotFoundException
+from ..errors import LockedCacheException, ProblemNotFoundException, ThingNotFound, FormatException, InvalidDictionaryInDatabaseException
+from ..dict_convertible import DictConvertible
 from ..base_problem import BaseProblem
+from ..user_data import UserData
+
+import typing
+
+from ...FileDictionaryReader import AsyncFileDict
+from ..user_data import UserData
+from .user_data_related_cache import UserDataRelatedCache
 import asyncio
 import orjson
 class ProblemsRelatedRedisCache:
@@ -40,21 +48,21 @@ class ProblemsRelatedRedisCache:
         Time complexity: O(1)"""
         if guild_id is not None and not isinstance(guild_id, int):
             raise TypeError("guild_id is not an int")
-        result = await self.get_key(f"problem:{guild_id}:{problem_id}")
+        result = await self.get_key(f"BaseProblem:{guild_id}:{problem_id}")
         if result is not None:
             return BaseProblem.from_dict(orjson.loads(result))
-        result = await self.get_key(f"quiz_problems:{guild_id}:{problem_i}")
+        result = await self.get_key(f"QuizProblem:{guild_id}:{problem_id}")
         if result is not None:
             return BaseProblem.from_dict(orjson.loads(result))
         raise ProblemNotFoundException("That problem is not found")
     async def get_all_problems(self):
         """Return a list of all problems!
         Time complexity: O(N)"""
-        return list(map(BaseProblem.from_dict, await self.redis.hgetall("problem").values()))
+        return list(map(BaseProblem.from_dict, await self.redis.hgetall("BaseProblem").values()))
     async def get_all_problems_by_guild(self, guild_id: int | None):
         """return a list of all problems with the guild id = id
         Time complexity: O(N)"""
-        return list(map(BaseProblem.from_dict, await self.redis.hgetall(f"problem:{guild_id}").values()))
+        return list(map(BaseProblem.from_dict, await self.redis.hgetall(f"BaseProblem:{guild_id}").values()))
     async def get_all_problems_by_func(self, func):
         """Return a list of all problems that satisfy the function.
         It is actually implemented as filter(func, await self.get_all_problems())
@@ -91,7 +99,7 @@ class ProblemsRelatedRedisCache:
         if problem.id != problem_id:
             raise ValueError("Ids do not match")
 
-        await self.set_key(f"problem:{problem.guild_id}:{problem_id}", problem.to_dict(show_answer=True))
+        await self.set_key(f"BaseProblem:{problem.guild_id}:{problem_id}", problem.to_dict(show_answer=True))
 
     async def update_problem(self, problem_id: int, problem: BaseProblem):
         """
@@ -112,8 +120,8 @@ class ProblemsRelatedRedisCache:
         """
         if not isinstance(problem_id, int) or (guild_id is not None and not isinstance(guild_id, int)):
             raise TypeError("Bad types!")
-        await self.del_key(f"problem:{guild_id}:{problem_id}")
-        await self.del_key(f"quiz_problem:{guild_id}:{problem_id}")
+        await self.del_key(f"BaseProblem:{guild_id}:{problem_id}")
+        await self.del_key(f"QuizProblem:{guild_id}:{problem_id}")
 
     # Additional methods for quizzes
 
@@ -124,7 +132,7 @@ class ProblemsRelatedRedisCache:
         :param quiz_id: The ID of the quiz.
         :param quiz_data: The data associated with the quiz.
         """
-        await self.set_key(f"quiz:{quiz_id}", orjson.dumps(quiz_data))
+        await self.set_key(f"Quiz:{quiz_id}", orjson.dumps(quiz_data))
 
     async def get_quiz(self, quiz_id: int) -> dict:
         """
@@ -134,7 +142,7 @@ class ProblemsRelatedRedisCache:
         :return: The data associated with the quiz.
         :raises ProblemNotFoundException: If the quiz is not found.
         """
-        result = await self.get_key(f"quiz:{quiz_id}")
+        result = await self.get_key(f"Quiz:{quiz_id}")
         if result is not None:
             return orjson.loads(result)
         raise ProblemNotFoundException("That quiz is not found")
@@ -145,4 +153,104 @@ class ProblemsRelatedRedisCache:
 
         :param quiz_id: The ID of the quiz.
         """
-        await self.del_key(f"quiz:{quiz_id}")
+        await self.del_key(f"Quiz:{quiz_id}")
+    async def add_thing(self, thing: DictConvertible):
+        await self.set_key(f"{thing.__class__.__name__}:{thing.guild_id}:{thing.id}", thing.to_dict())
+    async def remove_thing(self, thing: DictConvertible):
+        await self.del_key(f"{thing.__class__.__name__}:{thing.guild_id}:{thing.id}")
+    async def get_thing(
+            self,
+            thing_guild_id: int,
+            thing_id: int,
+            cls: typing.Type[DictConvertible],
+            default: DictConvertible | None = None
+    ):
+        result = await self.get_key(f"{cls.__name__}:{thing_guild_id}:{thing_id}")
+        if result is not None:
+            try:
+                return await cls.from_dict(orjson.loads(result))
+            except FormatException as fe:
+                fe.args[0]+="There was a problem with the format of the exception"
+                raise fe
+            except KeyError as ke:
+                raise FormatException("Oh no, the formatting is bad!") from ke
+            except orjson.JSONDecodeError as jde:
+                raise InvalidDictionaryInDatabaseException("It's not even formatted as JSON!") from jde
+            except Exception as exc:
+                raise RuntimeError("Something bad happened...") from exc
+        if default is not None:
+            return default
+        raise ThingNotFound("The thing is not found!")
+    async def get_user_data(self, user_id: int, default: UserData | None = None):
+        result = await self.get_key(f"UserData:{user_id}")
+        if result is not None:
+            try:
+                return UserData.from_dict(orjson.loads(result))
+            except orjson.JSONDecodeError:
+                raise InvalidDictionaryInDatabaseException("We have a non-dictionary on our hands")
+            except FormatException as fe:
+                raise FormatException("Oh no, the formatting is bad") from fe
+        if default is not None:
+            return default
+        raise ThingNotFound("I could not find any user data")
+    async def add_user_data(self, thing: UserData):
+        await self.set_key(f"UserData:{thing.user_id}", thing.to_dict())
+    async def remove_user_data(self, thing: UserData):
+        await self.del_key(f"UserData:{thing.user_id}")
+# TODO: the appeals_related_cache, guild_data_related_cache, final_cache
+# TODO: fix the rest of the commands such that this cache can work
+# TODO: get a redis server
+
+
+
+    class PermissionsRequiredRelatedCache(UserDataRelatedCache):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self._async_file_dict = AsyncFileDict("config.json")
+
+        async def get_permissions_required_for_command(
+                self, command_name
+        ) -> typing.Dict[str, bool]:
+            await self._async_file_dict.read_from_file()
+            return self._async_file_dict.dict["permissions_required"][command_name]
+
+        async def user_meets_permissions_required_to_use_command(
+                self,
+                user_id: int,
+                permissions_required: typing.Optional[typing.Dict[str, bool]] = None,
+                command_name: str | None = None
+        ) -> bool:
+            """Return whether the user meets permissions required to use the command"""
+            if permissions_required is None:
+                permissions_required = await self.get_permissions_required_for_command(
+                    command_name
+                )
+
+            await self.update_cache()
+            if "trusted" in permissions_required.keys():
+                if (
+                        await self.get_user_data(
+                            user_id, default=UserData.default(user_id=user_id)
+                        )
+                ).trusted != permissions_required["trusted"]:
+                    return False
+
+            if "blacklisted" in permissions_required.keys():
+                if (
+                        (
+                                await self.get_user_data(
+                                    user_id, default=UserData.default(user_id=user_id)
+                                )
+                        )
+                ).blacklisted != permissions_required["blacklisted"]:
+                    return False
+
+            for key, val in permissions_required.items():
+                try:
+                    if self.cached_user_data[user_id].to_dict()[key] != val:
+                        return False
+                except KeyError:
+                    pass
+
+            return True
+

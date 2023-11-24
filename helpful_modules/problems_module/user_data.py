@@ -1,5 +1,8 @@
-"""User Data"""
+"""User Data
+This code is licensed under the GNU GPLv3 :)
 
+"""
+import warnings
 
 class UserData:
     """A dataclass to store user data for the bot!"""
@@ -37,4 +40,5 @@ class UserData:
 
     async def add_to_cache(self, cache):
         """Add myself to a cache. Can't typehint because circular imports."""
+        warnings.warn("This method is being deprecated", stacklevel=-1, category=DeprecationWarning)
         return await cache.add_user_data(self)

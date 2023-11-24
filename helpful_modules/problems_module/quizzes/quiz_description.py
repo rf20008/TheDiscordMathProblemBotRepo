@@ -2,6 +2,7 @@ import typing as t
 from dataclasses import dataclass
 from ..dict_convertible import DictConvertible
 from .related_enums import QuizIntensity, QuizTimeLimit
+from ..errors import FormatException
 
 
 @dataclass
@@ -41,13 +42,31 @@ class QuizDescription(DictConvertible):
 
     @classmethod
     def from_dict(cls, data: dict) -> "QuizDescription":
-        return cls(
-            author=data["author"],
-            quiz_id=data["quiz_id"],
-            category=data["category"],
-            intensity=data["intensity"],
-            description=data["description"],
-            license=data["license"],
-            time_limit=data["timelimit"],
-            guild_id=data["guild_id"],
-        )
+        try:
+            return cls(
+                author=data["author"],
+                quiz_id=data["quiz_id"],
+                category=data["category"],
+                intensity=data["intensity"],
+                description=data["description"],
+                license=data["license"],
+                time_limit=data["timelimit"],
+                guild_id=data["guild_id"],
+            )
+        except KeyError as ke:
+            raise FormatException("Bad formatting!") from ke
+    @property
+    def id(self):
+        return self.quiz_id + self.author
+    def to_dict(self):
+        return {
+            "author": self.author,
+            "quiz_id": self.quiz_id,
+            "category": self.category,
+            "intensity": self.intensity,
+            "description": self.description,
+            "license": self.license,
+            "time_limit": self.license,
+            "guild_id": self.guild_id
+
+        }

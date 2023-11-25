@@ -94,7 +94,7 @@ class IsRowException(FormatException):
     pass
 
 
-class TooMuchUserDataException(MathProblemsModuleException, FormatException):
+class TooMuchUserDataException(FormatException):
     """Raised when there is too much user data!"""
 
     pass

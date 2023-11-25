@@ -151,7 +151,7 @@ class QuizSolvingSession(DictConvertible):
     def editable(self):
         return (not self.overtime) and (not self.is_final)
 
-   def modify_answer(self, new_answer: QuizSubmissionAnswer, index: int):
+    def modify_answer(self, new_answer: QuizSubmissionAnswer, index: int):
         if self.editable:
             raise QuizSessionOvertimeException("Quiz session overtime")
 

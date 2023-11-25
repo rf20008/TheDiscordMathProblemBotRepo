@@ -7,7 +7,7 @@ import warnings
 from copy import deepcopy
 from typing import Optional
 import disnake
-from dict_convertible import DictConvertible
+from .dict_convertible import DictConvertible
 from .errors import *
 
 ANSWER_CHAR_LIMIT = 1000

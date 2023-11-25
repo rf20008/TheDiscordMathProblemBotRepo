@@ -47,7 +47,7 @@ class InterestingComputationCog(HelperCog):
             product = 1
             for i in range(len(self.moduli)):
                 product *= self.moduli[i]
-            sum = 0
+            su = 0
             for i in range(len(self.moduli)):
                 num = product // self.moduli[i]
                 # compute the multiplicative number of product/b_i mod b_i
@@ -59,8 +59,8 @@ class InterestingComputationCog(HelperCog):
                 except ValueError:
                     raise ValueError("They aren't relatively prime")
                 mult_inv = return_val[0][1]
-                sum += num * mult_inv * self.remainders[i]
-            return sum
+                su += num * mult_inv * self.remainders[i]
+            return su
 
     @checks.no_insanely_huge_numbers_check()
     @commands.slash_command(name="crt_problem", description="crt_problem")

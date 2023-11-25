@@ -13,7 +13,7 @@ from asyncio import sleep as asyncio_sleep
 from copy import copy
 from logging import handlers
 from sys import argv, exc_info, exit, stdout
-
+from time import sleep
 # Imports - 3rd party
 from disnake.ext import commands
 

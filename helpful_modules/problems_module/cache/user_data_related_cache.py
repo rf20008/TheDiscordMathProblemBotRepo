@@ -10,13 +10,10 @@ import aiosqlite
 import disnake
 
 from helpful_modules.dict_factory import dict_factory
-from helpful_modules.threads_or_useful_funcs import get_log
 
-from ..base_problem import BaseProblem
 from ..errors import *
 from ..mysql_connector_with_stmt import mysql_connection
-from ..quizzes import Quiz, QuizProblem, QuizSolvingSession, QuizSubmission
-from ..quizzes.quiz_description import QuizDescription
+
 from ..user_data import UserData
 from .quiz_related_cache import QuizRelatedCache
 

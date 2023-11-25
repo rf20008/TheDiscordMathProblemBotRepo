@@ -20,7 +20,7 @@ from helpful_modules.save_files import FileSaver
 from helpful_modules.threads_or_useful_funcs import get_git_revision_hash
 from .helper_cog import HelperCog
 
-mb = lambda us: round(us/(1000000), ndigits=3)
+mb = lambda us: round(us / (1000000), ndigits=3)
 
 
 class MiscCommandsCog(HelperCog):
@@ -51,7 +51,7 @@ class MiscCommandsCog(HelperCog):
         """/info [include_extra_info: bool = False]
         Show bot info. include_extra_info shows technical information!"""
         mem_usage = psutil.virtual_memory()
-        used = mb(mem_usage.used/(1024*1024))
+        used = mb(mem_usage.used / (1024 * 1024))
         total = mb(mem_usage.total)
         perc = mem_usage.percent
         avail = mb(mem_usage.available)
@@ -68,10 +68,10 @@ class MiscCommandsCog(HelperCog):
             inline=False,
         )
         embed = embed.add_field(
-            name = "Memory Usage",
-            value = f"""Used/Available+Used Memory: {used}MB/{used+avail}MB 
+            name="Memory Usage",
+            value=f"""Used/Available+Used Memory: {used}MB/{used+avail}MB 
             (percentage: {round(100*used/(used+avail), ndigits=3)}%) (perc reported: {perc}) Total memory available: {total}MB""",
-            inline=False
+            inline=False,
         )
         embed = embed.add_field(
             name="Current Latency to Discord",
@@ -308,9 +308,7 @@ class MiscCommandsCog(HelperCog):
     @commands.slash_command(description="Interact with your user data")
     async def user_data(self, inter: disnake.ApplicationCommandInteraction):
         """The base command to interact with your user data. This doesn't do anything (you need to call a subcommand)"""
-        print(
-            f"The user_data command has been invoked by {inter.author.name}"
-        )
+        print(f"The user_data command has been invoked by {inter.author.name}")
         raise RuntimeError("This is not supposed to be executed without a subcommand")
 
     @disnake.ext.commands.cooldown(1, 500, commands.BucketType.user)  # To prevent abuse

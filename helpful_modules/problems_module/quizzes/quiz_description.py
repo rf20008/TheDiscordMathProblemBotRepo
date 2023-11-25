@@ -1,18 +1,18 @@
 import typing as t
 from dataclasses import dataclass
-
+from ..dict_convertible import DictConvertible
 from .related_enums import QuizIntensity, QuizTimeLimit
+from ..errors import FormatException
 
 
 @dataclass
-class QuizDescription:
+class QuizDescription(DictConvertible):
     """A dataclass that holds quiz description"""
 
     category: str
     intensity: t.Union[QuizIntensity, int]
     description: str
     license: str
-    cache: "MathProblemCache"
     time_limit: t.Union[int, QuizTimeLimit]
     guild_id: int
     author: int
@@ -41,15 +41,32 @@ class QuizDescription:
         self.time_limit = time_limit
 
     @classmethod
-    def from_dict(cls, data: dict, cache: "MathProblemCache") -> "QuizDescription":
-        return cls(
-            author=data["author"],
-            quiz_id=data["quiz_id"],
-            cache=cache,
-            category=data["category"],
-            intensity=data["intensity"],
-            description=data["description"],
-            license=data["license"],
-            time_limit=data["timelimit"],
-            guild_id=data["guild_id"],
-        )
+    def from_dict(cls, data: dict) -> "QuizDescription":
+        try:
+            return cls(
+                author=data["author"],
+                quiz_id=data["quiz_id"],
+                category=data["category"],
+                intensity=data["intensity"],
+                description=data["description"],
+                license=data["license"],
+                time_limit=data["timelimit"],
+                guild_id=data["guild_id"],
+            )
+        except KeyError as ke:
+            raise FormatException("Bad formatting!") from ke
+    @property
+    def id(self):
+        return self.quiz_id + self.author
+    def to_dict(self):
+        return {
+            "author": self.author,
+            "quiz_id": self.quiz_id,
+            "category": self.category,
+            "intensity": self.intensity,
+            "description": self.description,
+            "license": self.license,
+            "time_limit": self.license,
+            "guild_id": self.guild_id
+
+        }

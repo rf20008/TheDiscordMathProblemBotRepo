@@ -3,7 +3,7 @@ from typing import Union, Optional, Dict
 from ...threads_or_useful_funcs import assert_type_or_throw_exception
 from ..errors import MathProblemsModuleException
 from warnings import warn
-
+from ..dict_convertible import DictConvertible
 
 @dataclass
 class QuizSubmissionAnswer:
@@ -48,16 +48,15 @@ class QuizSubmissionAnswer:
         return f"<QuizSubmission quiz_id = {self.quiz_id} answer = {self.answer} grade = {self.grade}>"
 
 
-class QuizSubmission:
+class QuizSubmission(DictConvertible):
     """A class that represents someone's submission to a graded quiz"""
 
     mutable: bool
     user_id: Optional[int]
-    cache: "MathProblemCache"  # type: ignore
     quiz_id: Optional[int]
     answers: Dict[int, QuizSubmissionAnswer]
 
-    def __init__(self, user_id: int, quiz_id: int, cache: "MathProblemCache"):  # type: ignore
+    def __init__(self, user_id: int, quiz_id: int):  # type: ignore
         """
         Generate a QuizSubmission given the parameters given!
         Parameters
@@ -72,11 +71,8 @@ class QuizSubmission:
         self.user_id = user_id
         self.quiz_id = quiz_id
         self.mutable = True
-        self.answers = {
-            question.id: QuizSubmissionAnswer(problem_id=question.id, quiz_id=quiz_id)
-            for question in self.get_my_quiz()
-        }
-        self.cache = cache
+        self.answers = {} # todo: fix the quiz commands to make it a list of QuizSubmissionAnswer(problem_id=quiz_id, guild_id=guild_id
+        # with a number
 
     @property
     def quiz(self):
@@ -105,7 +101,7 @@ class QuizSubmission:
         ----------
         Quiz
             Returns the quiz that is associated with this!."""
-        return await self.cache.get_quiz(self.quiz_id)
+        raise NotImplementedError("This function is removed!")
 
     def set_answer(self, problem_id: int, answer: str) -> None:
         """Set the answer of a quiz submission
@@ -146,10 +142,6 @@ class QuizSubmission:
         c.mutable = dict_["mutable"]
         return c
 
-    async def submit(self, cache: "MathProblemCache") -> True:  # type: ignore
+    async def submit(self, ) -> True:  # type: ignore
 
-        self.mutable = False
-        if self in self.quiz.submissions:
-            raise QuizAlreadySubmitted
-        quiz = await self.cache.get_quiz()
-        return True
+        raise NotImplementedError("This function doesn't do anything!")

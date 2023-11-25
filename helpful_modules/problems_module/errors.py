@@ -37,8 +37,12 @@ class TooManyProblems(MathProblemsModuleException):
 
     pass
 
+class ThingNotFound(KeyError, IndexError, MathProblemsModuleException):
+    """Raised when a thing is not found"""
+    pass
 
-class ProblemNotFound(KeyError, MathProblemsModuleException):
+
+class ProblemNotFound(ThingNotFound):
     """Raised when a problem isn't found"""
 
     pass
@@ -50,7 +54,7 @@ class ProblemNotFoundException(ProblemNotFound):
     pass
 
 
-class ProblemNotWrittenException(MathProblemsModuleException):
+class ProblemNotWrittenException(ThingNotFound):
     """Raised when trying to grade a written problem but the problem is not a written problem"""
 
     pass
@@ -76,25 +80,27 @@ class MySQLException(SQLException, aiomysql.Error):
         self.base_error = base_error
 
 
-class QuizNotFound(MathProblemsModuleException):
+class QuizNotFound(ThingNotFound):
     """Raised when a quiz isn't found"""
 
     pass
 
-
-class IsRowException(MathProblemsModuleException):
+class FormatException(KeyError, MathProblemsModuleException):
+    """Raised when something is not formatted correctly"""
+    pass
+class IsRowException(FormatException):
     """Raised when expecting a dictionary but got a row instead."""
 
     pass
 
 
-class TooMuchUserDataException(MathProblemsModuleException):
+class TooMuchUserDataException(FormatException):
     """Raised when there is too much user data!"""
 
     pass
 
 
-class UserDataNotExistsException(MathProblemsModuleException):
+class UserDataNotExistsException(ThingNotFound):
     """Raised by MathProblemCache.set_user_data when user data does not exist!"""
 
     pass
@@ -110,7 +116,7 @@ class TooManyQuizzesException(MathProblemsModuleException):
         super().__init__(message)
 
 
-class QuizSessionNotFoundException(MathProblemsModuleException):
+class QuizSessionNotFoundException(ThingNotFound):
     """Raised when trying to find quiz sessions but they are not found"""
 
     pass
@@ -122,13 +128,13 @@ class QuizSessionOvertimeException(MathProblemsModuleException):
     pass
 
 
-class QuizDescriptionNotFoundException(MathProblemsModuleException):
+class QuizDescriptionNotFoundException(ThingNotFound):
     """Raised when Quiz Description is not found"""
 
     pass
 
 
-class InvalidDictionaryInDatabaseException(MathProblemsModuleException):
+class InvalidDictionaryInDatabaseException(FormatException):
     """Raised when a dictionary is expected in the database as part of a string data type, but it could not be compiled"""
 
     def __init__(self, msg: str):
@@ -143,3 +149,8 @@ class InvalidDictionaryInDatabaseException(MathProblemsModuleException):
 
 class PMDeprecationWarning(DeprecationWarning):
     """Raised when someone tries to use a feature of the problems module that is deprecated"""
+    pass
+
+class LockedCacheException(RuntimeError):
+    """Raised when an operation is done on a locked RedisCache"""
+    pass

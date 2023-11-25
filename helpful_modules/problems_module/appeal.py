@@ -54,7 +54,7 @@ class Appeal(DictConvertible):
     def to_dict(self) -> dict:
         return {
             "user_id": self.user_id,
-            "appeal_msg": self.appeal_num,
+            "appeal_msg": self.appeal_msg,
             "timestamp": self.timestamp,
             "appeal_num": self.appeal_num,
             "special_id": self.special_id,

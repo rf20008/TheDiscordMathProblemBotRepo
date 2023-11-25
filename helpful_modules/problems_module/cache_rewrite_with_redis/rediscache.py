@@ -2,16 +2,16 @@ import aioredis
 from ..errors import LockedCacheException, ProblemNotFoundException, ThingNotFound, FormatException, InvalidDictionaryInDatabaseException
 from ..dict_convertible import DictConvertible
 from ..base_problem import BaseProblem
-from ..user_data import UserData
+from ..appeal import Appeal, AppealType
 
 import typing
 
 from ...FileDictionaryReader import AsyncFileDict
+
 from ..user_data import UserData
-from .user_data_related_cache import UserDataRelatedCache
 import asyncio
 import orjson
-class ProblemsRelatedRedisCache:
+class RedisCache:
     """A class that is supposed to handle the problems, and have the same API as problems_related_cache"""
     def __init__(self, redis_url: str, password: str):
         self.redis_url = redis_url
@@ -220,7 +220,6 @@ class ProblemsRelatedRedisCache:
                 command_name
             )
 
-        await self.update_cache()
         if "trusted" in permissions_required.keys():
             if (
                     await self.get_user_data(
@@ -247,7 +246,7 @@ class ProblemsRelatedRedisCache:
                 pass
 
         return True
-
+    async def add_appeal(self, appeal: Appeal):
 # TODO: the appeals_related_cache, guild_data_related_cache, final_cache
 # TODO: fix the rest of the commands such that this cache can work
 # TODO: get a redis server

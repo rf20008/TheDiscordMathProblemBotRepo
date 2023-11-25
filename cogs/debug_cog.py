@@ -12,6 +12,7 @@ from helpful_modules import checks, problems_module
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules.custom_embeds import ErrorEmbed, SimpleEmbed, SuccessEmbed
 from helpful_modules.threads_or_useful_funcs import get_log
+from helpful_modules.problems_module.cache_rewrite_with_redis import RedisCache
 from .helper_cog import HelperCog
 from .interesting_computation_ import InterestingComputationCog
 
@@ -192,3 +193,49 @@ stderr: ```{new_stderr.getvalue()} ```"""
         new_stdout.close()
         new_stderr.close()
         return
+
+    @commands.is_owner()
+    @checks.trusted_users_only()
+    @commands.slash_command(
+        name = "redis",
+        description = "get redis queries. HOWEVER THIS IS RESTRICTED TO OWNERS ONLY",
+        options = [
+            disnake.Option(
+                name="key",
+                description="the key",
+                type=disnake.OptionType.string,
+                required=True
+            ),
+            disnake.Option(
+                name="value",
+                description = "the value",
+                type=disnake.OptionType.string,
+                required=False
+            )
+        ]
+    )
+    async def redis(self, inter: disnake.ApplicationCommandInteraction, key: str, value: str | None = None):
+        """
+        Like the eval and sql command, this command is restricted to owners
+        Parameters: key: str: the key we want to view or modify
+        value: str. This is an optional parameter. If not specified, it will just tell you what is stored at value
+
+        Parameters
+        ----------
+        :param inter: the interaction
+        :param key: the key
+        :param value: the value [not required]
+
+        Returns
+        -------
+        It doesn't actually return anything as a function, but it does the things.
+
+        """
+        if not await self.cog_slash_command_check(inter):
+            await inter.send("You do not own me. This command is restricted to **owners only**")
+            return
+        if not await self.bot.is_owner(inter.author):
+            return await inter.send("This command is restricted to owners only, but you are not an owner")
+        if not isinstance(self.bot.cache, RedisCache):
+            raise RuntimeError("/redis is not supported if the cache is not a RedisCache")
+        raise NotImplementedError("This isn't implemented yet")

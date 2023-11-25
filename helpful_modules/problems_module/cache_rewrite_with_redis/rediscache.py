@@ -1,4 +1,5 @@
-import aioredis
+from redis import asyncio as aioredis # type: ignore
+
 from ..errors import LockedCacheException, ProblemNotFoundException, ThingNotFound, FormatException, InvalidDictionaryInDatabaseException
 from ..dict_convertible import DictConvertible
 from ..base_problem import BaseProblem
@@ -246,7 +247,23 @@ class RedisCache:
                 pass
 
         return True
-    async def add_appeal(self, appeal: Appeal):
-# TODO: the appeals_related_cache, guild_data_related_cache, final_cache
+    async def get_appeal(self, user_id: int, default: Appeal | None = None) -> Appeal | None:
+        result = await self.get_key(f"Appeal:{user_id}")
+        if result is not None:
+            try:
+                return Appeal.from_dict(orjson.loads(result))
+            except orjson.JSONDecodeError:
+                raise InvalidDictionaryInDatabaseException("We have a non-dictionary on our hands")
+            except FormatException as fe:
+                raise FormatException("Oh no, the formatting is bad") from fe
+        if default is not None:
+            return default
+        raise ThingNotFound("I could not find any appeal")
+    async def add_appeal(self, thing: Appeal):
+        await self.set_key(f"Appeal:{thing.user_id}", thing.to_dict())
+    async def remove_appeal(self, thing: Appeal):
+        await self.del_key(f"Appeal:{thing.user_id}")
+# TODO: the guild_data_related_cache, final_cache
+# TODO: the remove_all_my_data and the get_all_data operations
 # TODO: fix the rest of the commands such that this cache can work
 # TODO: get a redis server

@@ -4,6 +4,7 @@ This code is licensed under the GNU GPLv3 :)
 """
 import warnings
 
+
 class UserData:
     """A dataclass to store user data for the bot!"""
 
@@ -22,7 +23,7 @@ class UserData:
         self.blacklisted = blacklisted
 
     @classmethod
-    def from_dict(cls, dict: dict) -> "UserData":
+    def from_dict(cls, dict: dict) -> "UserData":  # type: ignore
         """Get UserData from a dictionary"""
         return cls(
             user_id=dict["user_id"],
@@ -42,3 +43,7 @@ class UserData:
         """Add myself to a cache. Can't typehint because circular imports."""
         warnings.warn("This method is being deprecated", stacklevel=-1, category=DeprecationWarning)
         return await cache.add_user_data(self)
+
+    @classmethod
+    def default(cls, user_id: int):
+        return cls(user_id=user_id, trusted=False, blacklisted=False)

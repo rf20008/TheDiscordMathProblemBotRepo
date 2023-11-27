@@ -1,5 +1,5 @@
 python-dotenv>=0.19.1
-aioredis>=2.0.0a1
+redis>=5.0.1
 mysql-connector-python>=8.0.27
 aiohttp>=3.8
 pre-commit

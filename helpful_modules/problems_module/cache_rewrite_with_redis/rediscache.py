@@ -1,25 +1,34 @@
-from redis import asyncio as aioredis # type: ignore
-
-from ..errors import LockedCacheException, ProblemNotFoundException, ThingNotFound, FormatException, InvalidDictionaryInDatabaseException
-from ..dict_convertible import DictConvertible
-from ..base_problem import BaseProblem
-from ..appeal import Appeal, AppealType
-
+import asyncio
 import typing
 
+import orjson
+from redis import asyncio as aioredis  # type: ignore
+from ..quizzes import Quiz
+from ..GuildData import GuildData
+from ..appeal import Appeal
+from ..base_problem import BaseProblem
+from ..dict_convertible import DictConvertible
+from ..errors import LockedCacheException, ProblemNotFoundException, ThingNotFound, FormatException, \
+    InvalidDictionaryInDatabaseException
+from ..user_data import UserData
 from ...FileDictionaryReader import AsyncFileDict
 
-from ..user_data import UserData
-import asyncio
-import orjson
+
 class RedisCache:
     """A class that is supposed to handle the problems, and have the same API as problems_related_cache"""
+
     def __init__(self, redis_url: str, password: str):
         self.redis_url = redis_url
         self.password = password
-        self.redis = aioredis.from_url(redis_url, encoding = "utf-8", decode_responses=True, password=password)
+        self.redis = aioredis.from_url(
+            redis_url,
+            encoding="utf-8",
+            decode_responses=True,
+            password=password
+        )
         self.lock = asyncio.Lock()
         self._async_file_dict = AsyncFileDict("config.json")
+
     @property
     def is_locked(self):
         """Return whether the cache is locked"""
@@ -29,7 +38,8 @@ class RedisCache:
         """Return the value with key thing
         Time complexity: O(1)"""
         return await self.redis.hget(thing)
-    async def set_key(self, key: str, value: str):
+
+    async def set_key(self, key: str, value: str | dict):
         """Set the thing at key to value.
         Time complexity: O(1)
         :param key: the key
@@ -38,13 +48,15 @@ class RedisCache:
         :raises LockedCacheException: If the cache is locked"""
         if self.is_locked:
             raise LockedCacheException("The cache is currently locked!")
-        await self.redis.hset(key, value)
+        await self.redis.hset(key, str(value))
+
     async def del_key(self, key: str):
         """Delete the key associated with key:
         Time complexity: O(1)"""
         if self.is_locked:
             raise LockedCacheException("The cache is currently locked")
         await self.redis.hdel(key)
+
     async def get_problem(self, guild_id: int, problem_id: int) -> BaseProblem:
         """Attempt to return the problem with guild_id and problem_id =problem_id
         Time complexity: O(1)"""
@@ -57,20 +69,24 @@ class RedisCache:
         if result is not None:
             return BaseProblem.from_dict(orjson.loads(result))
         raise ProblemNotFoundException("That problem is not found")
+
     async def get_all_problems(self):
         """Return a list of all problems!
         Time complexity: O(N)"""
         return list(map(BaseProblem.from_dict, await self.redis.hgetall("BaseProblem").values()))
+
     async def get_all_problems_by_guild(self, guild_id: int | None):
         """return a list of all problems with the guild id = id
         Time complexity: O(N)"""
         return list(map(BaseProblem.from_dict, await self.redis.hgetall(f"BaseProblem:{guild_id}").values()))
+
     async def get_all_problems_by_func(self, func):
         """Return a list of all problems that satisfy the function.
         It is actually implemented as filter(func, await self.get_all_problems())
         Time complexity: O(N + sumF(P) over all problems) where F(P) is the big O runtime
         of calling func on a problem P"""
         return filter(func, await self.get_all_problems())
+
     async def get_global_problems(self):
         """
         Return a list of all global problems.
@@ -101,7 +117,7 @@ class RedisCache:
         if problem.id != problem_id:
             raise ValueError("Ids do not match")
 
-        await self.set_key(f"BaseProblem:{problem.guild_id}:{problem_id}", problem.to_dict(show_answer=True))
+        await self.set_key(f"BaseProblem:{problem.guild_id}:{problem_id}", str(problem.to_dict(show_answer=True)))
 
     async def update_problem(self, problem_id: int, problem: BaseProblem):
         """
@@ -127,14 +143,20 @@ class RedisCache:
 
     # Additional methods for quizzes
 
-    async def add_quiz(self, quiz_id: int, quiz_data: dict):
+    async def add_quiz_dict(self, quiz_id: int, quiz_data: dict):
         """
         Add a quiz to the cache.
 
         :param quiz_id: The ID of the quiz.
         :param quiz_data: The data associated with the quiz.
         """
-        await self.set_key(f"Quiz:{quiz_id}", orjson.dumps(quiz_data))
+        await self.set_key(f"Quiz:{quiz_id}", quiz_data)
+        # TODO: fix the type bug
+
+    async def add_quiz(self, quiz_id: int, quiz: Quiz):
+        """Add a quiz to the dict"""
+        assert quiz_id == quiz.id
+        return await self.add_quiz_dict(quiz.id, quiz.to_dict())
 
     async def get_quiz(self, quiz_id: int) -> dict:
         """
@@ -156,10 +178,27 @@ class RedisCache:
         :param quiz_id: The ID of the quiz.
         """
         await self.del_key(f"Quiz:{quiz_id}")
+
     async def add_thing(self, thing: DictConvertible):
-        await self.set_key(f"{thing.__class__.__name__}:{thing.guild_id}:{thing.id}", thing.to_dict())
+        """
+        Adds a dictionary convertible object to the cache.
+
+        :param thing: The object to add to the cache.
+        :type thing: DictConvertible
+        :return: Nothing.
+        """
+        await self.set_key(f"{thing.__class__.__name__}:{thing.guild_id}:{thing.id}", thing.to_dict())  # type: ignore
+
     async def remove_thing(self, thing: DictConvertible):
-        await self.del_key(f"{thing.__class__.__name__}:{thing.guild_id}:{thing.id}")
+        """
+        Removes a dictionary convertible object from the cache.
+
+        :param thing: The object to remove from the cache.
+        :type thing: DictConvertible
+        :return: Nothing.
+        """
+        await self.del_key(f"{thing.__class__.__name__}:{thing.guild_id}:{thing.id}")  # type: ignore
+
     async def get_thing(
             self,
             thing_guild_id: int,
@@ -167,12 +206,27 @@ class RedisCache:
             cls: typing.Type[DictConvertible],
             default: DictConvertible | None = None
     ):
+        """
+            Retrieves a dictionary convertible object from the cache.
+
+            :param thing_guild_id: The guild ID associated with the object.
+            :type thing_guild_id: int
+            :param thing_id: The ID of the object.
+            :type thing_id: int
+            :param cls: The type of the dictionary convertible object.
+            :type cls: typing.Type[DictConvertible]
+            :param default: The default value to return if the object is not found.
+            :type default: DictConvertible or None
+            :return: The retrieved object.
+            :rtype: DictConvertible
+            :raises ThingNotFound: If the object is not found.
+            """
         result = await self.get_key(f"{cls.__name__}:{thing_guild_id}:{thing_id}")
         if result is not None:
             try:
                 return await cls.from_dict(orjson.loads(result))
             except FormatException as fe:
-                fe.args[0]+="There was a problem with the format of the exception"
+                fe.args[0] += "There was a problem with the format of the exception"
                 raise fe
             except KeyError as ke:
                 raise FormatException("Oh no, the formatting is bad!") from ke
@@ -183,6 +237,7 @@ class RedisCache:
         if default is not None:
             return default
         raise ThingNotFound("The thing is not found!")
+
     async def get_user_data(self, user_id: int, default: UserData | None = None):
         result = await self.get_key(f"UserData:{user_id}")
         if result is not None:
@@ -195,17 +250,22 @@ class RedisCache:
         if default is not None:
             return default
         raise ThingNotFound("I could not find any user data")
+
     async def add_user_data(self, thing: UserData):
-        await self.set_key(f"UserData:{thing.user_id}", thing.to_dict())
+        await self.set_key(f"UserData:{thing.user_id}", str(thing.to_dict()))
+
     async def remove_user_data(self, thing: UserData):
         await self.del_key(f"UserData:{thing.user_id}")
-
-
-
 
     async def get_permissions_required_for_command(
             self, command_name
     ) -> typing.Dict[str, bool]:
+        """
+        Get the permissions required for a command.
+
+        :param command_name: The name of the command.
+        :return: A dictionary of permissions required for the command.
+        """
         await self._async_file_dict.read_from_file()
         return self._async_file_dict.dict["permissions_required"][command_name]
 
@@ -215,7 +275,14 @@ class RedisCache:
             permissions_required: typing.Optional[typing.Dict[str, bool]] = None,
             command_name: str | None = None
     ) -> bool:
-        """Return whether the user meets permissions required to use the command"""
+        """
+        Return whether the user meets permissions required to use the command.
+
+        :param user_id: The ID of the user.
+        :param permissions_required: Optional permissions required for the command.
+        :param command_name: Optional name of the command.
+        :return: True if the user meets permissions, False otherwise.
+        """
         if permissions_required is None:
             permissions_required = await self.get_permissions_required_for_command(
                 command_name
@@ -238,15 +305,12 @@ class RedisCache:
                     )
             ).blacklisted != permissions_required["blacklisted"]:
                 return False
+        user_data = await self.get_user_data(user_id)
+        return all(
+            getattr(user_data, key) != val
+            for key, val in permissions_required.items()
+        )
 
-        for key, val in permissions_required.items():
-            try:
-                if self.cached_user_data[user_id].to_dict()[key] != val:
-                    return False
-            except KeyError:
-                pass
-
-        return True
     async def get_appeal(self, user_id: int, default: Appeal | None = None) -> Appeal | None:
         result = await self.get_key(f"Appeal:{user_id}")
         if result is not None:
@@ -259,11 +323,84 @@ class RedisCache:
         if default is not None:
             return default
         raise ThingNotFound("I could not find any appeal")
+
     async def add_appeal(self, thing: Appeal):
         await self.set_key(f"Appeal:{thing.user_id}", thing.to_dict())
+
     async def remove_appeal(self, thing: Appeal):
+
         await self.del_key(f"Appeal:{thing.user_id}")
-# TODO: the guild_data_related_cache, final_cache
+
+    async def update_cache(self):
+        """
+        Deprecated method. Raises NotImplementedError.
+
+        :raises NotImplementedError: This method is deprecated.
+        """
+        raise NotImplementedError("This method is being removed, due to its expensiveness...")
+
+    async def add_guild_data(self, guild_data: GuildData):
+        """
+        Add guild data to the cache.
+
+        :param guild_data: The GuildData instance to add.
+        """
+        await self.set_key(f"GuildData:{guild_data.guild_id}", guild_data.to_dict())
+
+    async def del_guild_data(self, guild_id: int):
+        """
+        Remove guild data from the cache.
+
+        :param guild_id: The ID of the guild.
+        :raises TypeError: If 'guild_id' is not an int.
+        """
+        await self.del_key(f"GuildData:{guild_id}")
+
+    async def get_guild_data(self, guild_id: int, default: GuildData | None = None) -> GuildData:
+        """
+        Get guild data by guild ID.
+
+        :param guild_id: The ID of the guild.
+        :param default: The default GuildData instance to return if not found.
+        :return: The GuildData instance.
+        :raises ThingNotFound: If the guild data is not found.
+        """
+
+        result = await self.get_key(f"GuildData:{guild_id}")
+        if result is not None:
+            try:
+                return Appeal.from_dict(orjson.loads(result))
+            except orjson.JSONDecodeError:
+                raise InvalidDictionaryInDatabaseException("We have a non-dictionary on our hands")
+            except FormatException as fe:
+                raise FormatException("Oh no, the formatting is bad") from fe
+        if default is not None:
+            return default
+        raise ThingNotFound("I could not find any guild_data")
+
+    async def get_all_by_user_data(self, user_id: int) -> list[str]:
+        # get all things
+        things = await self.redis.hgetall(name="")
+        things_authored = []
+        for key, value in things.items():
+            dictionarified = None
+            try:
+                dictionarified = orjson.loads(value)  # type: ignore
+            except orjson.JSONDecodeError:
+                raise FormatException("Something in the redis is not a dictionary..")
+            if dictionarified is None:
+                raise FormatException("No dictionary found")
+            if dictionarified.get("author", None) == user_id:
+                things_authored.append(key)
+                continue
+            elif user_id in dictionarified.get("authors", []):
+                things_authored.append(key)
+                continue
+            elif dictionarified.get("user_id", None) == user_id:
+                things_authored.append(key)
+                continue
+
+        return things
 # TODO: the remove_all_my_data and the get_all_data operations
 # TODO: fix the rest of the commands such that this cache can work
 # TODO: get a redis server

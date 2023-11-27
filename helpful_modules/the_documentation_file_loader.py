@@ -1,5 +1,5 @@
 import json
-
+import warnings
 
 class DocumentationException(Exception):
     def _raise(self):
@@ -16,13 +16,17 @@ class DocumentationFileNotFound(DocumentationNotFound):
 
 class DocumentationFileLoader:
     def __init__(self):
-        pass
-
+        warnings.warn(category=DeprecationWarning, stacklevel=-1,
+                      message="The DocumentationFileLoader is being deprecated")
     def _load_documentation_file(self):
+        warnings.warn(category=DeprecationWarning, stacklevel=-1,
+                      message="The DocumentationFileLoader is being deprecated")
         with open("docs/documentation.json", "r") as file:
             return json.loads("\n".join([str(item) for item in file]))
 
     def load_documentation_into_readable_files(self):
+        warnings.warn(category=DeprecationWarning, stacklevel=-1,
+                      message="The DocumentationFileLoader is being deprecated")
         dictToStoreFileContent = {}
         docs_json = self._load_documentation_file()
         for item in docs_json:

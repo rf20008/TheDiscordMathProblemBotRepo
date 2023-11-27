@@ -378,7 +378,20 @@ class RedisCache:
             return default
         raise ThingNotFound("I could not find any guild_data")
 
-    async def get_all_by_user_data(self, user_id: int) -> list[str]:
+    async def get_all_by_user_id(self, user_id: int) -> list[str]:
+        """
+        Get a list of keys corresponding to things authored by the specified user.
+
+        This method queries all things stored in the Redis database and returns the keys
+        of the items where the provided user_id matches the 'author', 'authors', or 'user_id'
+        field in the stored JSON data.
+
+        :param user_id: The user ID to match against.
+        :type user_id: int
+        :return: A list of keys corresponding to things authored by the specified user.
+        :rtype: List[str]
+        :raises FormatException: If a stored value in Redis is not a valid JSON dictionary.
+        """
         # get all things
         things = await self.redis.hgetall(name="")
         things_authored = []
@@ -400,7 +413,26 @@ class RedisCache:
                 things_authored.append(key)
                 continue
 
-        return things
-# TODO: the remove_all_my_data and the get_all_data operations
+        return things_authored
+    async def del_all_by_user_id(self, user_id: int):
+        """DELETE all things that match the user_id
+        This operation is IRREVERSIBLE!
+        Time complexity: O(N)
+        Params:
+        :param user_id: the user id of the user we need to remove all things of
+        Raises
+        :raises TypeError: if the user_id is not actually an int
+        :raises FormatException: if something in the redis isn't a dict
+
+        Returns
+        nothing"""
+        things_to_remove = await self.get_all_by_user_data(user_id=user_id)
+        async with self.lock:
+            await asyncio.sleep(3.0000)
+            await self.redis.delete(*things_to_remove)
+            await asyncio.sleep(3.0000)
+
+
 # TODO: fix the rest of the commands such that this cache can work
 # TODO: get a redis server
+# TODO: unit tests!

@@ -1,8 +1,10 @@
 import asyncio
 from helpful_modules import threads_or_useful_funcs
 import disnake
+import disnake.ext
 import unittest
 import unittest.mock
+import datetime
 class TestGenerateId(unittest.TestCase):
     def test_id_range(self):
         for i in range(500):
@@ -59,6 +61,10 @@ class TestWraps(unittest.IsolatedAsyncioTestCase):
 
 # TODO: tests for base_on_error
 class TestBaseOnError(unittest.IsolatedAsyncioTestCase):
+    async def setUp(self):
+        bot = unittest.mock.AsyncMock(spec=disnake.ext.commands.Bot)
+        inter = unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction)
+        inter.bot = bot
     async def test_pass_on_non_exceptions(self):
         bot = unittest.mock.AsyncMock(spec=disnake.ext.commands.Bot)
         inter = unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction)
@@ -68,3 +74,18 @@ class TestBaseOnError(unittest.IsolatedAsyncioTestCase):
             inter.bot.close.assert_awaited()
     # TODO: finish
     # TODO: there are so many more tests, that need to be made :)
+    @unittest.mock.patch("disnake.utils.utcnow")
+    async def test_cooldown_errors(self, mock_utcnow):
+        mock_utcnow.return_value = datetime.datetime(year=2000, month=1,day=1,hour=0, minute=0, second=0, microsecond=0)
+        bot = unittest.mock.AsyncMock(spec=disnake.ext.commands.Bot)
+        inter = unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction)
+        inter.bot = bot
+        result = await threads_or_useful_funcs.base_on_error(
+            inter,
+            error=disnake.ext.commands.CommandOnCooldown(retry_after=3.0)
+        )
+        inter.send.assert_not_awaited()
+        # content = f"This command is on cooldown; please retry **{disnake.utils.format_dt(disnake.utils.utcnow() + datetime.timedelta(seconds=error.retry_after), style='R')}**."
+        #return {"content": content, "delete_after": error.retry_after}
+        self.assertEqual(result, {"content": f"This command is on cooldown; please retry **'<t:946702803:R>'**.", "delete_after": 3.0})
+        #return {"content": content, "delete_after": error.retry_after}, "delete_after": 3.0})

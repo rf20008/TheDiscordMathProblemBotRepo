@@ -223,7 +223,6 @@ class MathProblemCache:
         else:
             # Otherwise, use SQL to get the problem!
             async with aiosqlite.connect(self.db_name) as conn:
-
                 try:
                     conn.row_factory = dict_factory  # Make sure the row_factory can be set to dict_factory
                 except BaseException as exc:
@@ -335,7 +334,6 @@ class MathProblemCache:
             raise TypeError("Problem is not a valid MathProblem object.")
         # All the checks passed, hooray! Now let's add the problem.
         async with aiosqlite.connect(self.db_name) as conn:
-
             try:
                 conn.row_factory = (
                     dict_factory  # Make sure the row_factory can be set to dict_factory

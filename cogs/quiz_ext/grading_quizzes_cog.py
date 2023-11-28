@@ -65,7 +65,8 @@ class GradingQuizzesCog(HelperCog):
     ) -> typing.Optional[typing.Union[disnake.InteractionMessage, disnake.Message]]:
         """/quiz_grade view_submission_users
 
-        View the list of users who did the quiz. You must be an author to run this command."""
+        View the list of users who did the quiz. You must be an author to run this command.
+        """
         if not await self.can_grade_quiz(inter, quiz_id):
             return
         users_with_submissions = set()
@@ -129,7 +130,6 @@ class GradingQuizzesCog(HelperCog):
         submission = user_submissions[0]
         qn = 0
         for question_num in range(len(quiz.problems)):
-
             try:
                 question = quiz.problems[question_num]
             except KeyError:

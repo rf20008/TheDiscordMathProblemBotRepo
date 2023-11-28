@@ -5,6 +5,7 @@ from ..errors import MathProblemsModuleException
 from warnings import warn
 from ..dict_convertible import DictConvertible
 
+
 @dataclass
 class QuizSubmissionAnswer:
     """A class that represents an answer for a singular problem. This also has metadata."""
@@ -71,7 +72,9 @@ class QuizSubmission(DictConvertible):
         self.user_id = user_id
         self.quiz_id = quiz_id
         self.mutable = True
-        self.answers = {} # todo: fix the quiz commands to make it a list of QuizSubmissionAnswer(problem_id=quiz_id, guild_id=guild_id
+        self.answers = (
+            {}
+        )  # todo: fix the quiz commands to make it a list of QuizSubmissionAnswer(problem_id=quiz_id, guild_id=guild_id
         # with a number
 
     @property
@@ -142,6 +145,7 @@ class QuizSubmission(DictConvertible):
         c.mutable = dict_["mutable"]
         return c
 
-    async def submit(self, ) -> True:  # type: ignore
-
+    async def submit(
+        self,
+    ) -> True:  # type: ignore
         raise NotImplementedError("This function doesn't do anything!")

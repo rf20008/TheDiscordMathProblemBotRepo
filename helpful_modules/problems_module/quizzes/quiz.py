@@ -9,7 +9,10 @@ from .quiz_submissions import QuizSubmission
 from .QuizSolvingSession import QuizSolvingSession
 from .related_enums import QuizIntensity, QuizTimeLimit
 from ..errors import *
-MAX_PROBLEMS_PER_QUIZ = 100 # todo: lower it - character limits
+
+MAX_PROBLEMS_PER_QUIZ = 100  # todo: lower it - character limits
+
+
 class Quiz(list, DictConvertible):
     """Represents a quiz.
     but it has an additional attribute submissions which is a list of QuizSubmissions"""
@@ -20,7 +23,7 @@ class Quiz(list, DictConvertible):
         authors: List[int],
         quiz_problems: List[QuizProblem],
         category: QuizIntensity = None,
-        description: QuizDescription=None,
+        description: QuizDescription = None,
     ) -> None:
         super().__init__()
         """Create a new quiz. id is the quiz id and iter is an iterable of QuizMathProblems"""
@@ -42,9 +45,11 @@ class Quiz(list, DictConvertible):
         automatically update the cache -- you have to do it yourself.
         Time complexity: O(1)
         :param submission: the submission
-        :raises NotImplementedError: This function is deliberately left unimplemented - add submissions yourself"""
-        raise NotImplementedError("This function is deliberately left unimplemented - add submissions yourself")
-
+        :raises NotImplementedError: This function is deliberately left unimplemented - add submissions yourself
+        """
+        raise NotImplementedError(
+            "This function is deliberately left unimplemented - add submissions yourself"
+        )
 
     def add_problem(
         self, problem: QuizProblem, insert_location: typing.Optional[int] = None
@@ -55,7 +60,6 @@ class Quiz(list, DictConvertible):
                 f"""There is already the maximum number of problems on this quiz. Therefore, adding a new problem is prohibited... 
             Because this is a FOSS bot, there is no premium version and thus no way to increase the number of problems you can have on a quiz!
             If you want to increase it, you can, if you self-host this bot :)"""
-
             )
         if insert_location is None:
             insert_location = len(self.problems) - 1
@@ -68,7 +72,9 @@ class Quiz(list, DictConvertible):
 
     @property
     def submissions(self):
-        raise AttributeError("This property is being removed! Please use redis to get them...")
+        raise AttributeError(
+            "This property is being removed! Please use redis to get them..."
+        )
 
     @property
     def id(self):
@@ -95,7 +101,7 @@ class Quiz(list, DictConvertible):
             quiz_problems=problems_as_type,
             id=_dict["id"],
             description=description,
-            authors=authors
+            authors=authors,
         )  # type: ignore
         c.description = description
         c._submissions = submissions
@@ -111,12 +117,13 @@ class Quiz(list, DictConvertible):
             "submissions": submissions,
             "id": self._id,
             "description": self.description.to_dict(),
-            "authors": self.authors
+            "authors": self.authors,
         }
 
     async def update_self(self):
         """Update myself!"""
         raise NotImplementedError("Please update this cache yourself!")
+
     @classmethod
     def from_data(
         cls,

@@ -156,7 +156,8 @@ class ViewingQuizzesCog(HelperCog):
         show_all_data: Whether to show all data. You must have either solved the quiz (and the quiz owner has to enable quiz solvers seeing the quiz, which is not implemented yet), or you need to be a moderator, or you need to be a trusted user.
 
 
-        View the entire quiz. Due to Discord limitations, it will be sent in multiple embeds and multiple messages, which might trigger spam filters."""
+        View the entire quiz. Due to Discord limitations, it will be sent in multiple embeds and multiple messages, which might trigger spam filters.
+        """
         await inter.response.defer()
         if raw and not show_all_info:
             await inter.send(
@@ -381,7 +382,6 @@ class ViewingQuizzesCog(HelperCog):
             return
 
         if raw is False and show_all_info is False:
-
             session = await get_quiz_submission(self, inter.author.id, quiz_id)
             if session.done:
                 await inter.send("Your session is done!")

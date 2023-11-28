@@ -214,7 +214,8 @@ class ProblemsCog(HelperCog):
         If show_all_data is set to true, you must have trusted user permissions or have the administrator permission in the guild! Otherwise, the bot will tell you can't do that.
         The option `raw` is whether to show the problem as a string-ified version of a Python dictionary. Otherwise, it will be shown in a user-friendly manner. This defaults to False.
         The option `is_guild_problem` tells the bot about whether the problem you're trying to show is a guild problem. This defaults to false, which means you are viewing a global problems unless you specify otherwise.
-        **If you execute this in a DM, the bot will treat it like you set is_guild_problem to False regardless of what you put in for the option!**"""
+        **If you execute this in a DM, the bot will treat it like you set is_guild_problem to False regardless of what you put in for the option!**
+        """
         if inter.guild is None:
             # return await inter.send(embed=ErrorEmbed(
             #    "If you're running this command in a DM, I won't know what guild you're trying to run the command in!"
@@ -299,7 +300,8 @@ class ProblemsCog(HelperCog):
     )
     async def list_all_problem_ids(self, inter, show_only_guild_problems=False):
         """/list_all_problem_ids [show_only_guild_problems: bool = false]
-        List all problem ids. If show_only_guild_problems is true, then only ids of guild problems will be shown. Otherwise, only problem ids of problems that are global will be shown."""
+        List all problem ids. If show_only_guild_problems is true, then only ids of guild problems will be shown. Otherwise, only problem ids of problems that are global will be shown.
+        """
         if show_only_guild_problems:
             guild_id = inter.guild.id
             if guild_id is None:
@@ -495,7 +497,8 @@ class ProblemsCog(HelperCog):
     ) -> None:
         """/submit_problem {question:str}, {answer:str}, [guild_question:bool=false]
         Create & submit a new problem with the given question and answer.
-        If the problem is a guild problem, it must not be executed in a DM context or the bot will not know which guild the problem is for!"""
+        If the problem is a guild problem, it must not be executed in a DM context or the bot will not know which guild the problem is for!
+        """
         if (
             len(question) > self.cache.max_question_length
         ):  # Check to make sure it's not too long!
@@ -567,7 +570,6 @@ class ProblemsCog(HelperCog):
             return  # Exit the function
 
         while True:
-
             problem_id = generate_new_id()
             if problem_id not in [
                 problem.id
@@ -723,7 +725,8 @@ class ProblemsCog(HelperCog):
     ):
         """/check_answer {problem_id: int} {answer: str} [checking_guild_problem: bool = false]
         Check your answer to the problem with the given id.
-        If this command is executed in a DM, then you must set checking_guild_problem to False or the bot will error."""
+        If this command is executed in a DM, then you must set checking_guild_problem to False or the bot will error.
+        """
         if not inter.guild or not hasattr(inter.guild, "id"):
             if checking_guild_problem:
                 return await inter.send(
@@ -802,7 +805,8 @@ class ProblemsCog(HelperCog):
         if is_guild_problem is true, then the bot looks for the problem with the given problem id and guild id, and makes you vote for it.
         Otherwise, the bot looks for the global problem with given problem id (the guild id is None).
         There is a 5-second cooldown on this command, to prevent spam.
-        The data about you voting is not private; it will be given to people who created/solved/voted for problems and use /user_data get_data"""
+        The data about you voting is not private; it will be given to people who created/solved/voted for problems and use /user_data get_data
+        """
         try:
             problem = await self.bot.cache.get_problem(
                 inter.guild.id
@@ -935,7 +939,8 @@ class ProblemsCog(HelperCog):
         """/delete_problem (problem_id: int)
         Delete a problem. You must either have the Administrator permission in the guild, and the problem must be a guild problem, or be a trusted user.
 
-        You do not need to specify whether the problem is a guild problem, as the bot can figure it out."""
+        You do not need to specify whether the problem is a guild problem, as the bot can figure it out.
+        """
         if inter.guild is not None:
             guild_id = inter.guild.id
         else:

@@ -200,7 +200,8 @@ class MiscCommandsCog(HelperCog):
         self, inter: disnake.ApplicationCommandInteraction
     ):
         """/what_is_vote_threshold
-        Returns the vote threshold. Takes no arguments. There is a 5-second cooldown on this command."""
+        Returns the vote threshold. Takes no arguments. There is a 5-second cooldown on this command.
+        """
         await inter.send(
             embed=SuccessEmbed(f"The vote threshold is {self.bot.vote_threshold}."),
             ephemeral=True,
@@ -596,7 +597,8 @@ class MiscCommandsCog(HelperCog):
 
         Submit a request! I will know! It uses a channel in my discord server and posts an embed.
         I will probably deprecate this and replace it with emailing me.
-        Therefore, this command has been deprecated and will be removed in a future version of the bot!"""
+        Therefore, this command has been deprecated and will be removed in a future version of the bot!
+        """
         if (
             extra_info is None
             and type == ""

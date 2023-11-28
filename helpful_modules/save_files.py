@@ -14,7 +14,6 @@ class FileSaver:
         enabled=False,
         printSuccessMessagesByDefault=False,
     ):
-
         """Creates a new FileSaver object."""
         global numFileSavers
         numFileSavers += 1

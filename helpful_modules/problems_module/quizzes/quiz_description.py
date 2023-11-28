@@ -55,9 +55,11 @@ class QuizDescription(DictConvertible):
             )
         except KeyError as ke:
             raise FormatException("Bad formatting!") from ke
+
     @property
     def id(self):
         return self.quiz_id + self.author
+
     def to_dict(self):
         return {
             "author": self.author,
@@ -67,6 +69,5 @@ class QuizDescription(DictConvertible):
             "description": self.description,
             "license": self.license,
             "time_limit": self.license,
-            "guild_id": self.guild_id
-
+            "guild_id": self.guild_id,
         }

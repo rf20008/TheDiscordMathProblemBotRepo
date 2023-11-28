@@ -429,7 +429,8 @@ class ModifyingQuizzesCog(HelperCog):
         """/quiz_edit modify_description [quiz_id: int] [new_description: str] [time_limit: int] [difficulty:IMPOSSIBLE|ONLY_GENIUSES_CAN_SOLVE_THIS|EXTREMELY_CHALLENGING|EXTREMELY_HARD|VERY_HARD|CHALLENGING|HARD|MEDIUM_HARD|MEDIUM|BETWEEN_EASY_AND_MEDIUM|EASY|VERY_EASY|VERY_VERY_EASY|TRIVIAL|CUSTOM|TOO_EASY] [solvers_can_view_quiz: bool]'
         Modify the description of a quiz
 
-        If you set difficulty to -1, it will send a modal asking you to clarify (which you'll have 30 seconds to answer"""
+        If you set difficulty to -1, it will send a modal asking you to clarify (which you'll have 30 seconds to answer
+        """
         difficulty = int(difficulty)
         # Make sure the quiz exists
         try:

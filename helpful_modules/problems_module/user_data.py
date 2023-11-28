@@ -41,7 +41,11 @@ class UserData:
 
     async def add_to_cache(self, cache):
         """Add myself to a cache. Can't typehint because circular imports."""
-        warnings.warn("This method is being deprecated", stacklevel=-1, category=DeprecationWarning)
+        warnings.warn(
+            "This method is being deprecated",
+            stacklevel=-1,
+            category=DeprecationWarning,
+        )
         return await cache.add_user_data(self)
 
     @classmethod

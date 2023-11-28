@@ -121,7 +121,6 @@ async def base_on_error(
             title="Oh, no! An error occurred!",
         )
     except (TypeError, NameError) as e:
-
         # send as plain text
         plain_text = (
             """Oh no! An Exception occurred! And it couldn't be sent as an embed!```"""

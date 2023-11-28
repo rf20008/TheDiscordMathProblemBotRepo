@@ -126,7 +126,8 @@ class GuildConfigCog(HelperCog):
     ):
         """/guild_config remove_a_required_permission [permission: str]
         Remove a required permission from the list of required permissions to meet the mod check!
-        Warning: If you remove all required permissions, then ANYBODY can act as a moderator in your server in regards to this bot!"""
+        Warning: If you remove all required permissions, then ANYBODY can act as a moderator in your server in regards to this bot!
+        """
         data = await self.cache.get_guild_data(
             inter.guild_id, default=problems_module.GuildData.default(inter.guild_id)
         )
@@ -161,7 +162,8 @@ class GuildConfigCog(HelperCog):
     )
     async def remove_whitelisted_user(self, inter: GuildCommandInteraction, user: User):
         """/guild_config modify_mod_check remove_whitelisted_user [user: User]
-        Remove a whitelisted user from the list of whitelisted users for the mod check. This will work even if the user is not whitelisted"""
+        Remove a whitelisted user from the list of whitelisted users for the mod check. This will work even if the user is not whitelisted
+        """
         # I have no way of telling whether the user is in the server - because I don't have the members intent
         # This doesn't seem like a valid reason that Discord would give me this intent
         # so I have to work around it
@@ -185,7 +187,8 @@ class GuildConfigCog(HelperCog):
     )
     async def add_blacklisted_user(self, inter: GuildCommandInteraction, user: User):
         """/guild_config modify_mod_check add_blacklisted_user [user: User]
-        Add a blacklisted user to the mod check, which prevents this user from interacting as a mod with this bot, even if they meet all other requirements"""  # noqa: E401
+        Add a blacklisted user to the mod check, which prevents this user from interacting as a mod with this bot, even if they meet all other requirements
+        """  # noqa: E401
 
         data = await self.cache.get_guild_data(
             inter.guild_id,
@@ -202,7 +205,8 @@ class GuildConfigCog(HelperCog):
     )
     async def remove_blacklisted_user(self, inter: GuildCommandInteraction, user: User):
         """/guild_config modify_mod_check remove_blacklisted_user [user: User]
-        Attempt to remove a blacklisted user from the list of blacklisted users, and don't do anything if the user is not blacklisted"""
+        Attempt to remove a blacklisted user from the list of blacklisted users, and don't do anything if the user is not blacklisted
+        """
         data = await self.cache.get_guild_data(
             inter.guild_id, default=problems_module.GuildData.default()
         )

@@ -26,7 +26,6 @@ slash = None
 
 class DeveloperCommands(HelperCog):
     def __init__(self, bot: TheDiscordMathProblemBot):
-
         super().__init__(bot)
         self.bot: TheDiscordMathProblemBot = bot
         # checks = self.checks
@@ -139,7 +138,8 @@ class DeveloperCommands(HelperCog):
         """/raise_error {error_type: str|Exception} [error_description: str = None]
         This command raises an error (of type error_type) that has the description of the error_description.
         You must be a trusted user and the bot owner to run this command!
-        The purpose of this command is to test the bot's on_slash_command_error event!"""
+        The purpose of this command is to test the bot's on_slash_command_error event!
+        """
         # if (
         #        inter.author.id not in self.bot.trusted_users
         # ):  # Check that the user is a trusted user

@@ -18,7 +18,10 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 
 from typing import Protocol, TypeVar, Dict
 from .errors import FormatException
-T = TypeVar('T')
+
+T = TypeVar("T")
+
+
 class DictConvertible(Protocol):
     """
     A protocol for types that can be converted to and from dictionaries.

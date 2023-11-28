@@ -172,7 +172,8 @@ class GeneralizedTable:
     async def set_items(self, column_name_map: Dict[str, object]):
         """Set the items in the sql query to what is given. Over here it is okay if the user controls part of the data being sent, but not the column names.
         This is O(NC+Q) where C is the number of column names and N is the size of the dictionary given and Q is the time it takes to execute the query
-        Warning: If the table is not initialized, this will not actually change the database!"""
+        Warning: If the table is not initialized, this will not actually change the database!
+        """
         sql_query = ""
         for key, _ in column_name_map.items():
             if key not in self.column_names:

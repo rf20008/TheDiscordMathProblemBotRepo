@@ -127,7 +127,8 @@ class SuggestionCog(HelperCog):
         self, inter: disnake.ApplicationCommandInteraction, suggestion: str
     ) -> Optional[disnake.Message]:
         """/suggest [suggestion: str]
-        Make a suggestion. The suggestion must be shorter than 5451 characters (due to character limitations)."""
+        Make a suggestion. The suggestion must be shorter than 5451 characters (due to character limitations).
+        """
         if len(suggestion) > 5450:
             return await inter.send("Your suggestion is too long.")
         if not self.is_ready:

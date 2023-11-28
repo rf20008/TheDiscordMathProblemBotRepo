@@ -319,7 +319,9 @@ class ProblemsRelatedCache:
                 raise MathProblemsModuleException(
                     "Problem already exists! Use update_problem instead"
                 )
-        except ProblemNotFound:  # an exception raised when the problem does not exist! That means we're good to add the problem!
+        except (
+            ProblemNotFound
+        ):  # an exception raised when the problem does not exist! That means we're good to add the problem!
             pass
         if (
             self.update_cache_by_default_when_requesting
@@ -345,7 +347,6 @@ class ProblemsRelatedCache:
         # All the checks passed, hooray! Now let's add the problem.
         if self.use_sqlite:
             async with aiosqlite.connect(self.db_name) as conn:
-
                 try:
                     conn.row_factory = dict_factory  # Make sure the row_factory can be set to dict_factory
                 except BaseException as exc:

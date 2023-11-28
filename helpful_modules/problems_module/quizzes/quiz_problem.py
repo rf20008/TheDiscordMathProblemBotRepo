@@ -4,6 +4,7 @@ from helpful_modules.problems_module import BaseProblem
 import traceback, sys
 from ..dict_convertible import DictConvertible
 
+
 class QuizProblem(BaseProblem, DictConvertible):
     """A class that represents a Quiz Math Problem"""
 

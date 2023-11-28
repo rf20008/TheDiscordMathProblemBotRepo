@@ -11,6 +11,7 @@ MAX_NUM = 1
 for i in range(30):
     MAX_NUM *= 10
 
+
 # MAX_NUM should equal 10^30
 def setup(_bot):
     global bot
@@ -138,7 +139,8 @@ def has_privileges(**privileges_required):
     Right now, the only privileges that can be checked are:
         -`trusted`,
         -`blacklisted`
-    As this is the internal API of my bot, this may change at any time; don't rely on it :-)"""
+    As this is the internal API of my bot, this may change at any time; don't rely on it :-)
+    """
 
     async def predicate(inter: disnake.ApplicationCommandInteraction):
         """The actual check"""

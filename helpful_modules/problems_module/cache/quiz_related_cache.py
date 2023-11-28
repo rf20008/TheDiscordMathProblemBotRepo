@@ -327,7 +327,6 @@ class QuizRelatedCache(ProblemsRelatedCache):
         except QuizNotFound:
             pass
         if self.use_sqlite:
-
             async with aiosqlite.connect(self.db_name) as conn:
                 try:
                     conn.row_factory = dict_factory  # Make sure the row_factory can be set to dict_factory
@@ -586,7 +585,6 @@ class QuizRelatedCache(ProblemsRelatedCache):
 
         if self.use_sqlite:
             async with aiosqlite.connect(self.db_name) as conn:
-
                 cursor = await conn.cursor()
                 await cursor.execute(
                     """UPDATE quiz_description
@@ -719,7 +717,8 @@ class QuizRelatedCache(ProblemsRelatedCache):
     ) -> typing.List[Quiz]:
         """Get the quizzes that match the function.
         Function is a function that takes in the quiz, and the provided arguments and keyword arguments.
-        Return something True-like to signify you want the quiz in the list, and False-like to signify you don't."""
+        Return something True-like to signify you want the quiz in the list, and False-like to signify you don't.
+        """
         if args is None:
             args = []
         if kwargs is None:

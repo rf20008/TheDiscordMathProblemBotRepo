@@ -207,7 +207,8 @@ class CreatingQuizzesCommandsCog(HelperCog):
 
         There is currently a bug. Don't use this because there is a bug that makes the quiz not actually be created because there are no problems.
 
-        This command has been deprecated and will be removed in v1 in favor of /create with_existing_problem."""
+        This command has been deprecated and will be removed in v1 in favor of /create with_existing_problem.
+        """
 
         # TODO: only some people can create quizzes
         warnings.warn("This command has been deprecated", DeprecationWarning)

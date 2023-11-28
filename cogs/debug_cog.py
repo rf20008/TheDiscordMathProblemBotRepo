@@ -197,24 +197,29 @@ stderr: ```{new_stderr.getvalue()} ```"""
     @commands.is_owner()
     @checks.trusted_users_only()
     @commands.slash_command(
-        name = "redis",
-        description = "get redis queries. HOWEVER THIS IS RESTRICTED TO OWNERS ONLY",
-        options = [
+        name="redis",
+        description="get redis queries. HOWEVER THIS IS RESTRICTED TO OWNERS ONLY",
+        options=[
             disnake.Option(
                 name="key",
                 description="the key",
                 type=disnake.OptionType.string,
-                required=True
+                required=True,
             ),
             disnake.Option(
                 name="value",
-                description = "the value",
+                description="the value",
                 type=disnake.OptionType.string,
-                required=False
-            )
-        ]
+                required=False,
+            ),
+        ],
     )
-    async def redis(self, inter: disnake.ApplicationCommandInteraction, key: str, value: str | None = None):
+    async def redis(
+        self,
+        inter: disnake.ApplicationCommandInteraction,
+        key: str,
+        value: str | None = None,
+    ):
         """
         Like the eval and sql command, this command is restricted to owners
         Parameters: key: str: the key we want to view or modify
@@ -232,10 +237,16 @@ stderr: ```{new_stderr.getvalue()} ```"""
 
         """
         if not await self.cog_slash_command_check(inter):
-            await inter.send("You do not own me. This command is restricted to **owners only**")
+            await inter.send(
+                "You do not own me. This command is restricted to **owners only**"
+            )
             return
         if not await self.bot.is_owner(inter.author):
-            return await inter.send("This command is restricted to owners only, but you are not an owner")
+            return await inter.send(
+                "This command is restricted to owners only, but you are not an owner"
+            )
         if not isinstance(self.bot.cache, RedisCache):
-            raise RuntimeError("/redis is not supported if the cache is not a RedisCache")
+            raise RuntimeError(
+                "/redis is not supported if the cache is not a RedisCache"
+            )
         raise NotImplementedError("This isn't implemented yet")

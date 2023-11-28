@@ -35,7 +35,8 @@ class AppealsCog(HelperCog):
     async def blacklist(self, inter: disnake.ApplicationCommandInteraction):
         """Appeal your blacklists!
 
-        You should write out your reasoning beforehand. However, you have 20 minutes to type."""
+        You should write out your reasoning beforehand. However, you have 20 minutes to type.
+        """
 
         # Make sure they are blacklisted because if they're not blacklisted, they can't appeal
         # Get the info from the user

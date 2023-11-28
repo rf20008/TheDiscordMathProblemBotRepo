@@ -1,12 +1,14 @@
 import enum
 from dataclasses import dataclass
 from typing import Dict
+
 # This isn't really used, but it's licensed under GPLv3
 DEFAULT_LICENSE = """This quiz is licensed under a license 
 that allows me to do the processing with this quiz that is needed,
 allows you all to see this quiz, answer it, and see the solutions,
 but nothing else.
 """
+
 
 class QuizIntensity(float, enum.Enum):
     """An enumeration of quiz"""

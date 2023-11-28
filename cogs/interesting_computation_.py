@@ -109,7 +109,6 @@ class InterestingComputationCog(HelperCog):
                 raise MathProblemsModuleException("Remainder too big")
             for j in range(i, len(moduli)):
                 if gcd(moduli[i], moduli[j]) != 1:
-
                     return await inter.send(
                         embed=ErrorEmbed(
                             f"The chinese remainder theorem doesn't hold unless the numbers are relatively prime. The numbers that aren't relatively prime are {moduli[i]} and {moduli[j]} (which have a gcd of {gcd(moduli[i], moduli[j])})."

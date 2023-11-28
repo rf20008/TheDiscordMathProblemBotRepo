@@ -37,8 +37,10 @@ class TooManyProblems(MathProblemsModuleException):
 
     pass
 
+
 class ThingNotFound(KeyError, IndexError, MathProblemsModuleException):
     """Raised when a thing is not found"""
+
     pass
 
 
@@ -85,9 +87,13 @@ class QuizNotFound(ThingNotFound):
 
     pass
 
+
 class FormatException(KeyError, MathProblemsModuleException):
     """Raised when something is not formatted correctly"""
+
     pass
+
+
 class IsRowException(FormatException):
     """Raised when expecting a dictionary but got a row instead."""
 
@@ -149,8 +155,11 @@ class InvalidDictionaryInDatabaseException(FormatException):
 
 class PMDeprecationWarning(DeprecationWarning):
     """Raised when someone tries to use a feature of the problems module that is deprecated"""
+
     pass
+
 
 class LockedCacheException(RuntimeError):
     """Raised when an operation is done on a locked RedisCache"""
+
     pass

@@ -2,12 +2,15 @@ from enum import Enum
 from typing import *
 from .dict_convertible import DictConvertible
 from disnake.utils import format_dt
+
+
 class AppealType(Enum):
     BLACKLIST_APPEAL = 0
     GUILD_BLACKLIST_APPEAL = 1
     SUPPORT_SERVER_BAN = 2
     SUPPORT_SERVER_MISC_PUNISHMENT = 3
     OTHER = 4
+
 
 class Appeal(DictConvertible):
     __slots__ = (

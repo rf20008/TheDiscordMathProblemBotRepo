@@ -9,6 +9,7 @@ from helpful_modules.threads_or_useful_funcs import generate_new_id
 from .quiz_problem import QuizProblem
 from .quiz_submissions import QuizSubmission, QuizSubmissionAnswer
 from ..dict_convertible import DictConvertible
+
 # Licensed under GPLv3 (as all other code in this repository is)
 
 
@@ -100,14 +101,15 @@ class QuizSolvingSession(DictConvertible):
             user_id=dict["user_id"],
             quiz_id=dict["quiz_id"],
             guild_id=dict["guild_id"],
-            answers=list(map(QuizSubmissionAnswer.to_dict, dict["answers"])),  # TODO: don't use pickle because RCE
+            answers=list(
+                map(QuizSubmissionAnswer.to_dict, dict["answers"])
+            ),  # TODO: don't use pickle because RCE
             special_id=dict["special_id"],
             attempt_num=dict["attempt_num"],
         )
 
     @classmethod
     def from_mysql_dict(cls, dict: dict) -> "QuizSolvingSession":
-
         return cls.better_init(
             start_time=dict["start_time"],
             user_id=dict["user_id"],

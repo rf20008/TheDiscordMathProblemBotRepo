@@ -100,7 +100,8 @@ class SQLDict:
         return_results_of_execution=False,
     ):
         """A helper function for connecting and committing. You can pass in callables to _execute_before_querying, _execute_between_querying_and_commiting, and _execute_after_committing.
-        They must take a argument that is the instance of this sqldict. (and _execute_between_querying_and_committing and _execute_after_committing_ must take a Cursor object as its second argument) And they must be in the format (callable, options)."""
+        They must take a argument that is the instance of this sqldict. (and _execute_between_querying_and_committing and _execute_after_committing_ must take a Cursor object as its second argument) And they must be in the format (callable, options).
+        """
         assert isinstance(_execute_after_committing_, function)
 
         connection = self.connection

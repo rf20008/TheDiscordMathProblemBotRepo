@@ -21,7 +21,8 @@ class TestCog(HelperCog):
         self, inter: disnake.ApplicationCommandInteraction
     ) -> typing.Optional[disnake.InteractionMessage]:
         """/_test
-        This makes the bot return Test. This doesn't take any arguments. The purpose of this command is to test the bot!"""
+        This makes the bot return Test. This doesn't take any arguments. The purpose of this command is to test the bot!
+        """
         return await inter.send("Test")
 
     @disnake.ext.commands.command(name="_test")

@@ -211,7 +211,8 @@ JSON error: {e}"""
         """/quiz create blank
         Create a blank quiz. This is more user-friendly than /quiz create from_json, but it's slower!
 
-        There is currently a bug. Don't use this because there is a bug that makes the quiz not actually be created because there are no problems."""
+        There is currently a bug. Don't use this because there is a bug that makes the quiz not actually be created because there are no problems.
+        """
 
         # TODO: only some people can create quizzes
         already_existing_quiz_ids = [

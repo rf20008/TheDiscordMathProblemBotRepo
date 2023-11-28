@@ -35,7 +35,7 @@ class PermissionsRequiredRelatedCache(UserDataRelatedCache):
         self,
         user_id: int,
         permissions_required: typing.Optional[typing.Dict[str, bool]] = None,
-        command_name: str | None = None
+        command_name: str | None = None,
     ) -> bool:
         """Return whether the user meets permissions required to use the command"""
         if permissions_required is None:

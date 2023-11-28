@@ -47,7 +47,6 @@ class UserDataRelatedCache(QuizRelatedCache):
                 if len(cursor_results) == 0:
                     return default
                 elif len(cursor_results) == 1:
-
                     dict_to_use = cursor_results[0]
                     dict_to_use["trusted"] = bool(dict_to_use["trusted"])
                     dict_to_use["blacklisted"] = bool(dict_to_use["blacklisted"])

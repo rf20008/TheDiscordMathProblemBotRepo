@@ -181,7 +181,8 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
     ) -> None:
         """Notify the guild about the bot leaving the guild because the guild is blacklisted.
         Throws RuntimeError if the guild is not actually blacklisted.
-        Throws HTTPException if sending the message failed, or leaving the guild failed."""
+        Throws HTTPException if sending the message failed, or leaving the guild failed.
+        """
         if not await self.is_guild_blacklisted(guild):
             raise RuntimeError("The guild isn't blacklisted!")
         _me: disnake.Member = guild.me

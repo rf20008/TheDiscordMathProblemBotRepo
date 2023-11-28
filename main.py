@@ -14,6 +14,7 @@ from copy import copy
 from logging import handlers
 from sys import argv, exc_info, exit, stdout
 from time import sleep
+import signal
 
 # Imports - 3rd party
 from disnake.ext import commands
@@ -330,6 +331,13 @@ async def on_guild_remove(guild):
     await bot.cache.remove_all_by_guild_id(guild.id)  # Remove all guild-related stuff
     # uh oh?
 
+def handle_signal(signum):
+    if signum==signal.SIGUSR1:
+        asyncio.get_event_loop().create_task(bot.close())
+        exit("We are being replaced by the new bot!!!")
+
+
+signal.signal(signal.SIGUSR1, handle_signal)
 
 if __name__ == "__main__":
     print("The bot has finished setting up and will now run.")

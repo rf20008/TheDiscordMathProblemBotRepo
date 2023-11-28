@@ -146,6 +146,7 @@ async def base_on_error(
     return {"embed": embed}
 
 
+
 def get_log(name: Optional[str]) -> logging.Logger:
     _log = logging.getLogger(name)
     TRFH = handlers.TimedRotatingFileHandler(
@@ -186,18 +187,18 @@ def assert_type_or_throw_exception(
         The exception type thrown. Defaults to `py:class:TypeError`.
     """
     if not isinstance(thing, err_type):
-        raise exc_type(msg)
+        raise exc_type(msg)  # type: ignore
     return
 
 
 def extended_gcd(a, b):
     if a == 0:
-        return (b, 0, 1)
+        return b, 0, 1
     else:
         gcd, x1, y1 = extended_gcd(b % a, a)
         x = y1 - (b // a) * x1
         y = x1
-        return (gcd, x, y)
+        return gcd, x, y
 
 
 def miller_rabin(n, k=100):

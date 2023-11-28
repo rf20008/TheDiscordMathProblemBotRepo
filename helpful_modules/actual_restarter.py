@@ -1,10 +1,10 @@
 import os
 import threading
 import time
-
+from sys import executable
 
 def start():
-    os.system("cd ../; python3.10 main.py")
+    os.system(f"cd {executable}; python3.12 main.py")
 
 
 t = threading.Thread(target=start)

@@ -24,6 +24,7 @@ class RestartTheBot:
         self.bot = bot
 
     async def notify_before_restarting(self) -> None:
+        warnings.warn(category=RuntimeWarning, message="This may not do what it actually does")
         channel = await self.bot.fetch_channel(self.bot.constants.BOT_RESTART_CHANNEL)
         await channel.send(RESTART_MESSAGE_WARNING)
         await asyncio.sleep(20)
@@ -34,13 +35,13 @@ class RestartTheBot:
         await self.notify_before_restarting()
         await self.actual_restart()
 
-    async def actual_restart(self):
+    async def actual_restart(self) -> NoReturn:
         await asyncio.sleep(3)
         await self.bot.close()
         await asyncio.sleep(5)
         ## I learned that starting a new process that starts a new copy of the bot is better than starting the bot directly
         # the hard way
 
-        command = executable + " actuaL_restarter.py"
+        command = executable + " actuaL_restarter.py" #
         subprocess.run(command.split(), capture_output=True, shell=True)
         os._exit(1)

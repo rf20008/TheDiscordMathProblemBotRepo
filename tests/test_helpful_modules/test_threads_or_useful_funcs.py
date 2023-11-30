@@ -199,3 +199,24 @@ class TestBaseOnError(unittest.IsolatedAsyncioTestCase):
         self.assertIn("Test error message", result['content'])
         self.assertIn("Time:", result['content'])
         self.assertIn(threads_or_useful_funcs.get_git_revision_hash(), result['content'])
+class TestClassOrThrowException(unittest.TestCase):
+    def test_pass_basic_1(self):
+        self.assertTrue(threads_or_useful_funcs.assert_type_or_throw_exception(3111, int))
+
+    def test_pass_basic_2(self):
+        self.assertTrue(threads_or_useful_funcs.assert_type_or_throw_exception("hehe boi", str))
+
+    def test_pass_medium_1(self):
+        self.assertTrue(threads_or_useful_funcs.assert_type_or_throw_exception("nope" + "hehe boi", str))
+    def test_pass_class(self):
+        self.assertTrue(KeyboardInterrupt("hehe"), KeyboardInterrupt)
+    def test_wrong_type(self):
+        self.assertRaises(TypeError, threads_or_useful_funcs.assert_type_or_throw_exception, ("no", int))
+    def test_raise_correct_error_1(self):
+        self.assertRaises(ValueError, threads_or_useful_funcs.assert_type_or_throw_exception, ("no", int, "hehe", ValueError))
+    def test_raise_correct_error_2(self):
+        self.assertRaises(RuntimeError, threads_or_useful_funcs.assert_type_or_throw_exception, (1392929292, float, "hehe", RuntimeError))
+
+class TestExtendedGCD(unittest.TestCase):
+    def test_gcd(self):
+        self.assertEqual(threads_or_useful_funcs.extended_gcd(3, 1)[0], 1)

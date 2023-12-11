@@ -5,8 +5,47 @@ import disnake.ext
 import unittest
 import unittest.mock
 import datetime
-
+import math
+import random
 from helpful_modules.custom_embeds import ErrorEmbed
+def generate_many_randoms(many=1, lows=[], highs=[]):
+    if len(highs) != len(lows) or len(lows) != many:
+        raise ValueError("the arrays given do not match")
+    return (random.randint(lows[i], highs[i]) for i in range(many))
+
+class TestGenerateManyRandoms(unittest.TestCase):
+    def test_valid_input(self):
+        # Test with valid inputs
+        lows = [1, 10, 5]
+        highs = [10, 20, 15]
+        many = len(lows)
+        result = list(generate_many_randoms(many, lows, highs))
+
+        # Check that the length of the result matches the expected length
+        self.assertEqual(len(result), many)
+
+        # Check that each generated random number is within the specified range
+        for i in range(many):
+            self.assertGreaterEqual(result[i], lows[i])
+            self.assertLessEqual(result[i], highs[i])
+
+    def test_invalid_input_lengths(self):
+        # Test with invalid input lengths
+        lows = [1, 10, 5]
+        highs = [10, 20]
+        many = len(lows)
+
+        # Check that ValueError is raised for mismatched array lengths
+        with self.assertRaises(ValueError):
+            generate_many_randoms(many, lows, highs)
+
+    def test_empty_input(self):
+        # Test with empty input arrays
+        many = 0
+        result = list(generate_many_randoms(many,[],[]))
+
+        # Check that the result is an empty list
+        self.assertEqual(result, [])
 class TestGenerateId(unittest.TestCase):
     def test_id_range(self):
         for i in range(500):
@@ -66,15 +105,15 @@ class TestWraps(unittest.IsolatedAsyncioTestCase):
         # Assert that the executor's run_in_executor method was called
         executor_mock.run_in_executor.assert_called_once()
 
-
-# TODO: tests for base_on_error
+# TODO: all my tests are failing because the _error_log is not working, so patch them
 class TestBaseOnError(unittest.IsolatedAsyncioTestCase):
-    async def setUp(self):
+    async def asyncSetUp(self):
         bot = unittest.mock.AsyncMock(spec=disnake.ext.commands.Bot)
         inter = unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction)
         inter.bot = bot
 
-    async def test_pass_on_non_exceptions(self):
+    async def test_pass_on_non_exceptions(self, mock_logging):
+
         bot = unittest.mock.AsyncMock(spec=disnake.ext.commands.Bot)
         inter = unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction)
         inter.bot = bot
@@ -93,7 +132,7 @@ class TestBaseOnError(unittest.IsolatedAsyncioTestCase):
         inter = unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction)
         inter.bot = bot
         result = await threads_or_useful_funcs.base_on_error(
-            inter, error=disnake.ext.commands.CommandOnCooldown(retry_after=3.0)
+            inter, error=disnake.ext.commands.CommandOnCooldown(retry_after=3.0,cooldown=disnake.ext.commands.Cooldown(rate=3, per=1), type=disnake.ext.commands.BucketType.default)
         )
         inter.send.assert_not_awaited()
         # content = f"This command is on cooldown; please retry **{disnake.utils.format_dt(disnake.utils.utcnow() + datetime.timedelta(seconds=error.retry_after), style='R')}**."
@@ -101,8 +140,8 @@ class TestBaseOnError(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             result,
             {
-                "content": f"This command is on cooldown; please retry **'<t:946702803:R>'**.",
-                "delete_after": 3.0,
+                'content': f'This command is on cooldown; please retry **\'<t:946702803:R>\'**.',
+                'delete_after': 3.0,
             },
         )
         # return {"content": content, "delete_after": error.retry_after}, "delete_after": 3.0})
@@ -127,7 +166,7 @@ class TestBaseOnError(unittest.IsolatedAsyncioTestCase):
             "The error traceback is below."
         ))
         expected_result["content"] = result["content"] # TODO: fix the monkey patch
-        self.assertEqual(result, expected_result)
+        self.assertEqual(result, expected_result, "Results do not match")
 
     async def test_not_owner_error(self):
         bot = unittest.mock.AsyncMock(spec=disnake.ext.commands.Bot)
@@ -152,8 +191,7 @@ class TestBaseOnError(unittest.IsolatedAsyncioTestCase):
         expected_result = {
             "embed": ErrorEmbed(error_message)
         }
-        self.assertEqual(result, expected_result)
-
+        self.assertTrue(expected_result == result, f"The embeds do not match: expected = {repr(expected_result['embed'])} but actual is {repr(result['embed'])}")
     async def test_logging_error(self):
         bot = unittest.mock.AsyncMock(spec=disnake.ext.commands.Bot)
         inter = unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction)
@@ -218,5 +256,40 @@ class TestClassOrThrowException(unittest.TestCase):
         self.assertRaises(RuntimeError, threads_or_useful_funcs.assert_type_or_throw_exception, (1392929292, float, "hehe", RuntimeError))
 
 class TestExtendedGCD(unittest.TestCase):
-    def test_gcd(self):
+    def test_gcd_basic(self):
         self.assertEqual(threads_or_useful_funcs.extended_gcd(3, 1)[0], 1)
+        for i in range(300):
+            x,y,d = generate_many_randoms(3, lows=[1,1,1], highs=[30000,30000,30000])
+            self.assertEqual(threads_or_useful_funcs.extended_gcd(x*d, y*d)[0], math.gcd(x*d, y*d))
+    def test_bezouts_condition(self):
+        a,b = 3,1
+        g,x,y = threads_or_useful_funcs.extended_gcd(a,b)
+
+        self.assertEqual(abs(x*b+y*a), 1, f"Bezout's condition was not satisfied when a={a}, b={b}")
+        for i in range(300):
+            a,b, d = generate_many_randoms(3, lows=[1, 1, 1], highs=[30000, 30000, 30000])
+            g,x,y = threads_or_useful_funcs.extended_gcd(a*d,b*d)
+            self.assertEqual(x*b+y*a, 1, f"Bezout's condition was not satisfied when a={a}, b={b}, d={d}")
+class TestMillerRabin(unittest.TestCase):
+    def test_prime_small(self):
+        failures = 0
+        for _ in range(2000):
+            if threads_or_useful_funcs.miller_rabin(100, 3):
+                failures+=1
+            if not threads_or_useful_funcs.miller_rabin(7, 3):
+                failures+=1
+        self.assertLess(failures/1.15, 2000/64)
+    def test_prime_big(self):
+        M = 10**9+7
+        self.assertFalse(threads_or_useful_funcs.miller_rabin(M*M, 300))
+        self.assertTrue(threads_or_useful_funcs.miller_rabin(M, 300))
+        self.assertTrue(threads_or_useful_funcs.miller_rabin(10**18+3, 300))
+        self.assertFalse(threads_or_useful_funcs.miller_rabin(M*M -1, 300))
+        self.assertFalse(threads_or_useful_funcs.miller_rabin(M*M-2, 300))
+
+    def test_exceptions(self):
+        self.assertRaises(ValueError, threads_or_useful_funcs.miller_rabin("hehe boi", k=30))
+        self.assertRaises(ValueError, threads_or_useful_funcs.miller_rabin(0, k=15))
+
+if __name__=="__main__":
+    unittest.main()

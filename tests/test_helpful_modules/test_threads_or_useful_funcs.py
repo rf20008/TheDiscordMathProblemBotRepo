@@ -8,11 +8,26 @@ import datetime
 import math
 import random
 from helpful_modules.custom_embeds import ErrorEmbed
+class TestFailure(Exception):
+    """A test is failing!!!"""
+    pass
 def generate_many_randoms(many=1, lows=[], highs=[]):
     if len(highs) != len(lows) or len(lows) != many:
         raise ValueError("the arrays given do not match")
     return (random.randint(lows[i], highs[i]) for i in range(many))
-
+def test_embed_equality(expected, result):
+    if not isinstance(result, disnake.Embed):
+        raise TestFailure("the result is not an Embed")
+    if not isinstance(expected, disnake.Embed):
+        print("expected isn't an embed either")
+    for slot in expected.__slots__:
+        if slot == "colour":
+            slot = "color"
+        if getattr(expected, slot, None) != getattr(result, slot, None):
+            raise TestFailure(f"""The embeds don't match 
+    (slot {slot}) is not the same
+    expected's value is "{getattr(expected, slot, None)}"
+    but actual's value is "{getattr(result, slot, None)}" """)
 class TestGenerateManyRandoms(unittest.TestCase):
     def test_valid_input(self):
         # Test with valid inputs
@@ -124,7 +139,8 @@ class TestBaseOnError(unittest.IsolatedAsyncioTestCase):
     # TODO: finish
     # TODO: there are so many more tests, that need to be made :)
     @unittest.mock.patch("disnake.utils.utcnow")
-    async def test_cooldown_errors(self, mock_utcnow):
+    @unittest.mock.patch("helpful_modules._error_logging.log_error_to_file")
+    async def test_cooldown_errors(self, mock_utcnow, mock_log):
         mock_utcnow.return_value = datetime.datetime(
             year=2000, month=1, day=1, hour=0, minute=0, second=0, microsecond=0
         )
@@ -138,20 +154,20 @@ class TestBaseOnError(unittest.IsolatedAsyncioTestCase):
         # content = f"This command is on cooldown; please retry **{disnake.utils.format_dt(disnake.utils.utcnow() + datetime.timedelta(seconds=error.retry_after), style='R')}**."
         # return {"content": content, "delete_after": error.retry_after}
         self.assertEqual(
-            result,
-            {
-                'content': f'This command is on cooldown; please retry **\'<t:946702803:R>\'**.',
-                'delete_after': 3.0,
-            },
+            result["content"], f'This command is on cooldown; please retry **<t:946702803:R>**.'
         )
+        self.assertEqual(result["delete_after"], 3.0, "Delete afters do not match")
+        self.assertEqual(set(result.keys()), {"content", "delete_after"})
+        mock_log.assert_called_once()
         # return {"content": content, "delete_after": error.retry_after}, "delete_after": 3.0})
     # these three tests come from ChatGPT
-    async def test_forbidden_error(self):
+    @unittest.mock.patch("helpful_modules._error_logging.log_error_to_file")
+    async def test_forbidden_error(self, mock_log):
         bot = unittest.mock.AsyncMock(spec=disnake.ext.commands.Bot)
         inter = unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction)
         inter.bot = bot
         result = await threads_or_useful_funcs.base_on_error(
-            inter, error=disnake.Forbidden("Insufficient permissions.")
+            inter, error=disnake.Forbidden(message="Insufficient permissions.")
         )
         expected_result = {
             "content": "There was a 403 error. This means either\n"
@@ -167,8 +183,9 @@ class TestBaseOnError(unittest.IsolatedAsyncioTestCase):
         ))
         expected_result["content"] = result["content"] # TODO: fix the monkey patch
         self.assertEqual(result, expected_result, "Results do not match")
-
-    async def test_not_owner_error(self):
+        mock_log.assert_called_once()
+    @unittest.mock.patch("helpful_modules._error_logging.log_error_to_file")
+    async def test_not_owner_error(self, mock_log):
         bot = unittest.mock.AsyncMock(spec=disnake.ext.commands.Bot)
         inter = unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction)
         inter.bot = bot
@@ -178,9 +195,12 @@ class TestBaseOnError(unittest.IsolatedAsyncioTestCase):
         expected_result = {
             "embed": ErrorEmbed("You are not the owner of this bot.")
         }
-        self.assertEqual(result, expected_result)
+        test_embed_equality(expected_result["embed"], result["embed"])
+        self.assertEqual(result, expected_result, "Results do not match")
+        mock_log.assert_called_once()
 
-    async def test_check_failure_error(self):
+    @unittest.mock.patch("helpful_modules._error_logging.log_error_to_file")
+    async def test_check_failure_error(self, mock_log):
         bot = unittest.mock.AsyncMock(spec=disnake.ext.commands.Bot)
         inter = unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction)
         inter.bot = bot
@@ -191,8 +211,11 @@ class TestBaseOnError(unittest.IsolatedAsyncioTestCase):
         expected_result = {
             "embed": ErrorEmbed(error_message)
         }
-        self.assertTrue(expected_result == result, f"The embeds do not match: expected = {repr(expected_result['embed'])} but actual is {repr(result['embed'])}")
-    async def test_logging_error(self):
+        test_embed_equality(expected_result["embed"], result["embed"])
+        #self.assertTrue(expected_result == result, f"The embeds do not match: expected = {repr(expected_result['embed'])} but actual is {repr(result['embed'].__dict__)}")
+
+    @unittest.mock.patch("helpful_modules._error_logging.log_error_to_file")
+    async def test_logging_error(self, mock_log):
         bot = unittest.mock.AsyncMock(spec=disnake.ext.commands.Bot)
         inter = unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction)
         inter.bot = bot
@@ -206,7 +229,8 @@ class TestBaseOnError(unittest.IsolatedAsyncioTestCase):
         self.assertIn("An error occurred!", result['content'])
         self.assertIn("Steps you should do:", result['content'])
 
-    async def test_embed_creation(self):
+    @unittest.mock.patch("helpful_modules._error_logging.log_error_to_file")
+    async def test_embed_creation(self, mock_log):
         bot = unittest.mock.AsyncMock(spec=disnake.ext.commands.Bot)
         inter = unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction)
         inter.bot = bot
@@ -214,13 +238,15 @@ class TestBaseOnError(unittest.IsolatedAsyncioTestCase):
         result = await threads_or_useful_funcs.base_on_error(
             inter, error=Exception(error_message)
         )
+        self.assertIsInstance(result, dict)
         inter.send.assert_not_awaited()
         inter.bot.close.assert_not_awaited()
-        self.assertIn("Oh, no! An error occurred!", result['embed']['title'])
-        self.assertIn("Time:", result['embed']['footer']['text'])
-        self.assertIn(threads_or_useful_funcs.get_git_revision_hash(), result['embed']['footer']['text'])
+        self.assertIn("Oh, no! An error occurred!", result['embed'].title)
+        self.assertIn("Time:", result['embed'].footer.text)
+        self.assertIn(threads_or_useful_funcs.get_git_revision_hash(), result['embed'].footer.text)
 
-    async def test_embed_fallback_to_plain_text(self):
+    @unittest.mock.patch("helpful_modules._error_logging.log_error_to_file")
+    async def test_embed_fallback_to_plain_text(self, mock_log):
         bot = unittest.mock.AsyncMock(spec=disnake.ext.commands.Bot)
         inter = unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction)
         inter.bot = bot

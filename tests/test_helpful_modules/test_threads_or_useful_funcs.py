@@ -1,5 +1,6 @@
 import asyncio
 from helpful_modules import threads_or_useful_funcs
+from unittest.mock import *
 import disnake
 import disnake.ext
 import unittest
@@ -7,7 +8,9 @@ import unittest.mock
 import datetime
 import math
 import random
+import logging
 from helpful_modules.custom_embeds import ErrorEmbed
+
 class TestFailure(Exception):
     """A test is failing!!!"""
     pass
@@ -88,7 +91,7 @@ class TestGitCommitHash(unittest.TestCase):
         )
 
         # Check the result
-        self.assertEqual(result, "abcdef123456")
+        self.assertEqual(result, "abcdef1")
 
 
 class TestWraps(unittest.IsolatedAsyncioTestCase):
@@ -127,7 +130,7 @@ class TestBaseOnError(unittest.IsolatedAsyncioTestCase):
         inter = unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction)
         inter.bot = bot
 
-    async def test_pass_on_non_exceptions(self, mock_logging):
+    async def test_pass_on_non_exceptions(self):
 
         bot = unittest.mock.AsyncMock(spec=disnake.ext.commands.Bot)
         inter = unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction)
@@ -197,7 +200,7 @@ class TestBaseOnError(unittest.IsolatedAsyncioTestCase):
         }
         test_embed_equality(expected_result["embed"], result["embed"])
         self.assertEqual(result, expected_result, "Results do not match")
-        mock_log.assert_called_once()
+        mock_log.assert_not_called()
 
     @unittest.mock.patch("helpful_modules._error_logging.log_error_to_file")
     async def test_check_failure_error(self, mock_log):
@@ -215,19 +218,25 @@ class TestBaseOnError(unittest.IsolatedAsyncioTestCase):
         #self.assertTrue(expected_result == result, f"The embeds do not match: expected = {repr(expected_result['embed'])} but actual is {repr(result['embed'].__dict__)}")
 
     @unittest.mock.patch("helpful_modules._error_logging.log_error_to_file")
-    async def test_logging_error(self, mock_log):
+    async def test_logging_error(self, mock_log_error):
         bot = unittest.mock.AsyncMock(spec=disnake.ext.commands.Bot)
         inter = unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction)
         inter.bot = bot
         error_message = "Test error message"
+        mock_log_error.side_effect = RuntimeError("HAHAHAHA!")
         result = await threads_or_useful_funcs.base_on_error(
             inter, error=Exception(error_message)
         )
         inter.send.assert_not_awaited()
         inter.bot.close.assert_not_awaited()
-        self.assertIn(error_message, result['content'])
-        self.assertIn("An error occurred!", result['content'])
-        self.assertIn("Steps you should do:", result['content'])
+        self.assertIsInstance(result, dict)
+        stuff = result["embed"].description
+
+        self.assertIn(error_message, stuff)
+        self.assertIn("An error occurred!", stuff)
+        self.assertIn("Steps you should do:", stuff)
+        self.assertIn("Additionally, while trying to log this error, the following exception occurred: \n", stuff)
+
 
     @unittest.mock.patch("helpful_modules._error_logging.log_error_to_file")
     async def test_embed_creation(self, mock_log):
@@ -265,21 +274,21 @@ class TestBaseOnError(unittest.IsolatedAsyncioTestCase):
         self.assertIn(threads_or_useful_funcs.get_git_revision_hash(), result['content'])
 class TestClassOrThrowException(unittest.TestCase):
     def test_pass_basic_1(self):
-        self.assertTrue(threads_or_useful_funcs.assert_type_or_throw_exception(3111, int))
+        self.assertIsNone(threads_or_useful_funcs.assert_type_or_throw_exception(3111, int))
 
     def test_pass_basic_2(self):
-        self.assertTrue(threads_or_useful_funcs.assert_type_or_throw_exception("hehe boi", str))
+        self.assertIsNone(threads_or_useful_funcs.assert_type_or_throw_exception("hehe boi", str))
 
     def test_pass_medium_1(self):
-        self.assertTrue(threads_or_useful_funcs.assert_type_or_throw_exception("nope" + "hehe boi", str))
+        self.assertIsNone(threads_or_useful_funcs.assert_type_or_throw_exception("nope" + "hehe boi", str))
     def test_pass_class(self):
-        self.assertTrue(KeyboardInterrupt("hehe"), KeyboardInterrupt)
+        self.assertIsNone(threads_or_useful_funcs.assert_type_or_throw_exception(KeyboardInterrupt("hehe"), KeyboardInterrupt))
     def test_wrong_type(self):
         self.assertRaises(TypeError, threads_or_useful_funcs.assert_type_or_throw_exception, ("no", int))
     def test_raise_correct_error_1(self):
-        self.assertRaises(ValueError, threads_or_useful_funcs.assert_type_or_throw_exception, ("no", int, "hehe", ValueError))
+        self.assertRaises(ValueError, threads_or_useful_funcs.assert_type_or_throw_exception, *("no", int, "hehe", ValueError))
     def test_raise_correct_error_2(self):
-        self.assertRaises(RuntimeError, threads_or_useful_funcs.assert_type_or_throw_exception, (1392929292, float, "hehe", RuntimeError))
+        self.assertRaises(RuntimeError, threads_or_useful_funcs.assert_type_or_throw_exception, 1392929292, float, "hehe", RuntimeError)
 
 class TestExtendedGCD(unittest.TestCase):
     def test_gcd_basic(self):
@@ -316,6 +325,77 @@ class TestMillerRabin(unittest.TestCase):
     def test_exceptions(self):
         self.assertRaises(ValueError, threads_or_useful_funcs.miller_rabin("hehe boi", k=30))
         self.assertRaises(ValueError, threads_or_useful_funcs.miller_rabin(0, k=15))
+class TestEvalLogsAndLogs(unittest.IsolatedAsyncioTestCase):
 
+    async def test_ensure_eval_logs_exist(self):
+        # Test if the logs folder is created successfully
+        with patch("builtins.print") as mock_print:
+            threads_or_useful_funcs.ensure_eval_logs_exist()
+            mock_print.assert_not_called()  # Ensure print is not called on success
+
+        # Test if an exception is caught and a message is printed
+        with patch("builtins.print") as mock_print:
+            with patch("pathlib.Path.mkdir", side_effect=PermissionError):
+                threads_or_useful_funcs.ensure_eval_logs_exist()
+                mock_print.assert_any_call("I don't have permission to create an eval logs folder so logs may be missing!")
+
+    async def test_get_log(self):
+        with open("logs/bot.log", "w") as f:
+            f.write("hehe boi!!!")
+        # Test if a logger is returned with the correct handler
+        log = threads_or_useful_funcs.get_log("test_logger")
+        handlers = log.handlers
+        self.assertTrue(any(isinstance(handler, logging.handlers.TimedRotatingFileHandler) for handler in handlers))
+
+    async def test_log_evaled_code(self):
+        # Mock async file writing
+        async def mock_open(filepath, mode):
+            mock_file = unittest.mock.MagicMock()
+            mock_file.write = unittest.mock.MagicMock()
+            return mock_file
+
+        # Patch aiofiles.open to use the mock_open function
+        with patch("aiofiles.open", new_callable=mock_open):
+            code = "print('Hello, World!')"
+            filepath = "eval_log/test_date"
+            time_ran = datetime.datetime.now()
+
+            # Test if the code is successfully written to the file
+            with patch("helpful_modules.threads_or_useful_funcs.humanify_date", return_value="test_date"):
+                threads_or_useful_funcs.log_evaled_code(code, filepath, time_ran)
+                await mock_open("test_date", "r").write.assert_called_with(f"\n{str(time_ran)}\n{code}\n")
+
+            # Test if the default filepath is used when not provided
+            with patch("helpful_modules.threads_or_useful_funcs.humanify_date", return_value="test_date"):
+                threads_or_useful_funcs.log_evaled_code(code, time_ran=time_ran)
+                await mock_open("test_date", "r").write.assert_called_with(f"\n{str(time_ran)}\n{code}\n")
+
+            # Test if an exception is raised when writing to the file fails
+            with patch("aiofiles.open", side_effect=Exception("File write error")):
+                with self.assertRaises(RuntimeError):
+                    threads_or_useful_funcs.log_evaled_code(code, filepath, time_ran)
+
+class TestHumanifyDate(unittest.TestCase):
+
+    def test_humanify_date(self):
+        # Test with a datetime object
+        datetime_obj = datetime.datetime(2023, 1, 15)
+        formatted_date = threads_or_useful_funcs.humanify_date(datetime_obj)
+        expected_result = "2023 January 15"
+        self.assertEqual(formatted_date, expected_result)
+
+        # Test with a date object
+        date_obj = datetime.date(2023, 1, 15)
+        formatted_date = threads_or_useful_funcs.humanify_date(date_obj)
+        expected_result = "2023 January 15"
+        self.assertEqual(formatted_date, expected_result)
+
+if __name__ == '__main__':
+    unittest.main()
+
+if __name__ == '__main__':
+    unittest.main()
+if __name__ == '__main__':
+    unittest.main()
 if __name__=="__main__":
     unittest.main()

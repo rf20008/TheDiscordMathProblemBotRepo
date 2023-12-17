@@ -1,3 +1,4 @@
+import pathlib
 import logging
 import random
 import subprocess
@@ -11,6 +12,7 @@ from logging import handlers
 from sys import exc_info, stderr
 from time import asctime
 from typing import Optional, Any
+
 
 import disnake
 from disnake.ext import commands
@@ -35,8 +37,7 @@ def generate_new_id():
 def get_git_revision_hash() -> str:
     """A method that gets the git revision hash. Credit to https://stackoverflow.com/a/21901260 for the code :-)"""
     return (
-        subprocess.check_output(["git", "rev-parse", "HEAD"])
-        .decode("ascii")
+        subprocess.check_output(["git", "rev-parse", "HEAD"], encoding="ascii", errors="ignore")
         .strip()[:7]
     )  # [7:] is here because of the commit hash, the rest of this function is from stack overflow
 
@@ -74,7 +75,7 @@ async def base_on_error(
     inter: disnake.ApplicationCommandInteraction, error: BaseException | Exception
 ):
     """The base on_error event. Call this and use the dictionary as keyword arguments to print to the user"""
-    error_traceback = "\n".join(traceback.format_exception(error))
+
     if isinstance(error, BaseException) and not isinstance(error, Exception):
         # Errors that do not inherit from Exception are not meant to be caught
         await inter.bot.close()
@@ -89,6 +90,7 @@ async def base_on_error(
         2) There's a bug! If so, please report it!
         
         The error traceback is below."""
+        error_traceback = "\n".join(traceback.format_exception(error))
         return {"content": extra_content + error_traceback}
 
     if isinstance(error, commands.NotOwner):
@@ -97,11 +99,12 @@ async def base_on_error(
         return {"embed": ErrorEmbed(str(error))}
     # Embed = ErrorEmbed(custom_title="⚠ Oh no! Error: " + str(type(error)), description=("Command raised an exception:" + str(error)))
     logging.error("Uh oh - an error occurred ", exc_info=exc_info())
+    error_traceback = "\n".join(traceback.format_exception(error))
     print(
         "\n".join(traceback.format_exception(error)),  # python 3.10 only!
         file=stderr,
     )
-    await log_error(error)  # Log the error
+
     error_msg = """An error occurred!
     
     Steps you should do:
@@ -114,6 +117,15 @@ async def base_on_error(
     """ + disnake.utils.escape_markdown(
         error_traceback
     )  # TODO: update when my support server becomes public & think about providing the traceback to the user
+    try:
+        await log_error(error)  # Log the error
+    except Exception as log_error_exc:
+        print("This error didn't want to be logged")
+        error_msg += """Additionally, while trying to log this error, the following exception occurred: \n""" + \
+                     disnake.utils.escape_markdown(
+                         "\n".join(traceback.format_exception(log_error_exc))
+                     )
+
     try:
         embed = disnake.Embed(
             colour=disnake.Colour.red(),
@@ -227,3 +239,49 @@ def miller_rabin(n, k=100):
         if y != 1:
             return False
     return True
+month_num_to_name_dict = {
+    1: "January",
+    2: "February",
+    3: "March",
+    4: "April",
+    5: "May",
+    6: "June",
+    7: "July",
+    8: "August",
+    9: "September",
+    10: "October",
+    11: "November",
+    12: "December"
+}
+
+def humanify_date(date: datetime.datetime | datetime.date):
+    return str(date.year) + " " + month_num_to_name_dict[date.month] + " " + str(date.day)
+
+
+def ensure_eval_logs_exist():
+    try:
+        logs_folder = pathlib.Path("eval_log")
+        logs_folder.mkdir(exist_ok=True)
+        return
+    except:
+        print("I don't have permission to create an eval logs folder so logs may be missing!")
+        traceback.print_exc()
+def get_log(name: Optional[str]) -> logging.Logger:
+    _log = logging.getLogger(name)
+    TRFH = handlers.TimedRotatingFileHandler(
+        filename="logs/bot.log", when="midnight", encoding="utf-8", backupCount=300
+    )
+    _log.addHandler(TRFH)
+    return _log
+async def log_evaled_code(code: str, filepath: str = "", time_ran: datetime.datetime = None) -> None:
+    if time_ran == None:
+        time = datetime.datetime.now()
+    # determine the filepath
+    date = humanify_date(time_ran)
+    if filepath == "":
+        filepath = f"eval_log/{date}"
+    try:
+        async with aiofiles.open(filepath, 'a') as file:
+            await file.write("\n"+str(time_ran) + '\n' + code + "\n")
+    except Exception as e:
+        raise RuntimeError("While attempting to log the code that was evaluated, I ran into some problems!") from e

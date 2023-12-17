@@ -5,6 +5,7 @@ import io
 import textwrap
 from traceback import format_exception
 
+import datetime
 import disnake
 from disnake.ext import commands
 
@@ -12,7 +13,7 @@ from helpful_modules import checks, problems_module
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules.custom_embeds import ErrorEmbed, SimpleEmbed, SuccessEmbed
 from helpful_modules.my_modals import MyModal
-from helpful_modules.threads_or_useful_funcs import get_log
+from helpful_modules.threads_or_useful_funcs import get_log, ensure_eval_logs_exist, log_evaled_code
 from helpful_modules.problems_module.cache_rewrite_with_redis import RedisCache
 from .helper_cog import HelperCog
 from .interesting_computation_ import InterestingComputationCog
@@ -207,7 +208,7 @@ class DebugCog(HelperCog):
         except CheckFailure:
             raise
 
-        self.eval_code(inter, code, ephemeral)
+        await self.eval_code(inter, code, ephemeral)
 
     @commands.is_owner()
     @checks.trusted_users_only()

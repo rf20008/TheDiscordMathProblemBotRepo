@@ -10,7 +10,7 @@ class OnCooldown(Exception):
 async def check_for_cooldown(
     ctx, command_name: str, cooldown_time: float = 0.1, is_global_cooldown: bool = False
 ) -> t.NoReturn:
-    raise DeprecationWarning("Don't use this!")
+    raise NotImplementedError("THIS FUNCTION NOT SUPPOSED TO BE USED")
 
 
 # import time

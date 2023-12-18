@@ -13,6 +13,7 @@ from sys import exc_info, stderr
 from time import asctime
 from typing import Any, Optional
 
+import aiofiles
 import disnake
 from disnake.ext import commands
 
@@ -78,7 +79,9 @@ async def base_on_error(
     if isinstance(error, BaseException) and not isinstance(error, Exception):
         # Errors that do not inherit from Exception are not meant to be caught
         await inter.bot.close()
-        raise
+        if exc_info()[0] is not None:
+            raise
+        raise error
     if isinstance(error, (OnCooldown, disnake.ext.commands.CommandOnCooldown)):
         # This is a cooldown exception
         content = f"This command is on cooldown; please retry **{disnake.utils.format_dt(disnake.utils.utcnow() + datetime.timedelta(seconds=error.retry_after), style='R')}**."
@@ -272,6 +275,7 @@ def get_log(name: Optional[str]) -> logging.Logger:
     )
     _log.addHandler(TRFH)
     return _log
+
 async def log_evaled_code(code: str, filepath: str = "", time_ran: datetime.datetime = None) -> None:
     if time_ran == None:
         time = datetime.datetime.now()

@@ -17,6 +17,7 @@ class DocumentationFileNotFound(DocumentationNotFound):
 
 class DocumentationFileLoader:
     def __init__(self):
+        # this is deprecated
         warnings.warn(
             category=DeprecationWarning,
             stacklevel=-1,
@@ -40,13 +41,13 @@ class DocumentationFileLoader:
         )
         dictToStoreFileContent = {}
         docs_json = self._load_documentation_file()
-        for item in docs_json:
+        for key in docs_json.keys():
             dictToStoreFileContent[
-                item["file_name"]
+                docs_json["file_name"] # item is a key, but i forgot what this does
             ] = "<!This file is dynamically generated from documentation.json. If you want to contribute/this is your fork, edit that instead :)>\n"
-            if item["contains_legend"] == "true":
+            if docs_json.get("contains_legend", "false") == "true":
                 dictToStoreFileContent[
-                    item["file_name"]
+                    docs_json["file_name"]
                 ] += """# Legend - global
         
 *: Only useable by users with the Administrator (considering changing it to Manage Server) permission and global trusted users can use.
@@ -58,9 +59,9 @@ class DocumentationFileLoader:
 ***: This is a module/class. Cannot be called.
 
 No Mark: This is a command without user restrictions"""
-            item2 = item["contents"]
+            item2 = docs_json["contents"]
             for Item in item2:
-                dictToStoreFileContent[item["file_name"]] += (
+                dictToStoreFileContent[docs_json["file_name"]] += (
                     "\n"
                     + "#" * Item["heading_level"]
                     + " "
@@ -78,7 +79,7 @@ No Mark: This is a command without user restrictions"""
         _documentation = None
         documentation_from_json = self._load_documentation_file()
         for item in documentation_from_json:
-            if item["file_name"] == documentationSource:
+            if documentation_from_json["file_name"] == documentationSource:
                 _documentation = item
                 break
         if _documentation == None:

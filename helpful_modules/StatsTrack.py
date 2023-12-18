@@ -10,7 +10,7 @@ except ImportError:
 @dataclasses.dataclass
 class CommandUsage:
     user_id: int
-    command_name: int
+    command_name: str
     time: float
 
     def to_dict(self):

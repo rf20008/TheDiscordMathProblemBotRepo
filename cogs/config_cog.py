@@ -1,10 +1,12 @@
 from typing import Optional
 
 import disnake
-from disnake import Guild, GuildCommandInteraction, Member, Permissions, Role, User
+from disnake import (Guild, GuildCommandInteraction, Member, Permissions, Role,
+                     User)
 from disnake.ext import commands, tasks
 
-from helpful_modules import checks, problems_module, the_documentation_file_loader
+from helpful_modules import (checks, problems_module,
+                             the_documentation_file_loader)
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules.problems_module import GuildData, MathProblemCache
 from helpful_modules.threads_or_useful_funcs import get_log

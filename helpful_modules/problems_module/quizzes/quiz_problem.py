@@ -1,7 +1,10 @@
-from typing import *
 import sqlite3
+import sys
+import traceback
+from typing import *
+
 from helpful_modules.problems_module import BaseProblem
-import traceback, sys
+
 from ..dict_convertible import DictConvertible
 
 

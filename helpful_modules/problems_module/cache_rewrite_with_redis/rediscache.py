@@ -3,20 +3,17 @@ import typing
 
 import orjson
 from redis import asyncio as aioredis  # type: ignore
-from ..quizzes import Quiz
-from ..GuildData import GuildData
+
+from ...FileDictionaryReader import AsyncFileDict
 from ..appeal import Appeal
 from ..base_problem import BaseProblem
 from ..dict_convertible import DictConvertible
-from ..errors import (
-    LockedCacheException,
-    ProblemNotFoundException,
-    ThingNotFound,
-    FormatException,
-    InvalidDictionaryInDatabaseException,
-)
+from ..errors import (FormatException, InvalidDictionaryInDatabaseException,
+                      LockedCacheException, ProblemNotFoundException,
+                      ThingNotFound)
+from ..GuildData import GuildData
+from ..quizzes import Quiz
 from ..user_data import UserData
-from ...FileDictionaryReader import AsyncFileDict
 
 
 class RedisCache:

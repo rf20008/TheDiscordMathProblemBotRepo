@@ -5,7 +5,8 @@ import more_itertools
 from disnake.ext import commands, tasks
 from mpmath import *
 
-from helpful_modules import checks, custom_bot, problems_module, threads_or_useful_funcs
+from helpful_modules import (checks, custom_bot, problems_module,
+                             threads_or_useful_funcs)
 from helpful_modules.custom_embeds import ErrorEmbed, SimpleEmbed, SuccessEmbed
 from helpful_modules.problems_module import *
 

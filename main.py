@@ -6,6 +6,7 @@
 # imports - standard library
 import asyncio
 import logging
+import signal
 import threading
 import typing
 import warnings
@@ -14,25 +15,20 @@ from copy import copy
 from logging import handlers
 from sys import argv, exc_info, exit, stdout
 from time import sleep
-import signal
 
 # Imports - 3rd party
 from disnake.ext import commands
 
 from cogs import *
-from helpful_modules import (
-    checks,
-    custom_embeds,
-    problems_module,
-    return_intents,
-    save_files,
-    the_documentation_file_loader,
-)
+from helpful_modules import (checks, custom_embeds, problems_module,
+                             return_intents, save_files,
+                             the_documentation_file_loader)
 from helpful_modules.constants_loader import *
 from helpful_modules.cooldowns import check_for_cooldown
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
+from helpful_modules.StatsTrack import (CommandStats, CommandUsage,
+                                        StreamWrapperStorer)
 from helpful_modules.threads_or_useful_funcs import *
-from helpful_modules.StatsTrack import StreamWrapperStorer, CommandStats, CommandUsage
 
 # Imports - My own files
 

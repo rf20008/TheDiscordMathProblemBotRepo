@@ -16,7 +16,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
 
-from typing import Protocol, TypeVar, Dict
+from typing import Dict, Protocol, TypeVar
+
 from .errors import FormatException
 
 T = TypeVar("T")

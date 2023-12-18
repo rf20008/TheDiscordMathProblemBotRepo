@@ -1,8 +1,10 @@
 import sys
+import traceback
+
 import dislash
 import nextcord
+
 from .helper_cog import *
-import traceback
 
 
 class ErrorHandlerCog(HelperCog):

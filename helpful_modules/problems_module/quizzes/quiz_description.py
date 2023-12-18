@@ -1,8 +1,9 @@
 import typing as t
 from dataclasses import dataclass
+
 from ..dict_convertible import DictConvertible
-from .related_enums import QuizIntensity, QuizTimeLimit
 from ..errors import FormatException
+from .related_enums import QuizIntensity, QuizTimeLimit
 
 
 @dataclass

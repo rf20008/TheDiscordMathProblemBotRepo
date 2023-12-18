@@ -13,7 +13,6 @@ from helpful_modules.dict_factory import dict_factory
 
 from ..errors import *
 from ..mysql_connector_with_stmt import mysql_connection
-
 from ..user_data import UserData
 from .quiz_related_cache import QuizRelatedCache
 

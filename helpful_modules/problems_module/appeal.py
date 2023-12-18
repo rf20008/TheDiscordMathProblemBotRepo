@@ -1,7 +1,9 @@
 from enum import Enum
 from typing import *
-from .dict_convertible import DictConvertible
+
 from disnake.utils import format_dt
+
+from .dict_convertible import DictConvertible
 
 
 class AppealType(Enum):

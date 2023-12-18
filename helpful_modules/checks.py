@@ -1,9 +1,11 @@
+import time
+
 import disnake
 from disnake.ext import commands
-import time
+
 from .custom_bot import TheDiscordMathProblemBot
 from .problems_module.user_data import UserData
-from .StatsTrack import CommandUsage, CommandStats, StreamWrapperStorer
+from .StatsTrack import CommandStats, CommandUsage, StreamWrapperStorer
 
 bot = None
 MAX_LIMIT = 120_000  # Nothing longer than 120,000 characters

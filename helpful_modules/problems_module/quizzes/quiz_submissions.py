@@ -1,9 +1,10 @@
 from dataclasses import dataclass
-from typing import Union, Optional, Dict
-from ...threads_or_useful_funcs import assert_type_or_throw_exception
-from ..errors import MathProblemsModuleException
+from typing import Dict, Optional, Union
 from warnings import warn
+
+from ...threads_or_useful_funcs import assert_type_or_throw_exception
 from ..dict_convertible import DictConvertible
+from ..errors import MathProblemsModuleException
 
 
 @dataclass

@@ -1,15 +1,20 @@
 import asyncio
-from helpful_modules import threads_or_useful_funcs
-from unittest.mock import *
-import disnake
-import disnake.ext
-import unittest
-import unittest.mock
+import concurrent.futures
 import datetime
+import logging
 import math
 import random
-import logging
+import unittest
+import unittest.mock
+from unittest.mock import *
+
+import aiofiles
+import disnake
+import disnake.ext
+
+from helpful_modules import threads_or_useful_funcs
 from helpful_modules.custom_embeds import ErrorEmbed
+
 
 class TestFailure(Exception):
     """A test is failing!!!"""
@@ -100,14 +105,19 @@ class TestWraps(unittest.IsolatedAsyncioTestCase):
             return x * x + 3 * x + 2
 
         wrapped_f = threads_or_useful_funcs.async_wrap(f)
-        self.assertEqual(f(0), await wrapped_f(0))
-        self.assertEqual(f(3), await wrapped_f(3))
-        self.assertEqual(f(100), await wrapped_f(100))
-        self.assertNotEqual(f(0), await wrapped_f(30333))
+        self.assertEqual(f(0), await wrapped_f(0), "f and wrapped_f are not functionally equivalent, as f(0) != wrapped_f(0)")
+        self.assertEqual(f(3), await wrapped_f(3), "f and wrapped_f are not functionally equivalent, as f(3) != wrapped_f(3)")
+        self.assertEqual(f(100), await wrapped_f(100), "f and wrapped_f are not functionally equivalent, as f(100) != wrapped_f(100)")
+        self.assertNotEqual(f(0), await wrapped_f(30333), "They are equal for some function!")
 
     async def test_async_wrap_with_executor(self):
         # NOTE: THIS CAME FROM CHATGPT
         # Define a synchronous function
+        loop = None
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
         def sync_function():
             return "Hello, World!"
 
@@ -115,10 +125,10 @@ class TestWraps(unittest.IsolatedAsyncioTestCase):
         async_wrapped_function = threads_or_useful_funcs.async_wrap(sync_function)
 
         # Mock an executor
-        executor_mock = unittest.mock.Mock()
+        executor_mock = unittest.mock.AsyncMock(spec=type(loop))
 
         # Call the wrapped function with the executor within an async context
-        await async_wrapped_function(executor=executor_mock)
+        await async_wrapped_function(loop=executor_mock)
 
         # Assert that the executor's run_in_executor method was called
         executor_mock.run_in_executor.assert_called_once()
@@ -304,7 +314,11 @@ class TestExtendedGCD(unittest.TestCase):
         for i in range(300):
             a,b, d = generate_many_randoms(3, lows=[1, 1, 1], highs=[30000, 30000, 30000])
             g,x,y = threads_or_useful_funcs.extended_gcd(a*d,b*d)
-            self.assertEqual(x*a+y*b, g, f"Bezout's condition was not satisfied when a={a}, b={b}, d={d}")
+            real_gcd = math.gcd(a*d, b*d)
+            self.assertEqual(g, real_gcd, f"Our program said gcd({a}, {b})={g} but in reality it is {real_gcd}")
+            self.assertEqual(x*a*d+y*b*d, g, f"Bezout's condition was not satisfied when a={a}, b={b}, d={d} (x={x}, y={y}, d={d}, xy+ab={x*a*d+y*b*d}, g={g}), real_gcd={real_gcd}")
+
+
 class TestMillerRabin(unittest.TestCase):
     def test_prime_small(self):
         failures = 0
@@ -349,31 +363,37 @@ class TestEvalLogsAndLogs(unittest.IsolatedAsyncioTestCase):
 
     async def test_log_evaled_code(self):
         # Mock async file writing
-        async def mock_open(filepath, mode):
+        mock_file = unittest.mock.MagicMock()
+        mock_file.write = unittest.mock.MagicMock()
+        def reset_mocks():
+            nonlocal mock_file
             mock_file = unittest.mock.MagicMock()
             mock_file.write = unittest.mock.MagicMock()
-            return mock_file
+        mock_open = MagicMock(return_value=mock_file)
 
         # Patch aiofiles.open to use the mock_open function
         with patch("aiofiles.open", new_callable=mock_open):
             code = "print('Hello, World!')"
             filepath = "eval_log/test_date"
             time_ran = datetime.datetime.now()
-
+            reset_mocks()
             # Test if the code is successfully written to the file
             with patch("helpful_modules.threads_or_useful_funcs.humanify_date", return_value="test_date"):
-                threads_or_useful_funcs.log_evaled_code(code, filepath, time_ran)
-                await mock_open("test_date", "r").write.assert_called_with(f"\n{str(time_ran)}\n{code}\n")
+                await threads_or_useful_funcs.log_evaled_code(code, filepath, time_ran)
+                mock_file.write.assert_called_with(f"\n{str(time_ran)}\n{code}\n")
 
+            reset_mocks()
             # Test if the default filepath is used when not provided
             with patch("helpful_modules.threads_or_useful_funcs.humanify_date", return_value="test_date"):
-                threads_or_useful_funcs.log_evaled_code(code, time_ran=time_ran)
-                await mock_open("test_date", "r").write.assert_called_with(f"\n{str(time_ran)}\n{code}\n")
+                await threads_or_useful_funcs.log_evaled_code(code, time_ran=time_ran)
+                mock_file.write.assert_called_with(f"\n{str(time_ran)}\n{code}\n")
 
             # Test if an exception is raised when writing to the file fails
+            reset_mocks()
+
             with patch("aiofiles.open", side_effect=Exception("File write error")):
                 with self.assertRaises(RuntimeError):
-                    threads_or_useful_funcs.log_evaled_code(code, filepath, time_ran)
+                    await threads_or_useful_funcs.log_evaled_code(code, filepath, time_ran)
 
 class TestHumanifyDate(unittest.TestCase):
 
@@ -391,11 +411,4 @@ class TestHumanifyDate(unittest.TestCase):
         self.assertEqual(formatted_date, expected_result)
 
 if __name__ == '__main__':
-    unittest.main()
-
-if __name__ == '__main__':
-    unittest.main()
-if __name__ == '__main__':
-    unittest.main()
-if __name__=="__main__":
     unittest.main()

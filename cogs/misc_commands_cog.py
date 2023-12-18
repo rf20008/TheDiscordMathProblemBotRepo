@@ -7,8 +7,8 @@ from os import cpu_count
 from sys import version, version_info
 from time import asctime
 from typing import Union
-import psutil
 
+import psutil
 from disnake import *
 from disnake.ext import commands
 
@@ -18,6 +18,7 @@ from helpful_modules.custom_buttons import *
 from helpful_modules.custom_embeds import SimpleEmbed
 from helpful_modules.save_files import FileSaver
 from helpful_modules.threads_or_useful_funcs import get_git_revision_hash
+
 from .helper_cog import HelperCog
 
 mb = lambda us: round(us / (1000000), ndigits=3)

@@ -3,6 +3,7 @@ import threading
 import time
 from sys import executable
 
+
 def start():
     os.system(f"cd {executable}; python3.12 main.py")
 

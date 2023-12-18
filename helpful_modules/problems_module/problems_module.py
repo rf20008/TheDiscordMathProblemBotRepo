@@ -1,17 +1,24 @@
-from typing import *
-from time import sleep
-from sqlite3 import *
-from typing import *
-import nextcord, json, warnings, dislash
-from copy import deepcopy, copy
-from nextcord import *
-import pickle, sqlite3
+import asyncio
+import json
+import pickle
+import sqlite3
 import warnings
+from copy import copy, deepcopy
+from sqlite3 import *
+from time import sleep
+from typing import *
+
+import aiosqlite
+import dislash
+import nextcord
 import sqldict  # https://github.com/skylergrammer/sqldict/
-import asyncio, aiosqlite
-from helpful_modules.dict_factory import dict_factory  # Attribution to stackoverflow
-from .errors import *
+from nextcord import *
+
+from helpful_modules.dict_factory import \
+    dict_factory  # Attribution to stackoverflow
+
 from .base_problem import BaseProblem
+from .errors import *
 
 """The core of my bot (very necessary)"""
 from .quizzes import *

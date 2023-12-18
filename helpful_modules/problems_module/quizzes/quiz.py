@@ -2,13 +2,14 @@ import typing
 from typing import List
 
 from helpful_modules.problems_module import BaseProblem
+
 from ..dict_convertible import DictConvertible
+from ..errors import *
 from .quiz_description import QuizDescription
 from .quiz_problem import QuizProblem
 from .quiz_submissions import QuizSubmission
 from .QuizSolvingSession import QuizSolvingSession
 from .related_enums import QuizIntensity, QuizTimeLimit
-from ..errors import *
 
 MAX_PROBLEMS_PER_QUIZ = 100  # todo: lower it - character limits
 

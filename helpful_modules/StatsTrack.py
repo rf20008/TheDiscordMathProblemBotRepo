@@ -30,8 +30,10 @@ class CommandStats:
     unique_users: set[int]
     total_cmds_used: int
 
-    def __init__(self, usages, total_cmds, unique_users):
+    def __init__(self, usages=None, total_cmds=0, unique_users=()):
         self.usages = usages
+        if usages is None:
+            self.usages = []
         self.total_cmds = total_cmds
         self.unique_users = set(unique_users)
 
@@ -47,7 +49,7 @@ class CommandStats:
 
     def to_dict(self):
         return {
-            "usages": [usage.to_dict for usage in self.usages],
+            "usages": [usage.to_dict() for usage in self.usages],
             "unique_users": list(self.unique_users),
             "total_cmds": self.total_cmds,
         }
@@ -61,7 +63,17 @@ class CommandStats:
 
     @classmethod
     def from_dict(cls, data):
+        data["usages"] = list(map(CommandUsage.from_dict, data["usages"]))
         return cls(**data)
+
+    def __eq__(self, other):
+        if not isinstance(other, CommandStats):
+            return False
+        return (
+                self.usages == other.usages and
+                self.unique_users == other.unique_users and
+                self.total_cmds == other.total_cmds
+        )
 
 
 class StreamWrapperStorer:
@@ -77,7 +89,7 @@ class StreamWrapperStorer:
 
     def return_stats(self):
         # assume the stats object is in ONE LINE (not multiple)
-        return json.loads(self.reading.readline())
+        return CommandStats.from_dict(json.loads(self.reading.readline()))
 
     def close(self):
         self.stream.close()

@@ -18,23 +18,20 @@ from helpful_modules import threads_or_useful_funcs
 from helpful_modules.custom_embeds import ErrorEmbed
 
 
-class TestFailure(Exception):
-    """A test is failing!!!"""
-    pass
 def generate_many_randoms(many=1, lows=[], highs=[]):
     if len(highs) != len(lows) or len(lows) != many:
         raise ValueError("the arrays given do not match")
     return (random.randint(lows[i], highs[i]) for i in range(many))
-def test_embed_equality(expected, result):
+def check_embed_equality(expected, result):
     if not isinstance(result, disnake.Embed):
-        raise TestFailure("the result is not an Embed")
+        raise TypeError("the result is not an Embed")
     if not isinstance(expected, disnake.Embed):
-        print("expected isn't an embed either")
+        raise TypeError("expected isn't an embed either")
     for slot in expected.__slots__:
         if slot == "colour":
             slot = "color"
         if getattr(expected, slot, None) != getattr(result, slot, None):
-            raise TestFailure(f"""The embeds don't match 
+            raise ValueError(f"""The embeds don't match 
     (slot {slot}) is not the same
     expected's value is "{getattr(expected, slot, None)}"
     but actual's value is "{getattr(result, slot, None)}" """)
@@ -212,7 +209,7 @@ The error traceback is below."""
         expected_result = {
             "embed": ErrorEmbed("You are not the owner of this bot.")
         }
-        test_embed_equality(expected_result["embed"], result["embed"])
+        check_embed_equality(expected_result["embed"], result["embed"])
         self.assertEqual(result, expected_result, "Results do not match")
         mock_log.assert_not_called()
 
@@ -228,7 +225,7 @@ The error traceback is below."""
         expected_result = {
             "embed": ErrorEmbed(error_message)
         }
-        test_embed_equality(expected_result["embed"], result["embed"])
+        check_embed_equality(expected_result["embed"], result["embed"])
         #self.assertTrue(expected_result == result, f"The embeds do not match: expected = {repr(expected_result['embed'])} but actual is {repr(result['embed'].__dict__)}")
 
     @unittest.mock.patch("helpful_modules._error_logging.log_error_to_file")

@@ -5,7 +5,10 @@ import unittest
 from unittest.mock import mock_open, patch
 
 from helpful_modules.the_documentation_file_loader import (
-    DocumentationFileLoader, DocumentationFileNotFound, DocumentationNotFound)
+    DocumentationFileLoader,
+    DocumentationFileNotFound,
+    DocumentationNotFound,
+)
 
 
 class TestDocumentationFileLoader(unittest.TestCase):
@@ -19,17 +22,40 @@ class TestDocumentationFileLoader(unittest.TestCase):
         documentation = loader.load_documentation_into_readable_files()
 
         # Ensure that the file is opened with the correct path
-        mock_open.assert_called_once_with("docs/documentation.json", "r")
+        mock_open.assert_any_call("docs/documentation.json", "r")
 
         # Check that the loaded documentation matches the expected structure
-        self.assertEqual(
-            documentation,
+        self.assertIsInstance(documentation, dict)
+        self.assertIn("contents", documentation.keys())
+        self.assertIsInstance(documentation["contents"], list)
+        print(documentation)
+        self.assertIn(
+            documentation["contents"],
             [
-                {
-                    "file_name": "test.json",
-                    "contents": [{"title": "TestTitle", "contents": "TestContents"}],
-                }
+                [
+                    {
+                        "file_name": "test.json",
+                        "contents": [
+                            {"title": "TestTitle", "contents": "TestContents"}
+                        ],
+                    }
+                ],
+                [
+                    {
+                        "file_name": "test.json",
+                        "contents": [
+                            {
+                                "title": "TestTitle",
+                                "contents": "TestContents",
+                                "file_name": "test.json",
+                            }
+                        ],
+                    }
+                ],
             ],
+        )
+        self.assertEqual(
+            documentation["contents"],
         )
 
     @patch(

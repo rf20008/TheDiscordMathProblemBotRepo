@@ -122,7 +122,7 @@ async def base_on_error(
     try:
         await log_error(error)  # Log the error
     except Exception as log_error_exc:
-        print("This error didn't want to be logged")
+
         error_msg += """Additionally, while trying to log this error, the following exception occurred: \n""" + \
                      disnake.utils.escape_markdown(
                          "\n".join(traceback.format_exception(log_error_exc))

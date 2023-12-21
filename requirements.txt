@@ -13,3 +13,6 @@ fakeredis>=2.20.0
 git+git://github.com/omnilib/aiosqlite.git@main
 git+git://github.com/DisnakeDev/disnake.git@main
 git+git://github.com/ijl/orjson.git
+pyfakefs>=5.3.2
+pytest>=7.4.3
+pytest-aiofiles>=0.2.0

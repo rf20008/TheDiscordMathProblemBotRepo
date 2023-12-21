@@ -63,7 +63,7 @@ No Mark: This is a command without user restrictions"""
             for Item in item2:
                 dictToStoreFileContent[docs_json["file_name"]] += (
                     "\n"
-                    + "#" * Item["heading_level"]
+                    + "#" * Item.get("heading_level", 0)
                     + " "
                     + Item["title"]
                     + "\n"
@@ -78,16 +78,17 @@ No Mark: This is a command without user restrictions"""
     def get_documentation(self, documentationSource, documentationItem):
         _documentation = None
         documentation_from_json = self._load_documentation_file()
-        for item in documentation_from_json:
-            if documentation_from_json["file_name"] == documentationSource:
-                _documentation = item
+        for key, value in documentation_from_json.items():
+            print(key, value)
+            if value["file_name"] == documentationSource:
+                _documentation = value
                 break
-        if _documentation == None:
+        if _documentation is None:
             raise DocumentationFileNotFound(
                 f"Documentation file {documentationSource} not found"
             )
-        for item2 in _documentation["contents"]:
-            print(type(item2))
+
+        for item2 in _documentation["contents"]: # try to find the documentation by looping
             if item2["title"] == documentationItem:
                 return item2["contents"]
         raise DocumentationNotFound(f"Documentation for {documentationItem} not found")

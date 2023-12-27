@@ -42,6 +42,6 @@ class RestartTheBot:
         ## I learned that starting a new process that starts a new copy of the bot is better than starting the bot directly
         # the hard way
 
-        command = executable + " actuaL_restarter.py" #
+        command = executable + " actual_restarter.py" #
         subprocess.run(command.split(), capture_output=True, shell=True)
         os._exit(1)

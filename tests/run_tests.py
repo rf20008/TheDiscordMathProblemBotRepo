@@ -1,5 +1,7 @@
 import unittest
 import os
+import importlib
+
 
 def discover_and_import_tests(start_dir="."):
     suite = unittest.TestSuite()
@@ -8,13 +10,13 @@ def discover_and_import_tests(start_dir="."):
         for file_name in files:
             if file_name.startswith("test_") and file_name.endswith(".py"):
                 # Construct the module name by removing the ".py" extension
-                module_name = os.path.splitext(file_name)[0]
-
+                relative_path = os.path.relpath(os.path.join(root, file_name), start=start_dir)
+                module_name = os.path.splitext(relative_path.replace(os.path.sep, '.'))[0]
                 # Build the relative path to the module
                 relative_path = os.path.relpath(os.path.join(root, file_name), start=start_dir)
                 print(module_name, relative_path)
                 # Import the module dynamically
-                test_module = __import__(module_name, fromlist=[relative_path])
+                test_module = importlib.import_module(module_name)
 
                 # Iterate through the attributes of the module
                 for name in dir(test_module):

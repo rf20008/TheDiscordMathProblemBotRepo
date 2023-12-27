@@ -24,5 +24,5 @@ from .cache import *
 from .errors import *
 from .quizzes import *
 from .user_data import UserData
-
+from .cache_rewrite_with_redis import RedisCache
 __version__ = "0.1.0"

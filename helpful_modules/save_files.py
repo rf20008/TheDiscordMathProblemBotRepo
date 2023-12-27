@@ -1,5 +1,4 @@
 import json
-
 from . import problems_module
 
 numFileSavers = 0
@@ -37,7 +36,7 @@ class FileSaver:
 
     def load_files(self, main_cache, printSuccessMessages=None):
         """Loads files from file names specified in self.__init__."""
-        if not isinstance(main_cache, problems_module.MathProblemCache):
+        if not isinstance(main_cache, problems_module.MathProblemCache) and not isinstance(main_cache, problems_module.RedisCache):
             raise TypeError("main_cache is not a MathProblemCache.")
         if not self.enabled:
             raise RuntimeError("I'm not enabled! I can't load files!")
@@ -58,10 +57,12 @@ class FileSaver:
                 trusted_users.append(int(line))
         vote_threshold = False
         with open("vote_threshold.txt", "r") as file3:
-            for line in file3:
-                if str(
-                    line
-                ).isnumeric():  # Make sure that an empty string does not become the new vote threshold
+            lines = file3.readlines()
+            for line in lines:
+
+                # Make sure that an empty string does not become the new vote threshold
+
+                if str(line).isnumeric():
                     vote_threshold = int(line)
         if not vote_threshold:
             raise RuntimeError("vote_threshold not given!!")
@@ -91,9 +92,10 @@ class FileSaver:
         math_problems_dict={},
         trusted_users_list={},
     ):
-        """Saves files to file names specified in __init__."""
+        """Saves files to file names specified in __init__.
+        It does NOT SAVE the math_problems_dict"""
 
-        if not isinstance(main_cache, problems_module.MathProblemCache):
+        if not isinstance(main_cache, problems_module.MathProblemCache) and not isinstance(main_cache, problems_module.RedisCache):
             raise TypeError("main_cache is not a MathProblemCache.")
         if not self.enabled:
             raise RuntimeError("I'm not enabled! I can't load files!")
@@ -118,6 +120,8 @@ class FileSaver:
         with open("guild_math_problems.json", "w") as file4:
             e = json.dumps(obj=guild_math_problems_dict)
             file4.write(e)
+        with open("math_problems.json", "w") as file5:
+            json.dump(fp=file5, obj=math_problems_dict)
         if (
             printSuccessMessages
             or printSuccessMessages is None

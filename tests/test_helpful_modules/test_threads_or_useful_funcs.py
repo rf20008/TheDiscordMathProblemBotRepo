@@ -448,6 +448,8 @@ class TestMillerRabin(unittest.TestCase):
 
 
 class TestEvalLogsAndLogs(unittest.IsolatedAsyncioTestCase):
+    def setUp(self):
+        pyfakefs.setUpPyfakefs()
     async def test_ensure_eval_logs_exist(self):
         # Test if the logs folder is created successfully
         with patch("builtins.print") as mock_print:

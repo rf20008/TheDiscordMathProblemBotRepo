@@ -79,8 +79,8 @@ No Mark: This is a command without user restrictions"""
         _documentation = None
         documentation_from_json = self._load_documentation_file()
         for key, value in documentation_from_json.items():
-            print(key, value)
-            if value["file_name"] == documentationSource:
+            valuejson = json.loads(value)
+            if valuejson["file_name"] == documentationSource:
                 _documentation = value
                 break
         if _documentation is None:

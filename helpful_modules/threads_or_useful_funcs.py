@@ -278,7 +278,7 @@ def get_log(name: Optional[str]) -> logging.Logger:
 
 async def log_evaled_code(code: str, filepath: str = "", time_ran: datetime.datetime = None) -> None:
     if time_ran == None:
-        time = datetime.datetime.now()
+        time_ran = datetime.datetime.now()
     # determine the filepath
     date = humanify_date(time_ran)
     if filepath == "":

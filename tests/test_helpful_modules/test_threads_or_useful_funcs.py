@@ -14,7 +14,8 @@ import disnake.ext
 from helpful_modules import threads_or_useful_funcs
 from helpful_modules.custom_embeds import ErrorEmbed
 
-#import pyfakefs.fake_filesystem_unittest
+import pyfakefs.fake_filesystem_unittest
+import pyfakefs
 
 def generate_many_randoms(many=1, lows=(), highs=()):
     if len(highs) != len(lows) or len(lows) != many:
@@ -448,9 +449,9 @@ class TestMillerRabin(unittest.TestCase):
 
 
 class TestEvalLogsAndLogs(unittest.IsolatedAsyncioTestCase):
-    def setUp(self):
-        pyfakefs.setUpPyfakefs()
-    async def test_ensure_eval_logs_exist(self):
+
+    @pyfakefs.fake_filesystem_unittest.patchfs
+    async def test_ensure_eval_logs_exist(self, fake_fs):
         # Test if the logs folder is created successfully
         with patch("builtins.print") as mock_print:
             threads_or_useful_funcs.ensure_eval_logs_exist()
@@ -464,6 +465,7 @@ class TestEvalLogsAndLogs(unittest.IsolatedAsyncioTestCase):
                     "I don't have permission to create an eval logs folder so logs may be missing!"
                 )
 
+    @pyfakefs.fake_filesystem_unittest.patchfs
     async def test_get_log(self):
         with open("logs/bot.log", "w") as f:
             f.write("hehe boi!!!")
@@ -477,6 +479,7 @@ class TestEvalLogsAndLogs(unittest.IsolatedAsyncioTestCase):
             )
         )
 
+    @pyfakefs.fake_filesystem_unittest.patchfs
     async def test_log_evaled_code(self):
         # TODO: fix the mocking of aiofiles (the problem is __aenter__)
         # Mock async file writing

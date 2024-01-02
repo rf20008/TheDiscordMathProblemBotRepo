@@ -5,6 +5,7 @@ import datetime
 import io
 import textwrap
 from traceback import format_exception
+from os import urandom
 
 import disnake
 from disnake.ext import commands
@@ -280,7 +281,7 @@ class DebugCog(HelperCog):
     async def eval2(self, inter):
         """/eval2
 
-        R"""
+        This does Eval2. It is restricted to owners only. This command gives a modal"""
         if not await self.bot.is_owner(inter.author):
             raise commands.NotOwner("You must be the owner to use /eval2")
 

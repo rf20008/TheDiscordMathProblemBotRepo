@@ -15,7 +15,7 @@ class MyModal(Modal):
 
         self._callback = kwargs.pop("callback", default_callback)
 
-        async def _check(s, inter):
+        async def _check(*args, **kwargs):
             return True
 
         kwargs["custom_id"] = (

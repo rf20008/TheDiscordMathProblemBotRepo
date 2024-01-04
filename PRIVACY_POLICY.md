@@ -1,5 +1,5 @@
 # Privacy policy
-Disclaimer: I am not a lawyer.
+Disclaimer: I am not a lawyer. I am only a student, as of January 4, 2024. If you want legal advice, please ask a real lawyer.
 
 Most of the content in this privacy policy should be self-explanatory. (Write to me if it isn't!)
 If you use this application (the Discord Math Problem Bot), (I assume that) you (would) agree to this policy. If you do not agree, don't use this application! The only data we'll store about you without your consent is whether you're blacklisted or not. By using this bot, you agree to us storing data about you in accordance with my Privacy Policy!

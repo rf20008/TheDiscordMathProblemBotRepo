@@ -14,12 +14,9 @@ class TestMyModals(unittest.IsolatedAsyncioTestCase):
             inter=unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction),
             components=[],
         )
-        self.assertRaises(
-            NotImplementedError,
-            modal_2.callback,
-            unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction)
-        )
-
+        with self.assertRaises(NotImplementedError):
+            await modal_2.callback(unittest.mock.AsyncMock(spec=disnake.ModalInteraction))
+        self.assertTrue(await modal_2._check(unittest.mock.AsyncMock(spec=int)))
 
     @unittest.mock.patch("builtins.print")
     async def test_custom_callback_called_on_interaction(self, mock_print):
@@ -68,7 +65,7 @@ class TestMyModals(unittest.IsolatedAsyncioTestCase):
             err = Exception("Test Exception")
             raise err
         except Exception as error:
-            actual_return_stuff = await threads_or_useful_funcs.base_on_error(error, interaction)
+            actual_return_stuff = await threads_or_useful_funcs.base_on_error(interaction, error)
             # Act
             await modal.on_error(error, interaction)
 

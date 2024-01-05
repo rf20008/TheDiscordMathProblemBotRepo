@@ -10,12 +10,11 @@ class MyModal(Modal):
     """A wrapper around disnake.Modal that allows passing in a custom callback :-)"""
 
     def __init__(self, *args, **kwargs):
-        async def default_callback(modal_inter):
+        async def default_callback(modal, modal_inter, *args, **kwargs):
             raise NotImplementedError
 
         self._callback = kwargs.pop("callback", default_callback)
-
-        async def _check(*args, **kwargs):
+        async def _check(inter, *args, **kwargs):
             return True
 
         kwargs["custom_id"] = (
@@ -31,7 +30,7 @@ class MyModal(Modal):
         super().__init__(*args, **kwargs)
 
     async def callback(self, inter: disnake.ModalInteraction):
-        if await self._check(self, inter):
+        if await self._check(inter):
             await self._callback(self, inter, *self._extra_args)
 
     async def on_error(self, error, inter):

@@ -28,8 +28,9 @@ class TestMockableAioFiles(TestCase):
 
     def setUp(self):
         self.setUpPyfakefs()
+        self.loop = asyncio.new_event_loop()
 
-    async def test_write_and_read(self):
+    async def write_and_read_test(self):
         async with MockableAioFiles('test_file.txt', 'w') as mock_file:
             await mock_file.write('This is a test.')
 
@@ -37,8 +38,9 @@ class TestMockableAioFiles(TestCase):
         with open('test_file.txt', 'r') as file:
             content = file.read()
         self.assertEqual(content, 'This is a test.')
-
-    async def test_readline(self):
+    def test_write_and_read(self):
+        self.loop.run_until_complete(self.write_and_read_test())
+    async def readline_test(self):
         # Use standard open() to write content
         with open('test_file.txt', 'w') as file:
             file.write('Line 1\nLine 2\nLine 3\n')
@@ -48,8 +50,9 @@ class TestMockableAioFiles(TestCase):
             line2 = await mock_file.readline()
         self.assertEqual(line1, 'Line 1\n')
         self.assertEqual(line2, 'Line 2\n')
-
-    async def test_readall(self):
+    def test_readline(self):
+        self.loop.run_until_complete(self.readline_test())
+    async def readall_test(self):
         # Use standard open() to write content
         with open('test_file.txt', 'w') as file:
             file.write('Content\nMore content\nFinal content\n')
@@ -57,8 +60,9 @@ class TestMockableAioFiles(TestCase):
         async with MockableAioFiles('test_file.txt', 'r') as mock_file:
             content = [chunk async for chunk in mock_file.readall()]
         self.assertEqual(content, ['C', 'o', 'n', 't', 'e', 'n', 't', '\n', 'M', 'o', 'r', 'e', ' ', 'c', 'o', 'n', 't', 'e', 'n', 't', '\n', 'F', 'i', 'n', 'a', 'l', ' ', 'c', 'o', 'n', 't', 'e', 'n', 't', '\n'])
-
-    async def test_readlines(self):
+    def test_readall(self):
+        self.loop.run_until_complete(self.readall_test())
+    async def readlines_test(self):
         # Use standard open() to write content
         with open('test_file.txt', 'w') as file:
             file.write('Line 1\nLine 2\nLine 3\n')
@@ -66,8 +70,9 @@ class TestMockableAioFiles(TestCase):
         async with MockableAioFiles('test_file.txt', 'r') as mock_file:
             lines = [line async for line in mock_file.readlines()]
         self.assertEqual(lines, ['Line 1\n', 'Line 2\n', 'Line 3\n'])
-
-    async def test_close(self):
+    def test_readlines(self):
+        self.loop.run_until_complete(self.readlines_test())
+    async def close_test(self):
         async with MockableAioFiles('test_file.txt', 'w') as mock_file:
             await mock_file.write('Test content.')
 
@@ -75,17 +80,20 @@ class TestMockableAioFiles(TestCase):
         with open('test_file.txt', 'r') as file:
             content = file.read()
         self.assertEqual(content, 'Test content.')
-
-    async def test_iteration(self):
+    def test_close(self):
+        self.loop.run_until_complete(self.close_test())
+    async def iteration_test(self):
         # Use standard open() to write content
         with open('test_file.txt', 'w') as file:
             file.write('Line 1\nLine 2\nLine 3\n')
 
         async with MockableAioFiles('test_file.txt', 'r') as mock_file:
+            print(mock_file.__class__.__name__)
             lines = [line async for line in mock_file]
         self.assertEqual(lines, ['Line 1\n', 'Line 2\n', 'Line 3\n'])
-
-    async def test_read_write_same_file(self):
+    def test_iteration(self):
+        self.loop.run_until_complete(self.iteration_test())
+    async def read_write_same_file_test(self):
         async with MockableAioFiles('test_file.txt', 'w') as mock_file:
             # Attempting to read from the file opened in write mode should raise ValueError
             with self.assertRaises(ValueError):
@@ -98,7 +106,8 @@ class TestMockableAioFiles(TestCase):
             with self.assertRaises(ValueError):
                 await mock_file_read.write('Invalid write operation.')
             await mock_file_read.__aexit__()
-
+    def test_read_write_same_file(self):
+        self.loop.run_until_complete(self.read_write_same_file_test())
 if __name__ == '__main__':
     unittest.main()
 

@@ -41,17 +41,18 @@ class TestDocumentationFileLoader(pyfakefs.fake_filesystem_unittest.TestCase):
             [{"title": "TestTitle", "contents": "TestContents"}]
         )
 
-    @patch(
-        "builtins.open",
-        new_callable=mock_open,
-        read_data='{"file_name": "test.json", "contents": []}',
-    )
-    def test_get_documentation(self, mock_open):
-        loader = DocumentationFileLoader()
 
+    def test_get_documentation(self):
+        """Basic tests for get_documentation"""
+
+
+        loader = DocumentationFileLoader()
+        self.fs.create_dir("docs/")
+        with open("docs/documentation.json", "w") as f:
+            f.write('[{"file_name": "test.json", "contents": {"OWO": "OWO", "title": "TestTitle"}}]')
         # Test successful retrieval
         documentation = loader.get_documentation("test.json", "TestTitle")
-        self.assertEqual(documentation, "TestContents")
+        self.assertEqual(documentation, {"OWO": "OWO", "title": "TestTitle"})
 
         # Test file not found
         with self.assertRaises(DocumentationFileNotFound):

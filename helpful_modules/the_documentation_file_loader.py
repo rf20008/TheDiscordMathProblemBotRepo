@@ -78,17 +78,25 @@ No Mark: This is a command without user restrictions"""
     def get_documentation(self, documentationSource, documentationItem):
         _documentation = None
         documentation_from_json = self._load_documentation_file()
-        for key, value in documentation_from_json.items():
-            valuejson = json.loads(value)
-            if valuejson["file_name"] == documentationSource:
-                _documentation = value
+        for value in documentation_from_json:
+            value_json = value
+            if isinstance(value_json, (str, bytes, bytearray)):
+                value_json = json.loads(value_json)
+
+
+            if value_json["file_name"] == documentationSource:
+                _documentation = value_json
                 break
         if _documentation is None:
             raise DocumentationFileNotFound(
                 f"Documentation file {documentationSource} not found"
             )
-
-        for item2 in _documentation["contents"]: # try to find the documentation by looping
-            if item2["title"] == documentationItem:
-                return item2["contents"]
+        if "title" in _documentation.keys():
+            if _documentation["title"] != documentationSource:
+                raise DocumentationFileNotFound("Malformed documentation... or it's not found")
+            return _documentation
+        if _documentation["contents"]["title"] != documentationItem:
+            raise DocumentationNotFound("Documentation not found...")
+        else:
+            return _documentation["contents"]
         raise DocumentationNotFound(f"Documentation for {documentationItem} not found")

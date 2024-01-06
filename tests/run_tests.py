@@ -30,7 +30,7 @@ def discover_and_import_tests(start_dir="."):
 
 if __name__ == '__main__':
     # Run the dynamically discovered test suite
-    runner = unittest.TextTestRunner()
+    runner = unittest.TextTestRunner(verbosity=2)
     tests = discover_and_import_tests()
     print("Testing now!!!!")
     result = runner.run(tests)

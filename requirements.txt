@@ -16,3 +16,4 @@ git+git://github.com/ijl/orjson.git
 pyfakefs>=5.3.2
 pytest>=7.4.3
 pytest-aiofiles>=0.2.0
+func-timeout>=4.3.5

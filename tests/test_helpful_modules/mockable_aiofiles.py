@@ -75,13 +75,15 @@ class MockableAioFiles:
             raise RuntimeError("Cannot enter a context manager for the same file when it's already open.")
         self.file = open(self.file_name, self.mode, *self.args, **self.kwargs)
         return self
-    async def __aexit__(self, exc_type, exc_value, traceback):
+    async def __aexit__(self, exc_type=None, exc_value=None, traceback=None):
         """
         Exits the context and ensures proper file closure.
 
         Raises:
             RuntimeError: If there are issues with file closing.
         """
+        if exc_type is not None and exc_value is not None and traceback is not None:
+            raise RuntimeError("I do not know how to deal with this") from exc_value
         if not self.file:
             raise RuntimeError("Cannot close an already closed file.")
         self.file.close()
@@ -147,7 +149,11 @@ class MockableAioFiles:
             raise RuntimeError("Cannot read from a closed file")
         try:
             while True:
-                yield await self.read(1)
+                thing = await self.read(1)
+                if not thing:
+                    break
+                    # raise StopIteration("there's nothing to read anymore")
+                yield thing
         except EOFError:
             pass
 
@@ -156,7 +162,10 @@ class MockableAioFiles:
             raise RuntimeError("Cannot read from a closed file")
         try:
             while True:
-                yield await self.readline()
+                line = await self.readline()
+                if not line:
+                    break
+                yield line
         except EOFError:
             pass
 
@@ -172,11 +181,12 @@ class MockableAioFiles:
         self.file.close()
         self.file = None
 
-    def __aiter__(self):
+    async def __aiter__(self):
         """
         Allows the class to be an iterable.
 
         Returns:
             Generator[str]: the iterable object
         """
-        return self.readlines()
+        async for line in self.readlines():
+            yield line

@@ -24,13 +24,13 @@ class UserDataRelatedCache(QuizRelatedCache):
         raise RuntimeError("I don't want to be string-ified")
 
     async def get_user_data(
-        self, user_id: int, default: typing.Optional[UserData] = None
+        self, user_id: int, default: typing.Optional[UserData] | str = None
     ):
         log.debug(
             f"get_user_data method called. user_id: {user_id}, default: {default}"
         )
         assert isinstance(user_id, int)
-        assert isinstance(default, UserData) or default is None or default == Exception
+        assert isinstance(default, UserData) or default is None or isinstance(default, str)
         if default is None:
             default = UserData(user_id=user_id, trusted=False, blacklisted=False)
             # To avoid mutable default arguments
@@ -54,7 +54,8 @@ class UserDataRelatedCache(QuizRelatedCache):
                     return UserData.from_dict(dict_to_use)
                 else:
                     raise TooMuchUserDataException(
-                        f"Too much user data; found {len(cursor_results)} results; expected either 1 or 0"
+                        f"Too much user data; found {len(cursor_results)} results, but only 0 or 1 results are expected."
+                        f"Results: {cursor_results}"
                     )
         else:
             with mysql_connection(
@@ -66,7 +67,7 @@ class UserDataRelatedCache(QuizRelatedCache):
                 log.debug("Connected to MySQL")
                 cursor = connection.cursor(dictionaries=True)
                 cursor.execute(
-                    "SELECT * FROM user_data WHERE USER_ID=%s",
+                    "SELECT * FROM user_data WHERE user_id=?",
                     (user_id,),  # TODO: fix placeholders
                 )
                 results = list(cursor.fetchall())
@@ -78,19 +79,15 @@ class UserDataRelatedCache(QuizRelatedCache):
                 else:
                     try:
                         raise TooMuchUserDataException(
-                            f"Too much user data; found {len(results)} results;    expected either 1 or 0"
+                            f"Too much user data; found {len(results)} results, but only 0 or 1 results are expected."
                         )
                     except NameError:
-                        raise MathProblemsModuleException("Too much user data found.")
+                        raise TooMuchUserDataException("Too much user data found!")
 
     async def set_user_data(self, user_id: int, new: UserData) -> None:
         """Set the user_data of a user."""
         assert isinstance(user_id, int)
         assert isinstance(new, UserData)
-        if (await self.get_user_data(user_id=user_id, default=Exception)) != Exception:
-            raise UserDataNotExistsException(
-                "User data does not exist! Use add_user_data instead"
-            )
         if self.use_sqlite:
             async with aiosqlite.connect(self.db_name) as conn:
                 log.debug("Connected to SQLite!")
@@ -98,12 +95,19 @@ class UserDataRelatedCache(QuizRelatedCache):
                 blacklisted_int = int(new.blacklisted)
                 trusted_int = int(new.trusted)
                 cursor = await conn.cursor()
-                await cursor.execute(
-                    """UPDATE user_data 
-                SET user_id=?, blacklisted=?, trusted=?
-                WHERE user_id=?;""",
-                    (user_id, blacklisted_int, trusted_int, user_id),
-                )
+                if await self.get_user_data(user_id, default="Okay") == "Okay":
+                    await cursor.execute(
+                        "INSERT INTO user_data (user_id, blacklisted, trusted) VALUES (?, ?, ?)",
+                        (user_id, blacklisted_int, trusted_int)
+                    )
+                else:
+                    await cursor.execute(
+                        """UPDATE user_data 
+                    SET user_id=?, blacklisted=?, trusted=?
+                    WHERE user_id=?;""",
+                        (user_id, blacklisted_int, trusted_int, user_id),
+                    )
+
                 await conn.commit()
                 log.debug("Finished!")
         else:

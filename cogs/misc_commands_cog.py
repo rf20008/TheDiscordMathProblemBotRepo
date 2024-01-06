@@ -685,7 +685,7 @@ class MiscCommandsCog(HelperCog):
             return await inter.send("Can't blacklist user; user already blacklisted")
         else:
             user_data.blacklisted = True
-            await self.cache.add_user_data(user_id=user.id, new=user_data)
+            await self.cache.set_user_data(user_id=user.id, new=user_data)
 
             self.bot.log.info(f"Successfully blacklisted the user with id {user.id}")
             await inter.send("Successfully blacklisted the user!")
@@ -726,11 +726,8 @@ class MiscCommandsCog(HelperCog):
             return await inter.send("Can't un-blacklist user; user not blacklisted")
         else:
             user_data.blacklisted = False
-            try:
-                await self.cache.update_user_data(user_id=user_id, new=user_data)
-            except problems_module.MathProblemsModuleException:
-                await self.cache.add_user_data(user_id=user_id, new=user_data)
-            bot.log.info(f"Successfully un-blacklisted the user with id {user.id}")
+            await self.cache.set_user_data(user_id=user.id, new=user_data)
+            self.bot.log.info(f"Successfully un-blacklisted the user with id {user.id}")
             await inter.send("Successfully un-blacklisted the user!")
 
             # TODO: what do I do after a user gets blacklisted? Do I delete their data?

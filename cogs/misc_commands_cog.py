@@ -680,15 +680,13 @@ class MiscCommandsCog(HelperCog):
                 user_id=user.id, trusted=False, blacklisted=False
             ),
         )
-        if not user_data.blacklisted:
+        if user_data.blacklisted:
             self.bot.log.debug("Can't blacklist user; user already blacklisted")
             return await inter.send("Can't blacklist user; user already blacklisted")
         else:
             user_data.blacklisted = True
-            try:
-                await self.cache.update_user_data(user_id=user_id, new=user_data)
-            except problems_module.MathProblemsModuleException:
-                await self.cache.add_user_data(user_id=user_id, new=user_data)
+            await self.cache.add_user_data(user_id=user.id, new=user_data)
+
             self.bot.log.info(f"Successfully blacklisted the user with id {user.id}")
             await inter.send("Successfully blacklisted the user!")
 
@@ -724,7 +722,7 @@ class MiscCommandsCog(HelperCog):
             ),
         )
         if not user_data.blacklisted:
-            bot.log.debug("Can't un-blacklist user; user not blacklisted")
+            self.bot.log.debug("Can't un-blacklist user; user not blacklisted")
             return await inter.send("Can't un-blacklist user; user not blacklisted")
         else:
             user_data.blacklisted = False

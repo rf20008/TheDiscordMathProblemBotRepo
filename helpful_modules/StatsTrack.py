@@ -63,7 +63,8 @@ class CommandStats:
 
     @classmethod
     def from_dict(cls, data):
-        data["usages"] = list(map(CommandUsage.from_dict, data["usages"]))
+        if "usages" in data.keys():
+            data["usages"] = list(map(CommandUsage.from_dict, data["usages"]))
         return cls(**data)
 
     def __eq__(self, other):

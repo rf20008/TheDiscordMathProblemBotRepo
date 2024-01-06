@@ -74,7 +74,7 @@ class MockableAioFiles:
         if self.file:
             raise RuntimeError("Cannot enter a context manager for the same file when it's already open.")
         self.file = open(self.file_name, self.mode, *self.args, **self.kwargs)
-
+        return self
     async def __aexit__(self, exc_type, exc_value, traceback):
         """
         Exits the context and ensures proper file closure.

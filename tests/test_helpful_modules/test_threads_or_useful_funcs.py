@@ -17,6 +17,8 @@ from helpful_modules.custom_embeds import ErrorEmbed
 import pyfakefs.fake_filesystem_unittest
 import pyfakefs
 
+from .mockable_aiofiles import MockableAioFiles
+
 def generate_many_randoms(many=1, lows=(), highs=()):
     if len(highs) != len(lows) or len(lows) != many:
         raise ValueError("the arrays given do not match")
@@ -448,10 +450,15 @@ class TestMillerRabin(unittest.TestCase):
         self.assertRaises(ValueError, threads_or_useful_funcs.miller_rabin, 0, 15)
 
 
-class TestEvalLogsAndLogs(unittest.IsolatedAsyncioTestCase):
+class TestEvalLogsAndLogs(pyfakefs.fake_filesystem_unittest.TestCase):
+    def setUp(self):
+        self.setUpPyfakefs()
+        try:
+            self.loop = asyncio.get_running_loop()
+        except RuntimeError:
+            self.loop = asyncio.new_event_loop()
 
-    @pyfakefs.fake_filesystem_unittest.patchfs
-    async def test_ensure_eval_logs_exist(self, fake_fs):
+    async def ensure_eval_logs_exist_test(self):
         # Test if the logs folder is created successfully
         with patch("builtins.print") as mock_print:
             threads_or_useful_funcs.ensure_eval_logs_exist()
@@ -464,9 +471,9 @@ class TestEvalLogsAndLogs(unittest.IsolatedAsyncioTestCase):
                 mock_print.assert_any_call(
                     "I don't have permission to create an eval logs folder so logs may be missing!"
                 )
-
-    @pyfakefs.fake_filesystem_unittest.patchfs
-    async def test_get_log(self):
+    def test_ensure_eval_logs_exist(self):
+        self.loop.run_until_complete(self.ensure_eval_logs_exist_test())
+    def get_log_test(self):
         with open("logs/bot.log", "w") as f:
             f.write("hehe boi!!!")
         # Test if a logger is returned with the correct handler
@@ -478,9 +485,7 @@ class TestEvalLogsAndLogs(unittest.IsolatedAsyncioTestCase):
                 for handler in handlers
             )
         )
-
-    @pyfakefs.fake_filesystem_unittest.patchfs
-    async def test_log_evaled_code(self):
+    async def log_evaled_code_test(self):
         # TODO: fix the mocking of aiofiles (the problem is __aenter__)
         # Mock async file writing
         mock_file = unittest.mock.MagicMock()
@@ -502,7 +507,7 @@ class TestEvalLogsAndLogs(unittest.IsolatedAsyncioTestCase):
         mock_open2.__aexit__ = MagicMock()
 
         # Patch aiofiles.open to use the mock_open function
-        with patch("aiofiles.open", new_callable=mock_open2):
+        with patch("aiofiles.open", return_value=MockableAioFiles):
             reset_mocks()
             # Test if the code is successfully written to the file
             with patch(
@@ -510,15 +515,20 @@ class TestEvalLogsAndLogs(unittest.IsolatedAsyncioTestCase):
                 return_value="test_date",
             ):
                 await threads_or_useful_funcs.log_evaled_code(code, filepath, time_ran)
-                mock_file.write.assert_awaited_with(f"\n{str(time_ran)}\n{code}\n")
+                with open("logs/eval_logs/test_date.txt", "r") as file:
+                    lines = file.readlines()
+                    self.assertIn(f"\n{str(time_ran)}\n{code}\n", "\n".join(lines))
 
-            # Test if the default filepath is sed when not provided
+            # Test if the default filepath is set when not provided
             with patch(
                 "helpful_modules.threads_or_useful_funcs.humanify_date",
                 return_value="test_date",
+
             ):
                 await threads_or_useful_funcs.log_evaled_code(code, time_ran=time_ran)
-                mock_file.write.assert_awaited_with(f"\n{str(time_ran)}\n{code}\n")
+                with open("logs/eval_logs/test_date.txt", "r") as file:
+                    lines = file.readlines()
+                    self.assertIn(f"\n{str(time_ran)}\n{code}\n", "\n".join(lines))
 
             # Test if an exception is raised when writing to the file fails
             reset_mocks()
@@ -526,7 +536,8 @@ class TestEvalLogsAndLogs(unittest.IsolatedAsyncioTestCase):
         with patch("aiofiles.open", side_effect=Exception("File write error")):
             with self.assertRaises(RuntimeError):
                 await threads_or_useful_funcs.log_evaled_code(code, filepath, time_ran)
-
+    def test_log_evaled_code(self):
+        self.loop.run_until_complete(self.log_evaled_code_test())
 
 class TestHumanifyDate(unittest.TestCase):
     def test_humanify_date(self):

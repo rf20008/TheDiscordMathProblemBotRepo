@@ -14,7 +14,7 @@ def discover_and_import_tests(start_dir="."):
                 module_name = os.path.splitext(relative_path.replace(os.path.sep, '.'))[0]
                 # Build the relative path to the module
                 relative_path = os.path.relpath(os.path.join(root, file_name), start=start_dir)
-                print(module_name, relative_path)
+                print("Importing", module_name, relative_path)
                 # Import the module dynamically
                 test_module = importlib.import_module(module_name)
 
@@ -31,4 +31,6 @@ def discover_and_import_tests(start_dir="."):
 if __name__ == '__main__':
     # Run the dynamically discovered test suite
     runner = unittest.TextTestRunner()
-    result = runner.run(discover_and_import_tests())
+    tests = discover_and_import_tests()
+    print("Testing now!!!!")
+    result = runner.run(tests)

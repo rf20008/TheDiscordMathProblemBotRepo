@@ -88,7 +88,7 @@ class TestMockableAioFiles(TestCase):
             file.write('Line 1\nLine 2\nLine 3\n')
 
         async with MockableAioFiles('test_file.txt', 'r') as mock_file:
-            print(mock_file.__class__.__name__)
+
             lines = [line async for line in mock_file]
         self.assertEqual(lines, ['Line 1\n', 'Line 2\n', 'Line 3\n'])
     def test_iteration(self):

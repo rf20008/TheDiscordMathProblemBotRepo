@@ -17,7 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
 
-from .mockable_aiofiles import MockableAioFiles
+from tests.mockable_aiofiles import MockableAioFiles
 
 
 import unittest

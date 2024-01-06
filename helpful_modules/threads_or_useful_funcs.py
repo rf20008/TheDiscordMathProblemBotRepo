@@ -284,7 +284,8 @@ async def log_evaled_code(code: str, filepath: str = "", time_ran: datetime.date
     if filepath == "":
         filepath = f"eval_log/{date}"
     try:
-        async with aiofiles.open(filepath, 'a') as file:
+        to_open = aiofiles.open(filepath, 'a')
+        async with to_open as file:
             await file.write("\n"+str(time_ran) + '\n' + code + "\n")
     except Exception as e:
         raise RuntimeError("While attempting to log the code that was evaluated, I ran into some problems!") from e

@@ -1,56 +1,128 @@
 import asyncio
 import json
-
 import aiofiles
-
-"""
-This is used to read config.json, but it could also be used to read any JSON files and treat it like a dictionary, but not like a dictionary
-because
-1) __getitem__ has to be sync
-2) This uses file I/O, instead of dictionaries
-3) The file already needs to exist"""
 
 __all__ = ("AsyncFileDict",)
 
 
 class AsyncFileDict:
-    """This is a class that uses a file and stores JSON. It also uses an internal dictionary"""
+    """A class for asynchronously managing JSON data stored in a file."""
 
     def __init__(self, filename, overwrite=False):
+        """
+        Initialize the AsyncFileDict.
+
+        Parameters:
+        - filename (str): The name of the file to read or write JSON data.
+        - overwrite (bool): If True, overwrite the file if it exists.
+
+        """
         self.filename = filename
         self.dict = {}
         if overwrite:
             asyncio.run(self.update_my_file())
 
     async def update_my_file(self):
+        """
+        Asynchronously update the file with the internal dictionary.
+
+        Returns:
+        - None
+
+        """
         async with aiofiles.open(self.filename, "wb") as file:
             await file.write(bytes(json.dumps(self.dict), "utf-8"))
-            return
 
     async def read_from_file(self) -> dict:
+        """
+        Asynchronously read JSON data from the file into the internal dictionary.
+
+        Returns:
+        - dict: The internal dictionary.
+
+        """
         async with aiofiles.open(self.filename, "r") as file:
             self.dict = json.loads(await file.read())
             return self.dict
 
     async def get_key(self, key):
+        """
+        Asynchronously get the value associated with the given key.
+
+        Parameters:
+        - key: The key to retrieve.
+
+        Returns:
+        - The value associated with the key.
+
+        """
         return (await self.read_from_file())[key]
 
     async def set_key(self, key, val):
+        """
+        Asynchronously set a key-value pair and update the file.
+
+        Parameters:
+        - key: The key to set.
+        - val: The value to associate with the key.
+
+        Returns:
+        - None
+
+        """
         self.dict[key] = val
-        await self.update_my_file()  # This could raise a JSONEncodeError
+        await self.update_my_file()
 
     async def del_key(self, key):
+        """
+        Asynchronously delete a key-value pair and update the file.
+
+        Parameters:
+        - key: The key to delete.
+
+        Returns:
+        - None
+
+        """
         del self.dict[key]
         await self.update_my_file()
 
     def __iter__(self):
+        """
+        Return an iterator for the keys in the internal dictionary.
+
+        Returns:
+        - Iterator for keys.
+
+        """
         return self.dict.__iter__()
 
     def keys(self):
+        """
+        Return a view of the keys in the internal dictionary.
+
+        Returns:
+        - View of keys.
+
+        """
         return self.dict.keys()
 
     def values(self):
+        """
+        Return a view of the values in the internal dictionary.
+
+        Returns:
+        - View of values.
+
+        """
         return self.dict.items()
 
     def items(self):
+        """
+        Return a view of the key-value pairs in the internal dictionary.
+
+        Returns:
+        - View of key-value pairs.
+
+        """
         return self.dict.items()

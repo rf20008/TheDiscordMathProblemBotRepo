@@ -188,8 +188,7 @@ venv/*
 
 # Ignore the DB
 *.db
-MathProblemCache1.db
-
+eval_log/*
 #Whitelists
 #never ignore any python file :)
 !**/*.py
@@ -202,3 +201,5 @@ MathProblemCache1.db
 !**/__init__.py
 #PyCharm-specific, can be ignored
 .idea/**
+
+

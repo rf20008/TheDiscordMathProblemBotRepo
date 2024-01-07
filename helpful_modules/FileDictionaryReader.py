@@ -30,8 +30,8 @@ class AsyncFileDict:
         - None
 
         """
-        async with aiofiles.open(self.filename, "wb") as file:
-            await file.write(bytes(json.dumps(self.dict), "utf-8"))
+        async with aiofiles.open(self.filename, "w") as file:
+            await file.write(str(json.dumps(self.dict)))
 
     async def read_from_file(self) -> dict:
         """
@@ -42,8 +42,9 @@ class AsyncFileDict:
 
         """
         async with aiofiles.open(self.filename, "r") as file:
-            self.dict = json.loads(await file.read())
-            return self.dict
+            stuff = await file.read(-1)
+            self.dict = json.loads(stuff)
+        return self.dict
 
     async def get_key(self, key):
         """

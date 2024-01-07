@@ -83,13 +83,14 @@ class MockableAioFiles:
             RuntimeError: If there are issues with file closing.
         """
         if exc_type is not None and exc_value is not None and traceback is not None:
+            await self.close()
             raise RuntimeError("I do not know how to deal with this") from exc_value
         if not self.file:
             raise RuntimeError("Cannot close an already closed file.")
         self.file.close()
         self.file = None
 
-    async def write(self, content: str):
+    async def write(self, content: str | bytes | bytearray):
         """
         Writes the provided content to the file.
 
@@ -101,11 +102,13 @@ class MockableAioFiles:
             RuntimeError: If there are issues with writing to the file.
             ValueError: If the file is not open in a write or append mode.
         """
-        if not isinstance(content, str):
+        if 'b' not in self.mode and not isinstance(content, str):
             raise TypeError("Content is not a string.")
+        if 'b' in self.mode and not isinstance(content, (bytes, bytearray)):
+            raise TypeError("Bytes mode but writing non-bytes characters")
         if not self.file:
             raise RuntimeError("Cannot write to a closed file.")
-        if self.mode not in {'w', 'a'}:
+        if self.mode not in {'w', 'a', 'wb', 'ab'}:
             raise ValueError("File is not open in write or append mode.")
         self.file.write(content)
 

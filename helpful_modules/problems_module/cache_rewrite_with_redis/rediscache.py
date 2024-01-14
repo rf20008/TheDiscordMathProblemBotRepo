@@ -14,7 +14,7 @@ from ..errors import (FormatException, InvalidDictionaryInDatabaseException,
 from ..GuildData import GuildData
 from ..quizzes import Quiz
 from ..user_data import UserData
-
+from typing import List
 
 class RedisCache:
     """A class that is supposed to handle the problems, and have the same API as problems_related_cache"""
@@ -200,6 +200,32 @@ class RedisCache:
         """
         await self.set_key(f"{thing.__class__.__name__}:{thing.guild_id}:{thing.id}", thing.to_dict())  # type: ignore
 
+    async def add_things(self, things: List[DictConvertible]):
+        """
+        Adds a list of dictionary convertible objects to the cache using a batch set operation.
+
+        :param things: The list of objects to add to the cache.
+        :type things: List[DictConvertible]
+        :return: Nothing.
+        """
+        # Check if the cache is locked before acquiring the lock
+        if self.is_locked:
+            raise LockedCacheException("The cache is currently locked!")
+
+        async with self.lock:
+            # Inside the lock-protected block
+
+            # Create a pipeline to execute batch commands
+            pipeline = self.redis.pipeline()
+
+            # Add each thing to the pipeline
+            for thing in things:
+                key = f"{thing.__class__.__name__}:{thing.guild_id}:{thing.id}"
+                value = str(thing.to_dict())
+                pipeline.hset(key, value)
+
+            # Execute the batch set operation
+            await pipeline.execute()
     async def remove_thing(self, thing: DictConvertible):
         """
         Removes a dictionary convertible object from the cache.

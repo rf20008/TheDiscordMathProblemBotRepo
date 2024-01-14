@@ -21,7 +21,7 @@ from ._error_logging import log_error
 from .cooldowns import OnCooldown
 from .custom_embeds import *
 from .the_documentation_file_loader import DocumentationFileLoader
-
+from .problems_module.errors import LockedCacheException
 # Licensed under GPLv3
 
 log = logging.getLogger(__name__)
@@ -82,6 +82,9 @@ async def base_on_error(
         if exc_info()[0] is not None:
             raise
         raise error
+    if isinstance(error, LockedCacheException):
+        return {"content": "The bot's cache's lock is currently being held. Please try again later."}
+
     if isinstance(error, (OnCooldown, disnake.ext.commands.CommandOnCooldown)):
         # This is a cooldown exception
         content = f"This command is on cooldown; please retry **{disnake.utils.format_dt(disnake.utils.utcnow() + datetime.timedelta(seconds=error.retry_after), style='R')}**."

@@ -6,23 +6,23 @@ from time import sleep
 print("We are: " + str(os.path.abspath(os.getcwd())))
 current_file_path = os.path.abspath(__file__)
 main_script_path = os.path.abspath(os.path.join(os.path.dirname(current_file_path), "..", "main.py"))
+test_script_path = os.path.abspath(os.path.join(os.path.dirname(current_file_path), "test.py"))
 print("Current file path: " + str(current_file_path))
 print("Main script path: " + str(main_script_path))
+q = subprocess.Popen(
+    test_script_path.split(),
+    executable=executable,
+    shell=False,
+)
 
+print("Q's PID is " + str(q.pid))
+q.wait()
+print(q.stdout)
 
 def start():
     print(f"Hello from my subprocess! My PID is {os.getpid()}")
     print(f"{main_script_path}")
-    q = subprocess.run(
-        "test.py".split(),
-        executable=executable,
-        shell=False,
-        capture_output=True
-    )
 
-    print(q.pid)
-    q.wait()
-    print(q.stdout)
     p = subprocess.Popen(
         f"{main_script_path}".split(),
         executable=executable,

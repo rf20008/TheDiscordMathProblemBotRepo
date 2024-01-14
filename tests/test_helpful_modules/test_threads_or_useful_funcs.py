@@ -31,7 +31,7 @@ import disnake
 import disnake.ext
 from helpful_modules import threads_or_useful_funcs
 from helpful_modules.custom_embeds import ErrorEmbed
-
+from helpful_modules.problems_module.errors import LockedCacheException
 import pyfakefs.fake_filesystem_unittest
 import pyfakefs
 
@@ -182,11 +182,18 @@ class TestWraps(unittest.IsolatedAsyncioTestCase):
 
 # TODO: all my tests are failing because the _error_log is not working, so patch them
 class TestBaseOnError(unittest.IsolatedAsyncioTestCase):
+
+
     async def asyncSetUp(self):
         bot = unittest.mock.AsyncMock(spec=disnake.ext.commands.Bot)
         inter = unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction)
         inter.bot = bot
+    async def test_locked_cache_exception_handling(self):
+        inter = unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction)
+        error = LockedCacheException("The cache is currently locked!")
+        result = await threads_or_useful_funcs.base_on_error(inter, error)
 
+        self.assertEqual(result["content"], "The bot's cache's lock is currently being held. Please try again later.")
     async def test_pass_on_non_exceptions(self):
         # TODO: investigate the cause
         bot = unittest.mock.AsyncMock(spec=disnake.ext.commands.Bot)

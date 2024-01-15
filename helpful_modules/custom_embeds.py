@@ -3,14 +3,19 @@ from random import randint
 from disnake import Color, Embed
 
 
+def generate_random_color():
+    return Color.from_rgb(r=randint(0, 255), g=randint(0, 255), b=randint(0, 255))
+
 class SimpleEmbed(Embed):
     def __init__(
         self,
         title="",
         description="",
-        color=Color.from_rgb(r=randint(0, 255), g=randint(0, 255), b=randint(0, 255)),
+        color: Color | None = None,
         footer=None,
     ):
+        if color is None:
+            color = generate_random_color()
         super().__init__(title=title, description=description, color=color)
         self.set_footer(text=footer)
 

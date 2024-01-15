@@ -29,6 +29,7 @@ from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules.StatsTrack import (CommandStats, CommandUsage,
                                         StreamWrapperStorer)
 from helpful_modules.threads_or_useful_funcs import *
+from helpful_modules.base_on_error import base_on_error
 
 # Imports - My own files
 
@@ -237,7 +238,7 @@ bot.add_cog(HelpCog(bot))
 bot.CONSTANTS = bot_constants
 bot.add_check(checks.is_not_blacklisted())
 bot.add_cog(InterestingComputationCog(bot))
-
+bot.add_cog(DataModificationCog(bot))
 # Events
 
 

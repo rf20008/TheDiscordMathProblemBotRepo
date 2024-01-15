@@ -17,8 +17,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
 import unittest
+
 from disnake import Intents
-from helpful_modules.return_intents import return_intents  # Make sure to replace 'your_module' with the actual module name
+
+from helpful_modules.return_intents import \
+    return_intents  # Make sure to replace 'your_module' with the actual module name
+
 
 class TestReturnIntents(unittest.TestCase):
     def test_return_intents(self):

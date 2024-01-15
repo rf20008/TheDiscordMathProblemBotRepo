@@ -16,10 +16,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
-import unittest
-from helpful_modules import StatsTrack
 import io
 import json
+import unittest
+
+from helpful_modules import StatsTrack
 
 USAGE = StatsTrack.CommandUsage(user_id=3, command_name="test", time=-1.0)
 

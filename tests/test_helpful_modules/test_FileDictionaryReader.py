@@ -1,11 +1,15 @@
-from tests.mockable_aiofiles import MockableAioFiles
-from pyfakefs import fake_filesystem_unittest
 import asyncio
+import json
 import unittest
 import unittest.mock
+
 import func_timeout
+from pyfakefs import fake_filesystem_unittest
+
 from helpful_modules.FileDictionaryReader import AsyncFileDict
-import json
+from tests.mockable_aiofiles import MockableAioFiles
+
+
 class TestAsyncFileDict(fake_filesystem_unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

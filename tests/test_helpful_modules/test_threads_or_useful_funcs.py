@@ -29,12 +29,12 @@ import aiofiles
 import aiohttp.web_response
 import disnake
 import disnake.ext
+import pyfakefs
+import pyfakefs.fake_filesystem_unittest
+
 from helpful_modules import threads_or_useful_funcs
 from helpful_modules.custom_embeds import ErrorEmbed
 from helpful_modules.problems_module.errors import LockedCacheException
-import pyfakefs.fake_filesystem_unittest
-import pyfakefs
-
 from tests.mockable_aiofiles import MockableAioFiles
 
 FORBIDDEN_RESPONSE = """There was a 403 error. This means either
@@ -603,6 +603,15 @@ class TestHumanifyDate(unittest.TestCase):
         formatted_date = threads_or_useful_funcs.humanify_date(date_obj)
         expected_result = "2023 January 15"
         self.assertEqual(formatted_date, expected_result)
+class TestSecureFisherYatesShuffle(unittest.TestCase):
+    @patch("helpful_modules.threads_or_useful_funcs.secrets.randbelow", side_effect=[2, 1, 0, 0, 0])
+    def test_secure_fisher_yates_shuffle(self, mock_randbelow):
+        my_list = [1, 2, 3, 4, 5]
+        shuffled_list = threads_or_useful_funcs.secure_fisher_yates_shuffle(my_list)
+
+        self.assertNotEqual(my_list, shuffled_list)
+        self.assertCountEqual(my_list, shuffled_list)
+        mock_randbelow.assert_called_with(4)
 
 
 if __name__ == "__main__":

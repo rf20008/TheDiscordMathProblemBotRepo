@@ -17,6 +17,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
 import sys
+
 from .mockable_aiofiles import MockableAioFiles
+
 # WARNING: the following command adds something to sys path
 sys.path.append("../")

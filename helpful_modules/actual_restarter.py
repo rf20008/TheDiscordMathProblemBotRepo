@@ -1,8 +1,9 @@
-import os
-from sys import executable
-import subprocess
 import multiprocessing
+import os
+import subprocess
+from sys import executable
 from time import sleep
+
 print("We are: " + str(os.path.abspath(os.getcwd())))
 current_file_path = os.path.abspath(__file__)
 main_script_path = os.path.abspath(os.path.join(os.path.dirname(current_file_path), "..", "main.py"))

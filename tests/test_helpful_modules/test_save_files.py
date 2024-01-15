@@ -16,11 +16,14 @@
 
 # TODO: there will be issues with files
 import unittest
-from unittest.mock import mock_open, MagicMock, patch, AsyncMock
-from helpful_modules.save_files import FileSaver
-from helpful_modules.problems_module import RedisCache
+from unittest.mock import AsyncMock, MagicMock, mock_open, patch
+
 import pyfakefs
 from pyfakefs import fake_filesystem_unittest
+
+from helpful_modules.problems_module import RedisCache
+from helpful_modules.save_files import FileSaver
+
 
 class TestSaveFiles(fake_filesystem_unittest.TestCase):
     def setUp(self):

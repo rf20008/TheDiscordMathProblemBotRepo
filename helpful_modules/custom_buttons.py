@@ -4,7 +4,7 @@ from typing import Any, List
 import disnake
 
 from .custom_embeds import ErrorEmbed, SuccessEmbed
-from .threads_or_useful_funcs import base_on_error
+from .base_on_error import base_on_error
 
 """These are buttons that inherit from disnake's UI kit items"""
 

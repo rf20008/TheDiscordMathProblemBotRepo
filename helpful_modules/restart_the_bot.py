@@ -1,13 +1,14 @@
 import asyncio
-import subprocess
-from sys import executable
-import sys
-from typing import NoReturn, Optional
 import os
+import subprocess
+import sys
+import warnings
+from sys import executable
+from typing import NoReturn, Optional
 
 import disnake
-import warnings
 import psutil
+
 # from .custom_bot import TheDiscordMathProblemBot
 
 

@@ -17,13 +17,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
 
+import asyncio
+import unittest
+
+import func_timeout
+from pyfakefs.fake_filesystem_unittest import TestCase
+
 from tests.mockable_aiofiles import MockableAioFiles
 
-
-import unittest
-import asyncio
-from pyfakefs.fake_filesystem_unittest import TestCase
-import func_timeout
 
 class TestMockableAioFiles(TestCase):
     def __init__(self, *args, **kwargs):

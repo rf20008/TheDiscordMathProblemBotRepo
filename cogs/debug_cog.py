@@ -4,8 +4,8 @@ import copy
 import datetime
 import io
 import textwrap
-from traceback import format_exception
 from os import urandom
+from traceback import format_exception
 
 import disnake
 from disnake.ext import commands

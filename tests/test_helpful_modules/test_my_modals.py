@@ -16,12 +16,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+import typing
 import unittest
 import unittest.mock
-from helpful_modules import my_modals
+
 import disnake
-from helpful_modules import threads_or_useful_funcs
-import typing
+
+from helpful_modules import my_modals, threads_or_useful_funcs
+
 
 class TestMyModals(unittest.IsolatedAsyncioTestCase):
     async def test_default_init(self):

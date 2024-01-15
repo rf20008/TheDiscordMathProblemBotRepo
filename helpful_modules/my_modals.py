@@ -3,7 +3,7 @@ import os
 import disnake
 from disnake.ui import Modal
 
-from .threads_or_useful_funcs import base_on_error
+from .base_on_error import base_on_error
 
 
 class MyModal(Modal):

@@ -1,6 +1,6 @@
-import unittest
-import os
 import importlib
+import os
+import unittest
 
 
 def discover_and_import_tests(start_dir="."):

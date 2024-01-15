@@ -1,5 +1,6 @@
 import asyncio
 import typing
+from typing import List
 
 import orjson
 from redis import asyncio as aioredis  # type: ignore
@@ -14,7 +15,7 @@ from ..errors import (FormatException, InvalidDictionaryInDatabaseException,
 from ..GuildData import GuildData
 from ..quizzes import Quiz
 from ..user_data import UserData
-from typing import List
+
 
 class RedisCache:
     """A class that is supposed to handle the problems, and have the same API as problems_related_cache"""

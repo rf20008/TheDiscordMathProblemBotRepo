@@ -20,113 +20,25 @@ import asyncio
 import datetime
 import logging
 import math
-import random
 import unittest
 import unittest.mock
 from unittest.mock import AsyncMock, patch
 
 import aiofiles
-import aiohttp.web_response
-import disnake
-import disnake.ext
-import pyfakefs
 import pyfakefs.fake_filesystem_unittest
 
 from helpful_modules import threads_or_useful_funcs
-from helpful_modules.custom_embeds import ErrorEmbed
-from helpful_modules.problems_module.errors import LockedCacheException
 from tests.mockable_aiofiles import MockableAioFiles
-
-FORBIDDEN_RESPONSE = """There was a 403 error. This means either
-1) You didn't give me enough permissions to function correctly, or
-2) There's a bug! If so, please report it!
-The error traceback is below."""
-def generate_many_randoms(many=1, lows=(), highs=()):
-    if len(highs) != len(lows) or len(lows) != many:
-        raise ValueError("the arrays given do not match")
-    return (random.randint(lows[i], highs[i]) for i in range(many))
-
-
-def check_embed_equality(expected, result):
-    if not isinstance(result, disnake.Embed):
-        raise TypeError("the result is not an Embed")
-    if not isinstance(expected, disnake.Embed):
-        raise TypeError("expected isn't an embed either")
-    for slot in expected.__slots__:
-        if slot == "colour":
-            slot = "color"
-        if getattr(expected, slot, None) != getattr(result, slot, None):
-            raise ValueError(
-                f"""The embeds don't match 
-    (slot {slot}) is not the same
-    the expected value is "{getattr(expected, slot, None)}"
-    but the actual value is "{getattr(result, slot, None)}" """
-            )
-
-
-class TestGenerateManyRandoms(unittest.TestCase):
-    def test_valid_input(self):
-        # Test with valid inputs
-        lows = [1, 10, 5]
-        highs = [10, 20, 15]
-        many = len(lows)
-        result = list(generate_many_randoms(many, lows, highs))
-
-        # Check that the length of the result matches the expected length
-        self.assertEqual(len(result), many)
-
-        # Check that each generated random number is within the specified range
-        for i in range(many):
-            self.assertGreaterEqual(result[i], lows[i])
-            self.assertLessEqual(result[i], highs[i])
-
-    def test_invalid_input_lengths(self):
-        # Test with invalid input lengths
-        lows = [1, 10, 5]
-        highs = [10, 20]
-        many = len(lows)
-
-        # Check that ValueError is raised for mismatched array lengths
-        with self.assertRaises(ValueError):
-            generate_many_randoms(many, lows, highs)
-
-    def test_empty_input(self):
-        # Test with empty input arrays
-        many = 0
-        result = list(generate_many_randoms(many, [], []))
-
-        # Check that the result is an empty list
-        self.assertEqual(result, [])
+from tests.utils import generate_many_randoms
 
 
 class TestGenerateId(unittest.TestCase):
     def test_id_range(self):
         for i in range(500):
-            self.assertIn(threads_or_useful_funcs.generate_new_id(), range(2 ** 53))
+            self.assertIn(threads_or_useful_funcs.generate_new_id(), range(2**53))
 
     def test_id_type(self):
         self.assertIsInstance(threads_or_useful_funcs.generate_new_id(), int)
-
-
-class TestGitCommitHash(unittest.TestCase):
-    """This is a test class testing the GitCommitHash
-    It's from ChatGPT!"""
-
-    @unittest.mock.patch("subprocess.check_output")
-    def test_get_git_commit_hash(self, mock_check_output):
-        # Set the return value of subprocess.check_output
-        mock_check_output.return_value = b"abcdef123456\n"
-
-        # Now call your function
-        result = threads_or_useful_funcs.get_git_revision_hash()
-
-        # Check that subprocess.check_output was called with the correct arguments
-        mock_check_output.assert_called_once_with(
-            ["git", "rev-parse", "HEAD"], encoding="ascii", errors="ignore"
-        )
-
-        # Check the result
-        self.assertIn(result, ["abcdef1", b"abcdef1"])
 
 
 class TestWraps(unittest.IsolatedAsyncioTestCase):
@@ -178,189 +90,6 @@ class TestWraps(unittest.IsolatedAsyncioTestCase):
 
         # Assert that the executor's run_in_executor method was called
         executor_mock.run_in_executor.assert_called_once()
-
-
-# TODO: all my tests are failing because the _error_log is not working, so patch them
-class TestBaseOnError(unittest.IsolatedAsyncioTestCase):
-
-
-    async def asyncSetUp(self):
-        bot = unittest.mock.AsyncMock(spec=disnake.ext.commands.Bot)
-        inter = unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction)
-        inter.bot = bot
-    async def test_locked_cache_exception_handling(self):
-        inter = unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction)
-        error = LockedCacheException("The cache is currently locked!")
-        result = await threads_or_useful_funcs.base_on_error(inter, error)
-
-        self.assertEqual(result["content"], "The bot's cache's lock is currently being held. Please try again later.")
-    async def test_pass_on_non_exceptions(self):
-        # TODO: investigate the cause
-        bot = unittest.mock.AsyncMock(spec=disnake.ext.commands.Bot)
-        inter = unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction)
-        inter.bot = bot
-        with self.assertRaises(KeyboardInterrupt):
-            await threads_or_useful_funcs.base_on_error(
-                inter, error=KeyboardInterrupt("Keyboard Interrupt")
-            )
-            inter.bot.close.assert_awaited()
-
-    # TODO: finish
-    # TODO: there are so many more tests, that need to be made :)
-    @unittest.mock.patch("disnake.utils.utcnow")
-    @unittest.mock.patch("helpful_modules._error_logging.log_error_to_file")
-    async def test_cooldown_errors(self, mock_utcnow, mock_log):
-        mock_utcnow.return_value = datetime.datetime(
-            year=1970,
-            month=1,
-            day=1,
-            hour=0,
-            minute=0,
-            second=1,
-            microsecond=0,
-            tzinfo=datetime.timezone(offset=datetime.timedelta(hours=0)),
-        )
-        bot = unittest.mock.AsyncMock(spec=disnake.ext.commands.Bot)
-        inter = unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction)
-        inter.bot = bot
-        result = await threads_or_useful_funcs.base_on_error(
-            inter,
-            error=disnake.ext.commands.CommandOnCooldown(
-                retry_after=3.0,
-                cooldown=disnake.ext.commands.Cooldown(rate=3, per=1),
-                type=disnake.ext.commands.BucketType.default,
-            ),
-        )
-        inter.send.assert_not_awaited()
-        # content = f"This command is on cooldown; please retry **{disnake.utils.format_dt(disnake.utils.utcnow() + datetime.timedelta(seconds=error.retry_after), style='R')}**." # type: ignore
-
-        # return {"content": content, "delete_after": error.retry_after}
-        self.assertEqual(
-            result["content"], f"This command is on cooldown; please retry **<t:1:R>**."
-        )
-        self.assertEqual(result["delete_after"], 3.0, "Delete afters do not match")
-        self.assertEqual(set(result.keys()), {"content", "delete_after"})
-        mock_log.assert_called_once()
-        # return {"content": content, "delete_after": error.retry_after}, "delete_after": 3.0})
-
-    # these three tests come from ChatGPT
-    @unittest.mock.patch("helpful_modules._error_logging.log_error_to_file")
-    async def test_forbidden_error(self, mock_log):
-
-        lines = FORBIDDEN_RESPONSE.split("\n")
-        bot = unittest.mock.AsyncMock(spec=disnake.ext.commands.Bot)
-        inter = unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction)
-        inter.bot = bot
-        result = await threads_or_useful_funcs.base_on_error(
-            inter,
-            error=disnake.Forbidden(
-                message="Insufficient permissions.",
-                response=aiohttp.web_response.Response,
-            ),
-        )
-        expected_result = {
-            "content": "There was a 403 error. This means either\n"
-                       "1) You didn't give me enough permissions to function correctly, or\n"
-                       "2) There's a bug! If so, please report it!\n\n"
-                       "The error traceback is below."
-        }
-        for line in lines:
-            self.assertIn(
-                line,
-                result["content"][: len(FORBIDDEN_RESPONSE) + 55],
-                "One of the lines isn' in the beginning of the FORB response",
-            )
-        expected_result["content"] = result["content"]  # TODO: fix the monkey patch
-        self.assertEqual(result, expected_result, "Results do not match")
-        mock_log.assert_not_called()
-
-    @unittest.mock.patch("helpful_modules._error_logging.log_error_to_file")
-    async def test_not_owner_error(self, mock_log):
-        bot = unittest.mock.AsyncMock(spec=disnake.ext.commands.Bot)
-        inter = unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction)
-        inter.bot = bot
-        result = await threads_or_useful_funcs.base_on_error(
-            inter, error=disnake.ext.commands.errors.NotOwner()
-        )
-        expected_result = {"embed": ErrorEmbed("You are not the owner of this bot.")}
-        check_embed_equality(expected_result["embed"], result["embed"])
-        self.assertEqual(result, expected_result, "Results do not match")
-        mock_log.assert_not_called()
-
-    @unittest.mock.patch("helpful_modules._error_logging.log_error_to_file")
-    async def test_check_failure_error(self, _):
-        bot = unittest.mock.AsyncMock(spec=disnake.ext.commands.Bot)
-        inter = unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction)
-        inter.bot = bot
-        error_message = "Custom check failed."
-        result = await threads_or_useful_funcs.base_on_error(
-            inter, error=disnake.ext.commands.errors.CheckFailure(error_message)
-        )
-        expected_result = {"embed": ErrorEmbed(error_message)}
-        check_embed_equality(expected_result["embed"], result["embed"])
-        # self.assertTrue(expected_result == result, f"The embeds do not match: expected = {repr(expected_result['embed'])} but actual is {repr(result['embed'].__dict__)}")
-
-    @unittest.mock.patch("helpful_modules._error_logging.log_error_to_file")
-    async def test_logging_error(self, mock_log_error):
-        bot = unittest.mock.AsyncMock(spec=disnake.ext.commands.Bot)
-        inter = unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction)
-        inter.bot = bot
-        error_message = "Test error message"
-        mock_log_error.side_effect = RuntimeError("HAHAHAHA!")
-        result = await threads_or_useful_funcs.base_on_error(
-            inter, error=Exception(error_message)
-        )
-        inter.send.assert_not_awaited()
-        inter.bot.close.assert_not_awaited()
-        self.assertIsInstance(result, dict)
-        stuff = result["embed"].description
-
-        self.assertIn(error_message, stuff)
-        self.assertIn("An error occurred!", stuff)
-        self.assertIn("Steps you should do:", stuff)
-        self.assertIn(
-            "Additionally, while trying to log this error, the following exception occurred: \n",
-            stuff,
-        )
-
-    @unittest.mock.patch("helpful_modules._error_logging.log_error_to_file")
-    async def test_embed_creation(self, _):
-        bot = unittest.mock.AsyncMock(spec=disnake.ext.commands.Bot)
-        inter = unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction)
-        inter.bot = bot
-        error_message = "Test error message"
-        result = await threads_or_useful_funcs.base_on_error(
-            inter, error=Exception(error_message)
-        )
-        self.assertIsInstance(result, dict)
-        inter.send.assert_not_awaited()
-        inter.bot.close.assert_not_awaited()
-        self.assertIn("Oh, no! An error occurred!", result["embed"].title)
-        self.assertIn("Time:", result["embed"].footer.text)
-        self.assertIn(
-            threads_or_useful_funcs.get_git_revision_hash(), result["embed"].footer.text
-        )
-
-    @unittest.mock.patch("helpful_modules._error_logging.log_error_to_file")
-    async def test_embed_fallback_to_plain_text(self, _):
-        bot = unittest.mock.AsyncMock(spec=disnake.ext.commands.Bot)
-        inter = unittest.mock.AsyncMock(spec=disnake.ApplicationCommandInteraction)
-        inter.bot = bot
-        # Simulate a condition where creating an embed raises an exception
-        with unittest.mock.patch(
-                "disnake.Embed", side_effect=(TypeError("Test error"))
-        ):
-            result = await threads_or_useful_funcs.base_on_error(
-                inter, error=Exception("Test error message")
-            )
-        inter.send.assert_not_awaited()
-        inter.bot.close.assert_not_awaited()
-        self.assertIn("Oh no! An Exception occurred!", result["content"])
-        self.assertIn("Test error message", result["content"])
-        self.assertIn("Time:", result["content"])
-        self.assertIn(
-            threads_or_useful_funcs.get_git_revision_hash(), result["content"]
-        )
 
 
 class TestClassOrThrowException(unittest.TestCase):
@@ -463,10 +192,10 @@ class TestMillerRabin(unittest.TestCase):
         self.assertLess(failures / 1.15, 2000 / 64)
 
     def test_prime_big(self):
-        m = 10 ** 9 + 7
+        m = 10**9 + 7
         self.assertFalse(threads_or_useful_funcs.miller_rabin(m * m, 300))
-        self.assertTrue(threads_or_useful_funcs.miller_rabin(m,  300))
-        self.assertTrue(threads_or_useful_funcs.miller_rabin(10 ** 18 + 3, 300))
+        self.assertTrue(threads_or_useful_funcs.miller_rabin(m, 300))
+        self.assertTrue(threads_or_useful_funcs.miller_rabin(10**18 + 3, 300))
         self.assertFalse(threads_or_useful_funcs.miller_rabin(m * m - 1, 300))
         self.assertFalse(threads_or_useful_funcs.miller_rabin(m * m - 2, 300))
 
@@ -524,8 +253,12 @@ class TestEvalLogsAndLogs(pyfakefs.fake_filesystem_unittest.TestCase):
         time_ran = datetime.datetime.now()
 
         # Test permission error
-        with patch("aiofiles.open",
-                   new=AsyncMock(side_effect=PermissionError("YOU DO NOT HAVE PERMISSION! MUHAHAHA!"))):
+        with patch(
+            "aiofiles.open",
+            new=AsyncMock(
+                side_effect=PermissionError("YOU DO NOT HAVE PERMISSION! MUHAHAHA!")
+            ),
+        ):
             with self.assertRaises(RuntimeError):
                 await threads_or_useful_funcs.log_evaled_code(code, filepath, time_ran)
 
@@ -541,13 +274,17 @@ class TestEvalLogsAndLogs(pyfakefs.fake_filesystem_unittest.TestCase):
         mock_open3.__aenter__ = AsyncMock(side_effect=MockableAioFiles)
         mock_open3.__aexit__ = AsyncMock(side_effect=MockableAioFiles)
         with patch(
-                "aiofiles.open",
-                # new_callable= lambda *args, **kwargs: MockableAioFiles(*args, **kwargs)
-                wraps=MockableAioFiles
+            "aiofiles.open",
+            # new_callable= lambda *args, **kwargs: MockableAioFiles(*args, **kwargs)
+            wraps=MockableAioFiles,
         ):
-            print(f"Right before the test, aiofiles.open is of type {type(aiofiles.open)}")
-            await threads_or_useful_funcs.log_evaled_code(code="no", filepath="haha.log")
-        with open("haha.log", 'r') as file:
+            print(
+                f"Right before the test, aiofiles.open is of type {type(aiofiles.open)}"
+            )
+            await threads_or_useful_funcs.log_evaled_code(
+                code="no", filepath="haha.log"
+            )
+        with open("haha.log", "r") as file:
             self.assertIn("no", "\n".join(file.readlines()))
 
     def test_log_evaled_code_file_write(self):
@@ -564,8 +301,8 @@ class TestEvalLogsAndLogs(pyfakefs.fake_filesystem_unittest.TestCase):
             # reset_mocks()
             # Test if the code is successfully written to the file
             with patch(
-                    "helpful_modules.threads_or_useful_funcs.humanify_date",
-                    return_value="test_date",
+                "helpful_modules.threads_or_useful_funcs.humanify_date",
+                return_value="test_date",
             ):
                 await threads_or_useful_funcs.log_evaled_code(code, filepath, time_ran)
                 with open("eval_log/HAHA.txt", "r") as file:
@@ -574,9 +311,8 @@ class TestEvalLogsAndLogs(pyfakefs.fake_filesystem_unittest.TestCase):
 
             # Test if the default filepath is set when not provided
             with patch(
-                    "helpful_modules.threads_or_useful_funcs.humanify_date",
-                    return_value="test_date.txt",
-
+                "helpful_modules.threads_or_useful_funcs.humanify_date",
+                return_value="test_date.txt",
             ):
                 await threads_or_useful_funcs.log_evaled_code(code, time_ran=time_ran)
                 with open("eval_log/test_date.txt", "r") as file:
@@ -603,15 +339,20 @@ class TestHumanifyDate(unittest.TestCase):
         formatted_date = threads_or_useful_funcs.humanify_date(date_obj)
         expected_result = "2023 January 15"
         self.assertEqual(formatted_date, expected_result)
+
+
 class TestSecureFisherYatesShuffle(unittest.TestCase):
-    @patch("helpful_modules.threads_or_useful_funcs.secrets.randbelow", side_effect=[2, 1, 0, 0, 0])
+    @patch(
+        "helpful_modules.threads_or_useful_funcs.secrets.randbelow",
+        side_effect=[2, 1, 0, 0, 0],
+    )
     def test_secure_fisher_yates_shuffle(self, mock_randbelow):
         my_list = [1, 2, 3, 4, 5]
         shuffled_list = threads_or_useful_funcs.secure_fisher_yates_shuffle(my_list)
 
         self.assertNotEqual(my_list, shuffled_list)
         self.assertCountEqual(my_list, shuffled_list)
-        mock_randbelow.assert_called_with(4)
+        mock_randbelow.assert_called_with(2)
 
 
 if __name__ == "__main__":

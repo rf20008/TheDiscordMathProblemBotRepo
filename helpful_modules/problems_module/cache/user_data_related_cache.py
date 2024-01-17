@@ -30,7 +30,9 @@ class UserDataRelatedCache(QuizRelatedCache):
             f"get_user_data method called. user_id: {user_id}, default: {default}"
         )
         assert isinstance(user_id, int)
-        assert isinstance(default, UserData) or default is None or isinstance(default, str)
+        assert (
+            isinstance(default, UserData) or default is None or isinstance(default, str)
+        )
         if default is None:
             default = UserData(user_id=user_id, trusted=False, blacklisted=False)
             # To avoid mutable default arguments
@@ -98,7 +100,7 @@ class UserDataRelatedCache(QuizRelatedCache):
                 if await self.get_user_data(user_id, default="Okay") == "Okay":
                     await cursor.execute(
                         "INSERT INTO user_data (user_id, blacklisted, trusted) VALUES (?, ?, ?)",
-                        (user_id, blacklisted_int, trusted_int)
+                        (user_id, blacklisted_int, trusted_int),
                     )
                 else:
                     await cursor.execute(

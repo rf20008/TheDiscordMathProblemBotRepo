@@ -8,14 +8,26 @@ from time import asctime
 
 import disnake
 from disnake.ext import commands
-
+import subprocess
 from ._error_logging import log_error
 from .cooldowns import OnCooldown
 from .custom_embeds import *
 from .problems_module.errors import LockedCacheException
+
 from .the_documentation_file_loader import DocumentationFileLoader
+
+
+def get_git_revision_hash() -> str:
+    """A method that gets the git revision hash. Credit to https://stackoverflow.com/a/21901260 for the code :-)"""
+    return subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], encoding="ascii", errors="ignore"
+    ).strip()[
+        :7
+    ]  # [7:] is here because of the commit hash, the rest of this function is from stack overflow
+
+
 async def base_on_error(
-        inter: disnake.ApplicationCommandInteraction, error: BaseException | Exception
+    inter: disnake.ApplicationCommandInteraction, error: BaseException | Exception
 ):
     """The base on_error event. Call this and use the dictionary as keyword arguments to print to the user"""
 
@@ -26,7 +38,9 @@ async def base_on_error(
             raise
         raise error
     if isinstance(error, LockedCacheException):
-        return {"content": "The bot's cache's lock is currently being held. Please try again later."}
+        return {
+            "content": "The bot's cache's lock is currently being held. Please try again later."
+        }
 
     if isinstance(error, (OnCooldown, disnake.ext.commands.CommandOnCooldown)):
         # This is a cooldown exception
@@ -68,11 +82,12 @@ async def base_on_error(
     try:
         await log_error(error)  # Log the error
     except Exception as log_error_exc:
-
-        error_msg += """Additionally, while trying to log this error, the following exception occurred: \n""" + \
-                     disnake.utils.escape_markdown(
-                         "\n".join(traceback.format_exception(log_error_exc))
-                     )
+        error_msg += (
+            """Additionally, while trying to log this error, the following exception occurred: \n"""
+            + disnake.utils.escape_markdown(
+                "\n".join(traceback.format_exception(log_error_exc))
+            )
+        )
 
     try:
         embed = disnake.Embed(
@@ -104,4 +119,3 @@ async def base_on_error(
     footer = f"Time: {str(asctime())} Commit hash: {get_git_revision_hash()} The stack trace is shown for debugging purposes. The stack trace is also logged (and pushed), but should not contain identifying information (only code which is on github)"
     embed.set_footer(text=footer)
     return {"embed": embed}
-

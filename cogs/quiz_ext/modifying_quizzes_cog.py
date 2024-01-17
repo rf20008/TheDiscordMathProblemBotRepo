@@ -12,8 +12,7 @@ from helpful_modules.custom_embeds import ErrorEmbed, SuccessEmbed
 from helpful_modules.my_modals import MyModal
 from helpful_modules.problems_module import *
 from helpful_modules.problems_module import MathProblemCache, Quiz, QuizProblem
-from helpful_modules.problems_module.quizzes import (QuizSolvingSession,
-                                                     QuizSubmission)
+from helpful_modules.problems_module.quizzes import QuizSolvingSession, QuizSubmission
 from helpful_modules.threads_or_useful_funcs import generate_new_id, get_log
 
 from ..helper_cog import HelperCog

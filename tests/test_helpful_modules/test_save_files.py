@@ -44,9 +44,7 @@ class TestSaveFiles(fake_filesystem_unittest.TestCase):
         self.saver.disable()
         self.assertFalse(self.saver.enabled, "expected saver to be disabled")
         self.assertRaises(
-            RuntimeError,
-            self.saver.load_files,
-            AsyncMock(spec=RedisCache)
+            RuntimeError, self.saver.load_files, AsyncMock(spec=RedisCache)
         )
         self.assertRaises(TypeError, self.saver.load_files, "hehe boi")
 
@@ -57,8 +55,7 @@ class TestSaveFiles(fake_filesystem_unittest.TestCase):
         self.assertRaises(RuntimeError, self.saver.save_files, self.mock_cache)
         self.assertRaises(TypeError, self.saver.save_files, "hehe boi")
 
-
-    @patch('builtins.print')  # Mock the print function
+    @patch("builtins.print")  # Mock the print function
     def test_load_files(self, mock_print):
         """Test loading files with mock data."""
         # create the saver
@@ -66,11 +63,13 @@ class TestSaveFiles(fake_filesystem_unittest.TestCase):
         # make sure it's enabled
         self.assertTrue(file_saver.enabled)
         # we need a cache
-        main_cache = self.mock_cache  # Assuming you have a MockMathProblemCache class for testing
+        main_cache = (
+            self.mock_cache
+        )  # Assuming you have a MockMathProblemCache class for testing
 
         # Prepare files
         with open("math_problems.json", "w") as f:
-            f.write("{\"example_key\": \"example_value\"}")
+            f.write('{"example_key": "example_value"}')
         with open("vote_threshold.txt", "w") as f:
             f.write("3")
         with open("trusted_users.txt", "w") as f:
@@ -99,7 +98,6 @@ class TestSaveFiles(fake_filesystem_unittest.TestCase):
         self.assertEqual(result, expected_result)
         mock_print.assert_called_with(f"{file_saver.name}: Successfully loaded files.")
 
-
     @patch("builtins.print")
     def test_save_files(self, mock_print):
         self.saver.enable()
@@ -107,14 +105,14 @@ class TestSaveFiles(fake_filesystem_unittest.TestCase):
         result = self.saver.save_files(
             main_cache=self.mock_cache,
             trusted_users_list=[-1],
-            vote_threshold = 13,
-            math_problems_dict = {"1": "3"},
-            guild_math_problems_dict = {"1": "3"},
-            printSuccessMessages=True
+            vote_threshold=13,
+            math_problems_dict={"1": "3"},
+            guild_math_problems_dict={"1": "3"},
+            printSuccessMessages=True,
         )
 
         self.assertIs(result, None)
-        with open("trusted_users.txt", "r") as f: # type: ignore
+        with open("trusted_users.txt", "r") as f:  # type: ignore
             self.assertEqual(f.readline(), "-1\n")
         self.fs.root.remove_entry("trusted_users.txt")
         with open("vote_threshold.txt", "r") as f:
@@ -133,22 +131,24 @@ class TestSaveFiles(fake_filesystem_unittest.TestCase):
         """Test the my_id method of FileSaver."""
         self.saver.enable()
         self.assertEqual(self.saver.my_id(), self.saver.id)
+
     def test_my_name(self):
         """Test changing and retrieving the name of FileSaver."""
         self.assertEqual(self.saver.name, "TestSaver")
         self.saver.change_name("TestSaver3")
         self.assertEqual(self.saver.name, "TestSaver3")
         self.saver.change_name("1")
-        self.assertEqual(self.saver.name, '1')
+        self.assertEqual(self.saver.name, "1")
         self.saver.change_name("TestSaver")
         self.assertEqual(self.saver.name, "TestSaver")
 
     def test_goodbye(self):
         """Test the goodbye method of FileSaver."""
-        with patch('builtins.print') as mock_print:
+        with patch("builtins.print") as mock_print:
             self.saver.goodbye()
 
         mock_print.assert_called_with(f"{str(self.saver)}: Goodbye.... :(")
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     unittest.main()

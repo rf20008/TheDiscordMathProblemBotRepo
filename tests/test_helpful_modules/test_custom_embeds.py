@@ -18,15 +18,24 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
 import unittest
 from unittest.mock import patch
-from helpful_modules.custom_embeds import SimpleEmbed, ErrorEmbed, SuccessEmbed, generate_random_color
+from helpful_modules.custom_embeds import (
+    SimpleEmbed,
+    ErrorEmbed,
+    SuccessEmbed,
+    generate_random_color,
+)
 from disnake import Color, Embed
 
 
 class TestEmbeds(unittest.TestCase):
-
-    @patch("helpful_modules.custom_embeds.generate_random_color", return_value=Color.from_rgb(100, 150, 200))
+    @patch(
+        "helpful_modules.custom_embeds.generate_random_color",
+        return_value=Color.from_rgb(100, 150, 200),
+    )
     def test_simple_embed(self, mock_generate_random_color):
-        simple_embed = SimpleEmbed(title="Test Title", description="Test Description", footer="Test Footer")
+        simple_embed = SimpleEmbed(
+            title="Test Title", description="Test Description", footer="Test Footer"
+        )
 
         self.assertEqual(simple_embed.title, "Test Title")
         self.assertEqual(simple_embed.description, "Test Description")
@@ -44,7 +53,9 @@ class TestEmbeds(unittest.TestCase):
         self.assertEqual(error_embed.color, Color.red())
 
     def test_success_embed(self):
-        success_embed = SuccessEmbed(description="Success Description", footer="Success Footer")
+        success_embed = SuccessEmbed(
+            description="Success Description", footer="Success Footer"
+        )
 
         self.assertEqual(success_embed.title, "Success!")
         self.assertEqual(success_embed.description, "Success Description")
@@ -52,6 +63,5 @@ class TestEmbeds(unittest.TestCase):
         self.assertEqual(success_embed.color, Color.green())
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

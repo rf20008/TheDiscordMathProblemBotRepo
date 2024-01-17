@@ -24,14 +24,16 @@ RESTART_MESSAGE_FINAL_WARNING = (
 
 
 class RestartTheBot:
-    def __init__(self, bot:  Optional["TheDiscordMathProblemBot"]):
+    def __init__(self, bot: Optional["TheDiscordMathProblemBot"]):
         self.bot = bot
 
     async def notify_before_restarting(self) -> None:
         if self.bot is None:
             warnings.warn(category=RuntimeWarning, message="no bot supplied")
             return
-        warnings.warn(category=RuntimeWarning, message="This may not do what it actually does")
+        warnings.warn(
+            category=RuntimeWarning, message="This may not do what it actually does"
+        )
         channel = await self.bot.fetch_channel(self.bot.constants.BOT_RESTART_CHANNEL)
         await channel.send(RESTART_MESSAGE_WARNING)
         await asyncio.sleep(20)
@@ -43,7 +45,6 @@ class RestartTheBot:
         await self.actual_restart()
 
     async def actual_restart(self) -> NoReturn:
-
         if self.bot is not None:
             await asyncio.sleep(3)
             await self.bot.close()
@@ -51,7 +52,7 @@ class RestartTheBot:
         ## I learned that starting a new process that starts a new copy of the bot is better than starting the bot directly
         # the hard way
 
-        command = executable + " actual_restarter.py" #
+        command = executable + " actual_restarter.py"  #
         print(f"We are going to run {command.split()}")
 
         try:
@@ -73,7 +74,9 @@ class RestartTheBot:
 
 
 if __name__ == "__main__":
+
     async def main():
         restarter = RestartTheBot(bot=None)
         await restarter.restart_the_bot()
+
     asyncio.run(main())

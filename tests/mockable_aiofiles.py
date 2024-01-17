@@ -56,7 +56,7 @@ class MockableAioFiles:
     file: io.StringIO | io.TextIOBase
     kwargs: Dict[str, Any]
 
-    def __init__(self, file_name: str, mode: str = 'r', *args, **kwargs):
+    def __init__(self, file_name: str, mode: str = "r", *args, **kwargs):
         self.file_name = file_name
         self.mode = mode
         self.args = args
@@ -72,9 +72,12 @@ class MockableAioFiles:
                          or if there are issues with file opening.
         """
         if self.file:
-            raise RuntimeError("Cannot enter a context manager for the same file when it's already open.")
+            raise RuntimeError(
+                "Cannot enter a context manager for the same file when it's already open."
+            )
         self.file = open(self.file_name, self.mode, *self.args, **self.kwargs)
         return self
+
     async def __aexit__(self, exc_type=None, exc_value=None, traceback=None):
         """
         Exits the context and ensures proper file closure.
@@ -102,13 +105,13 @@ class MockableAioFiles:
             RuntimeError: If there are issues with writing to the file.
             ValueError: If the file is not open in a write or append mode.
         """
-        if 'b' not in self.mode and not isinstance(content, str):
+        if "b" not in self.mode and not isinstance(content, str):
             raise TypeError("Content is not a string.")
-        if 'b' in self.mode and not isinstance(content, (bytes, bytearray)):
+        if "b" in self.mode and not isinstance(content, (bytes, bytearray)):
             raise TypeError("Bytes mode but writing non-bytes characters")
         if not self.file:
             raise RuntimeError("Cannot write to a closed file.")
-        if self.mode not in {'w', 'a', 'wb', 'ab'}:
+        if self.mode not in {"w", "a", "wb", "ab"}:
             raise ValueError("File is not open in write or append mode.")
         self.file.write(content)
 
@@ -128,7 +131,7 @@ class MockableAioFiles:
         """
         if not self.file:
             raise RuntimeError("Cannot read from a closed file.")
-        if self.mode != 'r':
+        if self.mode != "r":
             raise ValueError("File is not open in read mode.")
         return self.file.read(size)
 
@@ -137,15 +140,15 @@ class MockableAioFiles:
             raise RuntimeError("Cannot read from a closed file")
         txt = []
         try:
-            while len(txt) == 0 or txt[-1] != '\n':
+            while len(txt) == 0 or txt[-1] != "\n":
                 char = await self.read(1)
                 if not char:
-                    return ''.join(txt)
+                    return "".join(txt)
                 txt.append(char)
 
-            return ''.join(txt)
+            return "".join(txt)
         except EOFError:
-            return ''.join(txt)
+            return "".join(txt)
 
     async def readall(self):
         if not self.file:

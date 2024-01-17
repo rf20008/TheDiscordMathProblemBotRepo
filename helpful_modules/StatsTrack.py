@@ -71,9 +71,9 @@ class CommandStats:
         if not isinstance(other, CommandStats):
             return False
         return (
-                self.usages == other.usages and
-                self.unique_users == other.unique_users and
-                self.total_cmds == other.total_cmds
+            self.usages == other.usages
+            and self.unique_users == other.unique_users
+            and self.total_cmds == other.total_cmds
         )
 
 

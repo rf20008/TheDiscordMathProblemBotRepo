@@ -35,14 +35,6 @@ def generate_new_id():
     return random.randint(0, 2**53 - 1)
 
 
-def get_git_revision_hash() -> str:
-    """A method that gets the git revision hash. Credit to https://stackoverflow.com/a/21901260 for the code :-)"""
-    return (
-        subprocess.check_output(["git", "rev-parse", "HEAD"], encoding="ascii", errors="ignore")
-        .strip()[:7]
-    )  # [7:] is here because of the commit hash, the rest of this function is from stack overflow
-
-
 def async_wrap(func):
     """Turn a sync function into an asynchronous function
     Source: https://dev.to/0xbf/turn-sync-function-to-async-python-tips-58nn
@@ -70,8 +62,6 @@ def loading_documentation_thread():
     d = DocumentationFileLoader()
     d.load_documentation_into_readable_files()
     del d
-
-
 
 
 def get_log(name: Optional[str]) -> logging.Logger:
@@ -154,6 +144,8 @@ def miller_rabin(n, k=100):
         if y != 1:
             return False
     return True
+
+
 month_num_to_name_dict = {
     1: "January",
     2: "February",
@@ -166,11 +158,14 @@ month_num_to_name_dict = {
     9: "September",
     10: "October",
     11: "November",
-    12: "December"
+    12: "December",
 }
 
+
 def humanify_date(date: datetime.datetime | datetime.date):
-    return str(date.year) + " " + month_num_to_name_dict[date.month] + " " + str(date.day)
+    return (
+        str(date.year) + " " + month_num_to_name_dict[date.month] + " " + str(date.day)
+    )
 
 
 def ensure_eval_logs_exist():
@@ -179,8 +174,12 @@ def ensure_eval_logs_exist():
         logs_folder.mkdir(exist_ok=True)
         return
     except:
-        print("I don't have permission to create an eval logs folder so logs may be missing!")
+        print(
+            "I don't have permission to create an eval logs folder so logs may be missing!"
+        )
         traceback.print_exc()
+
+
 def get_log(name: Optional[str]) -> logging.Logger:
     _log = logging.getLogger(name)
     TRFH = handlers.TimedRotatingFileHandler(
@@ -189,7 +188,10 @@ def get_log(name: Optional[str]) -> logging.Logger:
     _log.addHandler(TRFH)
     return _log
 
-async def log_evaled_code(code: str, filepath: str = "", time_ran: datetime.datetime = None) -> None:
+
+async def log_evaled_code(
+    code: str, filepath: str = "", time_ran: datetime.datetime = None
+) -> None:
     if time_ran == None:
         time_ran = datetime.datetime.now()
     # determine the filepath
@@ -197,11 +199,13 @@ async def log_evaled_code(code: str, filepath: str = "", time_ran: datetime.date
     if filepath == "":
         filepath = f"eval_log/{date}"
     try:
-        to_open = aiofiles.open(filepath, 'a')
+        to_open = aiofiles.open(filepath, "a")
         async with to_open as file:
-            await file.write("\n"+str(time_ran) + '\n' + code + "\n")
+            await file.write("\n" + str(time_ran) + "\n" + code + "\n")
     except Exception as e:
-        raise RuntimeError("While attempting to log the code that was evaluated, I ran into some problems!") from e
+        raise RuntimeError(
+            "While attempting to log the code that was evaluated, I ran into some problems!"
+        ) from e
 
 
 import secrets
@@ -217,9 +221,9 @@ def secure_fisher_yates_shuffle(sequence):
         j = secrets.randbelow(i + 1)
 
         # Swap elements
-        shuffled_sequence[i], shuffled_sequence[j] = shuffled_sequence[j], shuffled_sequence[i]
+        shuffled_sequence[i], shuffled_sequence[j] = (
+            shuffled_sequence[j],
+            shuffled_sequence[i],
+        )
 
     return shuffled_sequence
-
-
-

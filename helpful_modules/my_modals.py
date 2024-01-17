@@ -14,6 +14,7 @@ class MyModal(Modal):
             raise NotImplementedError
 
         self._callback = kwargs.pop("callback", default_callback)
+
         async def _check(inter, *args, **kwargs):
             return True
 

@@ -8,8 +8,14 @@ import disnake
 from disnake import Option, OptionChoice, OptionType
 from disnake.ext import commands, tasks
 
-from helpful_modules import (FileDictionaryReader, _error_logging, checks,
-                             custom_bot, custom_embeds, dict_factory)
+from helpful_modules import (
+    FileDictionaryReader,
+    _error_logging,
+    checks,
+    custom_bot,
+    custom_embeds,
+    dict_factory,
+)
 
 TYPES_TO_NAMES = {
     commands.InvokableUserCommand: "user",

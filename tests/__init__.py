@@ -19,6 +19,7 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 import sys
 
 from .mockable_aiofiles import MockableAioFiles
+from .utils import generate_many_randoms, check_embed_equality
 
 # WARNING: the following command adds something to sys path
 sys.path.append("../")

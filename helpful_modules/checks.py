@@ -9,7 +9,7 @@ from .StatsTrack import CommandStats, CommandUsage, StreamWrapperStorer
 
 bot = None
 MAX_LIMIT = 120_000  # Nothing longer than 120,000 characters
-MAX_NUM = 10 ** 30
+MAX_NUM = 10**30
 
 
 # MAX_NUM should equal 10^30
@@ -100,16 +100,20 @@ def is_not_blacklisted():
 
     async def predicate(inter):
         if not isinstance(inter.bot, TheDiscordMathProblemBot):
-            raise TypeError("Uh oh! We can't check whether people are denylisted if the bot is just an instance of disnake.ext.commands.Bot")
+            raise TypeError(
+                "Uh oh! We can't check whether people are denylisted if the bot is just an instance of disnake.ext.commands.Bot"
+            )
 
         user_data: UserData = await inter.bot.cache.get_user_data(
             user_id=inter.author.id,
             default=UserData(user_id=inter.author.id, trusted=False, blacklisted=False),
         )
         if user_data.blacklisted:
-            raise BlacklistedException("You are denylisted from the bot!"
-                                       "To appeal, you must use /appeal"
-                                       "Note that appeals are seen very rarely...")
+            raise BlacklistedException(
+                "You are denylisted from the bot!"
+                "To appeal, you must use /appeal"
+                "Note that appeals are seen very rarely..."
+            )
         return True
 
     return commands.check(predicate)

@@ -43,7 +43,7 @@ class DocumentationFileLoader:
         docs_json = self._load_documentation_file()
         for key in docs_json.keys():
             dictToStoreFileContent[
-                docs_json["file_name"] # item is a key, but i forgot what this does
+                docs_json["file_name"]  # item is a key, but i forgot what this does
             ] = "<!This file is dynamically generated from documentation.json. If you want to contribute/this is your fork, edit that instead :)>\n"
             if docs_json.get("contains_legend", "false") == "true":
                 dictToStoreFileContent[
@@ -83,7 +83,6 @@ No Mark: This is a command without user restrictions"""
             if isinstance(value_json, (str, bytes, bytearray)):
                 value_json = json.loads(value_json)
 
-
             if value_json["file_name"] == documentationSource:
                 _documentation = value_json
                 break
@@ -93,7 +92,9 @@ No Mark: This is a command without user restrictions"""
             )
         if "title" in _documentation.keys():
             if _documentation["title"] != documentationSource:
-                raise DocumentationFileNotFound("Malformed documentation... or it's not found")
+                raise DocumentationFileNotFound(
+                    "Malformed documentation... or it's not found"
+                )
             return _documentation
         if _documentation["contents"]["title"] != documentationItem:
             raise DocumentationNotFound("Documentation not found...")

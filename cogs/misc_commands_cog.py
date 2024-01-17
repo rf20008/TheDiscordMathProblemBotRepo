@@ -17,7 +17,7 @@ from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules.custom_buttons import *
 from helpful_modules.custom_embeds import SimpleEmbed
 from helpful_modules.save_files import FileSaver
-from helpful_modules.threads_or_useful_funcs import get_git_revision_hash
+from helpful_modules.base_on_error import get_git_revision_hash
 
 from .helper_cog import HelperCog
 

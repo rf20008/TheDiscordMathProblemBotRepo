@@ -14,8 +14,7 @@ import nextcord
 import sqldict  # https://github.com/skylergrammer/sqldict/
 from nextcord import *
 
-from helpful_modules.dict_factory import \
-    dict_factory  # Attribution to stackoverflow
+from helpful_modules.dict_factory import dict_factory  # Attribution to stackoverflow
 
 from .base_problem import BaseProblem
 from .errors import *

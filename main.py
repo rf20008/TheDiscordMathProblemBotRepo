@@ -20,14 +20,18 @@ from time import sleep
 from disnake.ext import commands
 
 from cogs import *
-from helpful_modules import (checks, custom_embeds, problems_module,
-                             return_intents, save_files,
-                             the_documentation_file_loader)
+from helpful_modules import (
+    checks,
+    custom_embeds,
+    problems_module,
+    return_intents,
+    save_files,
+    the_documentation_file_loader,
+)
 from helpful_modules.constants_loader import *
 from helpful_modules.cooldowns import check_for_cooldown
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
-from helpful_modules.StatsTrack import (CommandStats, CommandUsage,
-                                        StreamWrapperStorer)
+from helpful_modules.StatsTrack import CommandStats, CommandUsage, StreamWrapperStorer
 from helpful_modules.threads_or_useful_funcs import *
 from helpful_modules.base_on_error import base_on_error
 
@@ -328,8 +332,9 @@ async def on_guild_remove(guild):
     await bot.cache.remove_all_by_guild_id(guild.id)  # Remove all guild-related stuff
     # uh oh?
 
+
 def handle_signal(signum):
-    if signum==signal.SIGUSR1:
+    if signum == signal.SIGUSR1:
         asyncio.get_event_loop().create_task(bot.close())
         exit("We are being replaced by the new bot!!!")
 

@@ -24,7 +24,10 @@ from unittest.mock import mock_open, patch
 import pyfakefs
 
 from helpful_modules.the_documentation_file_loader import (
-    DocumentationFileLoader, DocumentationFileNotFound, DocumentationNotFound)
+    DocumentationFileLoader,
+    DocumentationFileNotFound,
+    DocumentationNotFound,
+)
 
 
 class TestDocumentationFileLoader(pyfakefs.fake_filesystem_unittest.TestCase):
@@ -32,15 +35,17 @@ class TestDocumentationFileLoader(pyfakefs.fake_filesystem_unittest.TestCase):
         super().setUp()
         self.setUpPyfakefs()
 
-    #@patch(
+    # @patch(
     #    "builtins.open",
     #    new_callable=mock_open,
     #    read_data='{"file_name": "test.json", "contents": [{"title": "TestTitle", "contents": "TestContents"}]}',
-    #)
+    # )
     def test_load_documentation_into_readable_files(self):
         self.fs.create_dir("docs/")
         with open("docs/documentation.json", "w") as f:
-            f.write('{"file_name": "test.json", "contents": [{"title": "TestTitle", "contents": "TestContents"}]}')
+            f.write(
+                '{"file_name": "test.json", "contents": [{"title": "TestTitle", "contents": "TestContents"}]}'
+            )
 
         loader = DocumentationFileLoader()
         documentation = loader.load_documentation_into_readable_files()
@@ -54,18 +59,18 @@ class TestDocumentationFileLoader(pyfakefs.fake_filesystem_unittest.TestCase):
         print(documentation)
         self.assertEqual(
             documentation["contents"],
-            [{"title": "TestTitle", "contents": "TestContents"}]
+            [{"title": "TestTitle", "contents": "TestContents"}],
         )
-
 
     def test_get_documentation(self):
         """Basic tests for get_documentation"""
 
-
         loader = DocumentationFileLoader()
         self.fs.create_dir("docs/")
         with open("docs/documentation.json", "w") as f:
-            f.write('[{"file_name": "test.json", "contents": {"OWO": "OWO", "title": "TestTitle"}}]')
+            f.write(
+                '[{"file_name": "test.json", "contents": {"OWO": "OWO", "title": "TestTitle"}}]'
+            )
         # Test successful retrieval
         documentation = loader.get_documentation("test.json", "TestTitle")
         self.assertEqual(documentation, {"OWO": "OWO", "title": "TestTitle"})

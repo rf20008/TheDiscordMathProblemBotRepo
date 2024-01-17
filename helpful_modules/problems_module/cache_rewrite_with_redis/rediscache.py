@@ -9,9 +9,13 @@ from ...FileDictionaryReader import AsyncFileDict
 from ..appeal import Appeal
 from ..base_problem import BaseProblem
 from ..dict_convertible import DictConvertible
-from ..errors import (FormatException, InvalidDictionaryInDatabaseException,
-                      LockedCacheException, ProblemNotFoundException,
-                      ThingNotFound)
+from ..errors import (
+    FormatException,
+    InvalidDictionaryInDatabaseException,
+    LockedCacheException,
+    ProblemNotFoundException,
+    ThingNotFound,
+)
 from ..GuildData import GuildData
 from ..quizzes import Quiz
 from ..user_data import UserData
@@ -227,6 +231,7 @@ class RedisCache:
 
             # Execute the batch set operation
             await pipeline.execute()
+
     async def remove_thing(self, thing: DictConvertible):
         """
         Removes a dictionary convertible object from the cache.

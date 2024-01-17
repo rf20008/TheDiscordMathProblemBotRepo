@@ -2,8 +2,12 @@ from typing import Union
 
 import disnake
 from disnake.ext import commands, tasks
-from disnake.ext.commands import (AutoShardedBot, AutoShardedInteractionBot,
-                                  Bot, InteractionBot)
+from disnake.ext.commands import (
+    AutoShardedBot,
+    AutoShardedInteractionBot,
+    Bot,
+    InteractionBot,
+)
 
 from helpful_modules import problems_module
 from helpful_modules._error_logging import log_error

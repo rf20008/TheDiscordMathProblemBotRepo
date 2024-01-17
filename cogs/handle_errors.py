@@ -34,6 +34,7 @@ class ErrorHandlerCog(HelperCog):
         if isinstance(error, NotOwner):
             await ctx.reply(embed=ErrorEmbed("You are not the owner of this bot."))
             return
+
     # Embed = ErrorEmbed(custom_title="⚠ Oh no! Error: " + str(type(error)), description=("Command raised an exception:" + str(error)))
 
     error_traceback = "\n".join(error_traceback_as_obj)

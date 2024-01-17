@@ -37,7 +37,9 @@ class FileSaver:
 
     def load_files(self, main_cache, printSuccessMessages=None):
         """Loads files from file names specified in self.__init__."""
-        if not isinstance(main_cache, problems_module.MathProblemCache) and not isinstance(main_cache, problems_module.RedisCache):
+        if not isinstance(
+            main_cache, problems_module.MathProblemCache
+        ) and not isinstance(main_cache, problems_module.RedisCache):
             raise TypeError("main_cache is not a MathProblemCache.")
         if not self.enabled:
             raise RuntimeError("I'm not enabled! I can't load files!")
@@ -60,7 +62,6 @@ class FileSaver:
         with open("vote_threshold.txt", "r") as file3:
             lines = file3.readlines()
             for line in lines:
-
                 # Make sure that an empty string does not become the new vote threshold
 
                 if str(line).isnumeric():
@@ -96,7 +97,9 @@ class FileSaver:
         """Saves files to file names specified in __init__.
         It does NOT SAVE the math_problems_dict"""
 
-        if not isinstance(main_cache, problems_module.MathProblemCache) and not isinstance(main_cache, problems_module.RedisCache):
+        if not isinstance(
+            main_cache, problems_module.MathProblemCache
+        ) and not isinstance(main_cache, problems_module.RedisCache):
             raise TypeError("main_cache is not a MathProblemCache.")
         if not self.enabled:
             raise RuntimeError("I'm not enabled! I can't load files!")

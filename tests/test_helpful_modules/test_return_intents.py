@@ -20,8 +20,9 @@ import unittest
 
 from disnake import Intents
 
-from helpful_modules.return_intents import \
-    return_intents  # Make sure to replace 'your_module' with the actual module name
+from helpful_modules.return_intents import (
+    return_intents,
+)  # Make sure to replace 'your_module' with the actual module name
 
 
 class TestReturnIntents(unittest.TestCase):
@@ -38,5 +39,6 @@ class TestReturnIntents(unittest.TestCase):
         self.assertFalse(result.reactions)
         self.assertFalse(result.bans)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

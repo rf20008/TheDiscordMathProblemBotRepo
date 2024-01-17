@@ -15,8 +15,11 @@ from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules.custom_embeds import ErrorEmbed, SimpleEmbed, SuccessEmbed
 from helpful_modules.my_modals import MyModal
 from helpful_modules.problems_module.cache_rewrite_with_redis import RedisCache
-from helpful_modules.threads_or_useful_funcs import (ensure_eval_logs_exist,
-                                                     get_log, log_evaled_code)
+from helpful_modules.threads_or_useful_funcs import (
+    ensure_eval_logs_exist,
+    get_log,
+    log_evaled_code,
+)
 
 from .helper_cog import HelperCog
 from .interesting_computation_ import InterestingComputationCog
@@ -59,9 +62,9 @@ class DebugCog(HelperCog):
             compiled = False
             new_stderr.write("".join(format_exception(e)))
         if (
-                "func" not in globals().keys()
-                and "func" not in locals().keys()
-                and compiled is True
+            "func" not in globals().keys()
+            and "func" not in locals().keys()
+            and compiled is True
         ):
             raise RuntimeError("func is not defined")
         err = None
@@ -75,9 +78,8 @@ class DebugCog(HelperCog):
                             )  # Get the 'func' from the global variables and call it
                             log.info("/eval ran (found in globals)")
                         elif "func" in locals().keys():
-
                             print(
-                                await (locals()["func"]()), file=new_stdout
+                                await locals()["func"](), file=new_stdout
                             )  # Get func() from locals and call it
                             log.info("/eval ran (found in locals)")
                         else:
@@ -91,7 +93,7 @@ class DebugCog(HelperCog):
             stdout: ```{new_stdout.getvalue()} ```
             stderr: ```{new_stderr.getvalue()} ```"""
             ),
-            ephemeral=ephemeral
+            ephemeral=ephemeral,
         )
         new_stdout.close()
         new_stderr.close()
@@ -99,7 +101,6 @@ class DebugCog(HelperCog):
             raise err
         else:
             return
-
 
     async def cog_slash_command_check(
         self, inter: disnake.ApplicationCommandInteraction

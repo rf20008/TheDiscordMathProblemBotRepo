@@ -6,6 +6,7 @@ from disnake import Color, Embed
 def generate_random_color():
     return Color.from_rgb(r=randint(0, 255), g=randint(0, 255), b=randint(0, 255))
 
+
 class SimpleEmbed(Embed):
     def __init__(
         self,

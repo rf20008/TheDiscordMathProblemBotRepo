@@ -10,10 +10,16 @@ def discover_and_import_tests(start_dir="."):
         for file_name in files:
             if file_name.startswith("test_") and file_name.endswith(".py"):
                 # Construct the module name by removing the ".py" extension
-                relative_path = os.path.relpath(os.path.join(root, file_name), start=start_dir)
-                module_name = os.path.splitext(relative_path.replace(os.path.sep, '.'))[0]
+                relative_path = os.path.relpath(
+                    os.path.join(root, file_name), start=start_dir
+                )
+                module_name = os.path.splitext(relative_path.replace(os.path.sep, "."))[
+                    0
+                ]
                 # Build the relative path to the module
-                relative_path = os.path.relpath(os.path.join(root, file_name), start=start_dir)
+                relative_path = os.path.relpath(
+                    os.path.join(root, file_name), start=start_dir
+                )
                 print("Importing", module_name, relative_path)
                 # Import the module dynamically
                 test_module = importlib.import_module(module_name)
@@ -28,7 +34,8 @@ def discover_and_import_tests(start_dir="."):
 
     return suite
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     # Run the dynamically discovered test suite
     runner = unittest.TextTestRunner(verbosity=2)
     tests = discover_and_import_tests()

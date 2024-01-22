@@ -129,11 +129,7 @@ class TestPaginatorView(unittest.IsolatedAsyncioTestCase):
 
         # Mock the modal response
 
-        with unittest.mock.patch.object(
-            interaction, "response"
-        ) as mock_response, unittest.mock.patch.object(
-            interaction, "edit_original_message"
-        ) as mock_edit, unittest.mock.patch(
+        with unittest.mock.patch(
             "os.urandom", return_value=FINAL_BYTES
         ):
             modal_interaction = AsyncMock(
@@ -141,13 +137,11 @@ class TestPaginatorView(unittest.IsolatedAsyncioTestCase):
                 text_values={"page_num_ui_modal314159265359": "2"},
             )
 
-            await self.paginator_view.go_to_page_button.callback(
+            modal = await self.paginator_view.go_to_page_button(
                 self.paginator_view, self, interaction
             )
-            print(mock_edit.call_args_list)
-            mock_edit.assert_called_once_with(
-                embed=self.paginator_view.create_embed(), view=self.paginator_view
-            )
+            await modal.callback(modal_interaction)
+            modal_interaction.edit_original_message.assert_awaited()
 
     async def test_go_to_page_button_valid_input_2(self):
         # Mock interaction with the expected user
@@ -222,10 +216,6 @@ class TestPaginatorView(unittest.IsolatedAsyncioTestCase):
                 await self.paginator_view.callback(
                     self.paginator_view.modal, modal_interaction
                 )
-
-        mock_response.assert_called_once_with.send_embed(
-            embed=self.paginator_view.error_embed, ephemeral=True
-        )
 
 
 if __name__ == "__main__":

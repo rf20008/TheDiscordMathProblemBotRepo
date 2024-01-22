@@ -78,7 +78,7 @@ class PaginatorView(disnake.ui.View):
     @disnake.ui.button(label="Go to Page", style=disnake.ButtonStyle.green)
     async def go_to_page_button(
         self, button: disnake.ui.Button, inter: disnake.MessageInteraction
-    ):
+    ) -> disnake.ui.Modal:
         if inter.author.id != self.user_id:
             await inter.send(
                 "You can not interact with this because it is not yours", ephemeral=True
@@ -143,6 +143,7 @@ class PaginatorView(disnake.ui.View):
         )
         try:
             await inter.response.send_modal(modal)
+            return modal # this helps me test because without this i can't test
         except asyncio.TimeoutError:
             await inter.followup.send(
                 embed=ErrorEmbed(

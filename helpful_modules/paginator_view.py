@@ -40,7 +40,7 @@ class PaginatorView(disnake.ui.View):
 
     @disnake.ui.button(emoji="➡️")
     async def next_page_button(
-        self, _: disnake.ui.Button, inter: disnake.MessageInteraction
+        self: "PaginatorView", _: disnake.ui.Button, inter: disnake.MessageInteraction
     ) -> None:
         if inter.author.id != self.user_id:
             await inter.send(
@@ -53,7 +53,7 @@ class PaginatorView(disnake.ui.View):
 
     @disnake.ui.button(emoji="⬅")
     async def prev_page_button(
-        self, button: disnake.ui.Button, inter: disnake.MessageInteraction
+        self: "PaginatorView", button: disnake.ui.Button, inter: disnake.MessageInteraction
     ) -> None:
         if inter.author.id != self.user_id:
             await inter.send(
@@ -62,6 +62,7 @@ class PaginatorView(disnake.ui.View):
             return
         self.page_num -= 1
         self.page_num %= len(self.pages)
+        # Of course, we need to show this to the user
         await inter.edit_original_message(view=self, embed=self.create_embed())
 
     async def on_timeout(self):

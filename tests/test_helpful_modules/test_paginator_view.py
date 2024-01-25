@@ -40,7 +40,7 @@ class TestPaginatorView(unittest.IsolatedAsyncioTestCase):
 
     async def test_interaction_check_valid_user(self):
         interaction = AsyncMock(spec=disnake.Interaction)
-        interaction.author = self.user_id
+        interaction.author = AsyncMock(spec=disnake.User, id=self.user_id)
         result = await self.paginator_view.interaction_check(interaction)
         self.assertTrue(result)
 
@@ -53,7 +53,7 @@ class TestPaginatorView(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(result)
 
     async def test_next_page_button(self):
-        author = AsyncMock(spec=disnake.User, id=self.id)
+        author = AsyncMock(spec=disnake.User, id=self.user_id)
         interaction = AsyncMock(spec=disnake.MessageInteraction, author=author)
         original_message = AsyncMock(
             spec=disnake.Message,
@@ -62,17 +62,14 @@ class TestPaginatorView(unittest.IsolatedAsyncioTestCase):
             interaction=interaction,
         )
 
-        with unittest.mock.patch.object(
-            interaction, "edit_original_message"
-        ) as mock_edit:
-            await self.paginator_view.next_page_button.callback(None, interaction)
+        await self.paginator_view.next_page_button.callback(interaction)
 
-        mock_edit.assert_called_once_with(
+        interaction.edit_original_message.assert_awaited_once_with(
             view=self.paginator_view, embed=self.paginator_view.create_embed()
         )
 
     async def test_prev_page_button(self):
-        author = AsyncMock(spec=disnake.User, id=self.id)
+        author = AsyncMock(spec=disnake.User, id=self.user_id)
         interaction = AsyncMock(spec=disnake.MessageInteraction, author=author)
         # original_message = disnake.Message(id=-123, channel=disnake.TextChannel(id=456), interaction=interaction)
         original_message = AsyncMock(
@@ -82,14 +79,13 @@ class TestPaginatorView(unittest.IsolatedAsyncioTestCase):
             interaction=interaction,
         )
 
-        with unittest.mock.patch.object(
-            interaction, "edit_original_message"
-        ) as mock_edit:
-            await self.paginator_view.prev_page_button.callback(None, interaction)
+        self.paginator_view.page_num = 2
+        await self.paginator_view.prev_page_button.callback(interaction)
 
-        mock_edit.assert_called_once_with(
+        interaction.edit_original_message.assert_awaited_once_with(
             view=self.paginator_view, embed=self.paginator_view.create_embed()
         )
+        self.assertEqual(1, self.paginator_view.page_num)
 
     async def test_on_timeout(self):
         # Set up the view with some items
@@ -130,7 +126,7 @@ class TestPaginatorView(unittest.IsolatedAsyncioTestCase):
         # Mock the modal response
 
         with unittest.mock.patch(
-            "os.urandom", return_value=FINAL_BYTES
+                "os.urandom", return_value=FINAL_BYTES
         ):
             modal_interaction = AsyncMock(
                 spec=disnake.ModalInteraction,
@@ -158,7 +154,7 @@ class TestPaginatorView(unittest.IsolatedAsyncioTestCase):
         # Patch the response.send_modal method to return the modal interaction
         with unittest.mock.patch("os.urandom", return_value=FINAL_BYTES):
             with unittest.mock.patch.object(
-                interaction.response, "send_modal", return_value=modal_interaction
+                    interaction.response, "send_modal", return_value=modal_interaction
             ):
                 # Call the go_to_page_button method
                 await self.paginator_view.go_to_page_button(None, interaction)
@@ -186,7 +182,7 @@ class TestPaginatorView(unittest.IsolatedAsyncioTestCase):
         # Call the function!
         with unittest.mock.patch("os.urandom", return_value=FINAL_BYTES):
             with unittest.mock.patch.object(
-                interaction.response, "send_modal", return_value=modal_interaction
+                    interaction.response, "send_modal", return_value=modal_interaction
             ):
                 await self.paginator_view.go_to_page_button(None, interaction)
         # asserts

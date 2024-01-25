@@ -1,6 +1,9 @@
 # Terms & Conditions
 Disclaimer: As of January 5, 2024, I am a high school student making this discord bot for fun. I am *not* a lawyer. If you want legal advice, please ask a real lawyer.
 
+Disclaimer 2: I didn't consult any legal advice while writing these Terms, or while modifying them, or revising them, or doing any step in the writing process of these Terms.
+I am *not* experienced in crafting legally binding documents!
+
 Most of this language should be self-explanatory. Please create an issue if it isn't!
 
 By using the application (The Discord Math Problem Bot), you agree to these Terms.
@@ -15,7 +18,8 @@ By using the application (The Discord Math Problem Bot), you agree to these Term
 "fork instances of the bot" refer to instances of the Bot that are not the official instance (ran in this repository.)
 "guild administrators" means people who have the 'administrator' permission in the guild.
 "you" refers to any user of this bot, or any entity that accesses any part of The Discord Math Problem Bot in such a way that these Terms apply, or both.
-
+"NSFW" stands for *N*ot *S*afe *F*or *W*ork, and
+"NSFL" stands for *N*ot *S*afe *F*or *L*ife.
 ## Rules/things I have the right to do.
 
 Trusted users (including me) reserve the right to deny-list users from the official instance of the bot for many reasons, including: 
@@ -32,11 +36,12 @@ Moreover, trusted users are not contractually required by these Terms to deny-li
 
 
 
-The trusted users/guild administrators (if the problem isn't global) also have the right to delete problems submitted to the bot for many reasons, including <ul>
+The trusted users/guild administrators (if the problem isn't global) also have the right to delete problems submitted to the bot for many reasons, including 
+<ul>
 <li> Disrespecting/targeting/etc... people through problems</li>
 <li> Sending NSFW/NSFL content through problems.</li>
 <li> Sending copyrighted things that the author does not have the correct rights to license to this bot. </li>
-</ul> People with the authority to delete problems reserve the right to use their own discretion on whether to delete a problem or not. (This covers edge cases!) </ul>
+</ul> People with the authority to delete problems reserve the right to use their own discretion on whether to delete a problem or not. (This covers edge cases!) 
 I also do not have control over guild administrators (as they are not me). They can enforce their own rules on which problems are acceptable.
 
 
@@ -132,8 +137,8 @@ Moreover, trusted users are not contractually required by these Terms to deny-li
 The trusted users/guild administrators (if the problem isn't global) also have the right to delete problems submitted to the bot for many reasons, including <ul>
 <li> Disrespecting/targeting/etc... people through problems</li>
 <li> Sending NSFW/NSFL content through problems.</li>
-<li> Sending copyrighted things that the author does not have the correct rights to license to this bot. </li>
-</ul> People with the authority to delete problems reserve the right to use their own discretion on whether to delete a problem or not. (This covers edge cases!) </ul>
+<li> Sending copyrighted things that the author does not have the correct rights to license to this bot. </li> </ul>
+ People with the authority to delete problems reserve the right to use their own discretion on whether to delete a problem or not. (This covers edge cases!) 
 I also do not have control over guild administrators (as they are not me). They can enforce their own rules on which problems are acceptable.
 
 

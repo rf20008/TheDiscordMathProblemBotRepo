@@ -488,6 +488,30 @@ class RedisCache:
             await self.redis.delete(*things_to_remove)
             await asyncio.sleep(3.0000)
 
+    async def get_guild_data(self, guild_id: int, default: GuildData | None = None) -> GuildData | None:
+        result = await self.get_key(f"GuildData:{guild_id}")
+        if result is not None:
+            try:
+                return GuildData.from_dict(orjson.loads(result))
+            except orjson.JSONDecodeError:
+                raise InvalidDictionaryInDatabaseException(
+                    "We have a non-dictionary on our hands"
+                )
+            except FormatException as fe:
+                raise FormatException("Oh no, the formatting is bad") from fe
+        if default is not None:
+            return default
+        raise ThingNotFound("I could not find any guild data")
+
+    async def add_guild_data(self, thing: GuildData):
+        await self.set_key(f"GuildData:{thing.guild_id}", str(thing.to_dict()))
+
+    async def remove_guild_data(self, thing: GuildData | int):
+        if isinstance(thing, GuildData):
+            await self.del_key(f"GuildData:{thing.guild_id}")
+        else:
+            await self.del_key(f"GuildData:{thing}")
+
 
 # TODO: fix the rest of the commands such that this cache can work
 # TODO: get a redis server

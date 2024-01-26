@@ -178,13 +178,14 @@ class DataModificationCog(HelperCog):
             label="Never mind....",
         )
         view = MyView(timeout=30, items=[confirmation_button, deny_button])
-        return await inter.send(
+        await inter.send(
             embed=SimpleEmbed(
                 title="Are you sure?", description="This will delete all your data!"
             ),
             view=view,
         )
-
+        return view
+    
     async def _get_json_data_by_user(
         self, author: Union[disnake.User, disnake.Member]
     ) -> typing.Dict[str, typing.Any]:

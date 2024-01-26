@@ -178,7 +178,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         return data.blacklisted
 
     async def notify_guild_on_guild_leave_because_guild_blacklist(
-        self, guild: disnake.Guild
+            self, guild: disnake.Guild
     ) -> None:
         """Notify the guild about the bot leaving the guild because the guild is blacklisted.
         Throws RuntimeError if the guild is not actually blacklisted.
@@ -186,44 +186,34 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         """
         if not await self.is_guild_blacklisted(guild):
             raise RuntimeError("The guild isn't blacklisted!")
-        _me: disnake.Member = guild.me
+
+        me: disnake.Member = guild.me
         channels_that_we_could_send_to = [
             channel
             for channel in guild.channels
             if channel.permissions_for(me).send_messages
         ]
-        if len(channels_that_we_could_send_to) == 0:
-            # Bypass trying to send the message - We don't have any channels we could send this message to anyway
 
+        if not channels_that_we_could_send_to:
+            # Bypass trying to send the message - We don't have any channels we could send this message to anyway
             await guild.leave()
             return
 
-        # Let's try to send the message to a channel that everyone can see
         everyone_role = guild.get_role(guild.id)
-        channels_that_we_can_send_to_and_everyone_can_see = [
+        channels_that_everyone_can_see = [
             channel
             for channel in channels_that_we_could_send_to
             if channel.permissions_for(everyone_role).view_channel
         ]
-        if len(channels_that_we_can_send_to_and_everyone_can_see) != 0:
-            channel_to_send_to = random.choice(
-                channels_that_we_can_send_to_and_everyone_can_see
-            )
-            await channel_to_send_to.send(
-                f"""I have left the guild because the guild is blacklisted, under my terms and conditions.
-            However, I'm available under the GPL. My source code is at {self.constants.SOURCE_CODE_LINK}, so you could self-host the bot if you wish.
-            """
-            )
-            await guild.leave()
-            return
 
+        if channels_that_everyone_can_see:
+            channel_to_send_to = random.choice(channels_that_everyone_can_see)
         else:
-            # There is no channel that we can send to and everyone can see
-            # So we try to send it to a channel that mods can see
             guild_data: problems_module.GuildData = await self.cache.get_guild_data(
                 guild_id=guild.id, default=problems_module.GuildData.default()
             )
             channels_that_mods_can_see = channels_that_we_could_send_to
+
             for role_id in guild_data.mod_check.roles_allowed:
                 role: disnake.Role = guild.get_role(role_id)
                 channels_that_mods_can_see = [
@@ -231,32 +221,19 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
                     for channel in channels_that_mods_can_see
                     if channel.permissions_for(role).view_channel
                 ]
-            if (
-                len(channels_that_mods_can_see) == 0
-                and len(channels_that_we_could_send_to) != 0
-            ):
+
+            if not channels_that_mods_can_see and channels_that_we_could_send_to:
                 # No channels that mods can see, but we could send to some channels
                 channel_to_send_to = random.choice(channels_that_we_could_send_to)
-                await channel_to_send_to.send(
-                    f"""I have left this guild because the guild is blacklisted, under my terms and conditions.
-                            However, I'm available under the GPL. My source code is at {self.constants.SOURCE_CODE_LINK}, so you could self-host the bot if you wish.
-                            """
-                )
-                await guild.leave()
-                return
+            else:
+                channel_to_send_to = random.choice(channels_that_mods_can_see)
 
-            channel_to_send_to = random.choice(channels_that_mods_can_see)
-            await channel_to_send_to.send(
-                f"""I have left this guild because the guild is blacklisted, under my terms and conditions.
-                        However, I'm available under the GPL. My source code is at {self.constants.SOURCE_CODE_LINK}, so you could self-host the bot if you wish.
-                        """
-            )
-            await guild.leave()
-            return
-        # Fallback
-
-        await guild.leave()  # noqa
-        return
+        await channel_to_send_to.send(
+            f"""I have left the guild because the guild is blacklisted, under my terms and conditions.
+        However, I'm available under the GPL. My source code is at {self.constants.SOURCE_CODE_LINK}, so you could self-host the bot if you wish.
+        """
+        )
+        await guild.leave()
 
     # async def on_application_command(self, inter: disnake.ApplicationCommandInteraction):
     #    await super().on_application_command(inter)

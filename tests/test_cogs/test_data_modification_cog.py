@@ -21,7 +21,7 @@ class TestDataModificationCog(unittest.IsolatedAsyncioTestCase):
         # Call the user_data command
         with patch.object(self.cog, '_get_json_data_by_user', AsyncMock()):
             self.cog.user_data.callback(self.cog, interaction)
-
+        raise Exception("This test is unfinished, and should not pass by default")
         # Add assertions based on expected behavior of user_data command
 
     async def test_delete_all_command(self):
@@ -39,7 +39,7 @@ class TestDataModificationCog(unittest.IsolatedAsyncioTestCase):
         # Call the delete_all command
         with patch.object(self.cog, '_get_json_data_by_user', AsyncMock()):
             await self.cog.delete_all.callback(self.cog, inter=interaction)
-
+        raise Exception("This test is unfinished, and should not pass by default")
         # Add assertions based on expected behavior of delete_all command
 
     async def test_get_data_command(self):
@@ -60,7 +60,7 @@ class TestDataModificationCog(unittest.IsolatedAsyncioTestCase):
 
         # Call the get_data command
         await self.cog.get_data.callback(self.cog, inter=interaction)
-
+        raise Exception("This test is unfinished, and should not pass by default")
         # Add assertions based on expected behavior of get_data command
 
 if __name__ == '__main__':

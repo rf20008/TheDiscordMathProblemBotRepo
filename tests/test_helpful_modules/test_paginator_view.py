@@ -133,7 +133,7 @@ class TestPaginatorView(unittest.IsolatedAsyncioTestCase):
                 text_values={"page_num_ui_modal314159265359": "2"},
             )
 
-            modal = await self.paginator_view.go_to_page_button(
+            modal = await self.paginator_view.go_to_page_button.callback(
                 self.paginator_view, self, interaction
             )
             await modal.callback(modal_interaction)
@@ -149,15 +149,13 @@ class TestPaginatorView(unittest.IsolatedAsyncioTestCase):
         # Mock the modal interaction with valid input
         modal_interaction = AsyncMock(
             spec=disnake.ModalInteraction,
-            text_values={"page_num_ui_modal31415926535": "2"},
+            text_values={"page_num_ui_modal" + FINAL_VALUE: "2"},
         )
         # Patch the response.send_modal method to return the modal interaction
         with unittest.mock.patch("os.urandom", return_value=FINAL_BYTES):
-            with unittest.mock.patch.object(
-                    interaction.response, "send_modal", return_value=modal_interaction
-            ):
-                # Call the go_to_page_button method
-                await self.paginator_view.go_to_page_button(None, interaction)
+
+            # Call the go_to_page_button method
+            await self.paginator_view.go_to_page_button.callback(interaction)
 
         # Assertions
         interaction.response.send_modal.assert_called_once()
@@ -184,7 +182,7 @@ class TestPaginatorView(unittest.IsolatedAsyncioTestCase):
             with unittest.mock.patch.object(
                     interaction.response, "send_modal", return_value=modal_interaction
             ):
-                await self.paginator_view.go_to_page_button(None, interaction)
+                await self.paginator_view.go_to_page_button.callback(interaction)
         # asserts
 
         modal_interaction.assert_not_awaited()
@@ -208,7 +206,7 @@ class TestPaginatorView(unittest.IsolatedAsyncioTestCase):
                     text_values={"page_num_ui_modal314159265359": "10"},
                 )  # Out of bounds
 
-                await self.paginator_view.go_to_page_button(None, interaction)
+                await self.paginator_view.go_to_page_button.callback(interaction)
                 await self.paginator_view.callback(
                     self.paginator_view.modal, modal_interaction
                 )

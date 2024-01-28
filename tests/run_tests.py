@@ -5,7 +5,6 @@ import unittest
 
 def discover_and_import_tests(start_dir="."):
     suite = unittest.TestSuite()
-
     for root, dirs, files in os.walk(start_dir):
         for file_name in files:
             if file_name.startswith("test_") and file_name.endswith(".py"):
@@ -30,10 +29,8 @@ def discover_and_import_tests(start_dir="."):
                     # Check if the attribute is a class and a subclass of unittest.TestCase
                     if isinstance(obj, type) and issubclass(obj, unittest.TestCase):
                         # Add the test class to the suite
-                        suite.addTest(unittest.makeSuite(obj))
-
+                        suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(obj))
     return suite
-
 
 if __name__ == "__main__":
     # Run the dynamically discovered test suite

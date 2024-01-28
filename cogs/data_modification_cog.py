@@ -1,3 +1,21 @@
+"""
+This file is part of The Discord Math Problem Bot Repo
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
+"""
 import typing
 from typing import *
 
@@ -5,9 +23,11 @@ import disnake
 from disnake.ext import commands, tasks
 
 from helpful_modules import checks, custom_bot, problems_module, threads_or_useful_funcs
-
+from helpful_modules.custom_buttons import ConfirmationButton, BasicButton, MyView
+from helpful_modules.custom_embeds import SimpleEmbed, SuccessEmbed, ErrorEmbed
 from .helper_cog import HelperCog
-
+import io
+import copy
 PAGE_SIZE = 3000
 
 
@@ -152,7 +172,7 @@ class DataModificationCog(HelperCog):
             return
 
         _extra_data = {
-            "cache": copy(self.bot.cache),
+            "cache": copy.copy(self.bot.cache),
             "delete_votes": delete_votes,
             "delete_solves": delete_solves,
         }
@@ -250,7 +270,7 @@ class DataModificationCog(HelperCog):
         Return a disnake.File with the specified filename that contains the string provided.
         """
         assert isinstance(item, str)
-        return disnake.File(BytesIO(bytes(item, "utf-8")), filename=file_name)
+        return disnake.File(io.BytesIO(bytes(item, "utf-8")), filename=file_name)
 
     @disnake.ext.commands.cooldown(1, 100, disnake.ext.commands.BucketType.user)
     @user_data.sub_command(
@@ -264,7 +284,7 @@ class DataModificationCog(HelperCog):
         You can use this command even if you are blacklisted."""
         await inter.response.defer()
         file = disnake.File(
-            BytesIO(
+            io.BytesIO(
                 bytes(
                     json.dumps(
                         await self._get_json_data_by_user(inter.author), indent=2

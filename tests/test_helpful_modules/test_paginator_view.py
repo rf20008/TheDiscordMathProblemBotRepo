@@ -134,7 +134,7 @@ class TestPaginatorView(unittest.IsolatedAsyncioTestCase):
             )
 
             modal = await self.paginator_view.go_to_page_button.callback(
-                self.paginator_view, self, interaction
+                interaction
             )
             await modal.callback(modal_interaction)
             modal_interaction.edit_original_message.assert_awaited()
@@ -197,20 +197,20 @@ class TestPaginatorView(unittest.IsolatedAsyncioTestCase):
             channel=AsyncMock(spec=disnake.PartialMessageable, id=-123),
             interaction=interaction,
         )
-
+        modal_interaction = unittest.mock.AsyncMock(
+            spec=disnake.ModalInteraction,
+            text_values={"page_num_ui_modal314159265359": "10"},
+        )  # Out of bounds
         # Mock the modal response
+        print(str(FINAL_BYTES))
         with unittest.mock.patch("os.urandom", return_value=FINAL_BYTES):
-            with unittest.mock.patch.object(interaction, "response") as mock_response:
-                modal_interaction = unittest.mock.AsyncMock(
-                    spec=disnake.ModalInteraction,
-                    text_values={"page_num_ui_modal314159265359": "10"},
-                )  # Out of bounds
 
-                await self.paginator_view.go_to_page_button.callback(interaction)
-                await self.paginator_view.callback(
-                    self.paginator_view.modal, modal_interaction
-                )
-
+            modal = await self.paginator_view.go_to_page_button.callback(interaction)
+            await modal.callback(
+                modal_interaction
+            )
+            self.assertNotEqual(self.paginator_view.page_num, 10)
+            modal_interaction.send.assert_awaited()
 
 if __name__ == "__main__":
     unittest.main()

@@ -58,6 +58,7 @@ class ConfirmView(disnake.ui.View):
             return True
         else:
             await inter.send("This isn't your view!", ephemeral=True, delete_after=15.0)
+            return False
 
     @disnake.ui.button(label="CONFIRM", disabled=False, style=disnake.ButtonStyle.green)
     async def confirm(

@@ -38,7 +38,8 @@ class TestMyModals(unittest.IsolatedAsyncioTestCase):
             await modal_2.callback(
                 unittest.mock.AsyncMock(spec=disnake.ModalInteraction)
             )
-        self.assertTrue(await modal_2._check(unittest.mock.AsyncMock(spec=int)))
+        with self.assertRaises(NotImplementedError):
+            await modal_2._check(unittest.mock.AsyncMock(spec=int))
 
     @unittest.mock.patch("builtins.print")
     async def test_custom_callback_called_on_interaction(self, mock_print):
@@ -113,10 +114,11 @@ class TestMyModals(unittest.IsolatedAsyncioTestCase):
             custom_id="2171828384858",
             inter=interaction,
             components=[],
+
         )
 
         # Act
-        await modal.on_timeout()
+        await modal.on_timeout(interaction)
 
         # Assert
         interaction.send.assert_awaited_once_with(

@@ -92,7 +92,7 @@ class PaginatorView(disnake.ui.View):
             custom_id="page_num_ui_modal" + os.urandom(20).hex(),
         )
         page_num_custom_id = component.custom_id
-
+        async
         async def on_timeout(_: disnake.ui.Modal):
             await inter.send(
                 embed=ErrorEmbed(

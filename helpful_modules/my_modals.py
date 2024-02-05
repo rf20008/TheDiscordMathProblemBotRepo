@@ -16,7 +16,7 @@ class MyModal(Modal):
         self._callback = kwargs.pop("callback", default_callback)
 
         async def _check(inter, *args, **kwargs):
-            return True
+            raise NotImplementedError("You need to implement this check yourself!")
 
         kwargs["custom_id"] = (
             kwargs["custom_id"]
@@ -27,7 +27,7 @@ class MyModal(Modal):
         self._extra_args = kwargs.pop("extra_args", [])
         self._on_error = kwargs.pop("on_error", MyModal.on_error)
         self._inter: disnake.ApplicationCommandInteraction = kwargs.pop("inter", None)
-
+        self.on_timeout = kwargs.pop("on_timeout", MyModal.on_timeout)
         super().__init__(*args, **kwargs)
 
     async def callback(self, inter: disnake.ModalInteraction):

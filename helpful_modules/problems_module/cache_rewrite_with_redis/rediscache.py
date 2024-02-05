@@ -80,6 +80,9 @@ class RedisCache:
         return list(
             map(BaseProblem.from_dict, await self.redis.hgetall("BaseProblem").values())
         )
+    async def get_all_things(self):
+        """Return a list of EVERYTHING in the data base"""
+        return list(self.redis.hgetall(""))
 
     async def get_all_problems_by_guild(self, guild_id: int | None):
         """return a list of all problems with the guild id = id
@@ -448,7 +451,7 @@ class RedisCache:
         :raises FormatException: If a stored value in Redis is not a valid JSON dictionary.
         """
         # get all things
-        things = await self.redis.hgetall(name="")
+        things = await self.get_all_things()
         things_authored = []
         for key, value in things.items():
             dictionarified = None

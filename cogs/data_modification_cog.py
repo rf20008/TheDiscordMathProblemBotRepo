@@ -20,14 +20,16 @@ import typing
 from typing import *
 
 import disnake
-from disnake.ext import commands, tasks
+from disnake.ext import commands
 
-from helpful_modules import checks, custom_bot, problems_module, threads_or_useful_funcs
+from helpful_modules import checks, custom_bot, problems_module
 from helpful_modules.custom_buttons import ConfirmationButton, BasicButton, MyView
 from helpful_modules.custom_embeds import SimpleEmbed, SuccessEmbed, ErrorEmbed
 from .helper_cog import HelperCog
 import io
 import copy
+import json
+import asyncio
 PAGE_SIZE = 3000
 
 
@@ -71,7 +73,7 @@ class DataModificationCog(HelperCog):
         ],
     )
     async def delete_all(
-        self: "MiscCommandsCog",
+        self: "DataModificationCog",
         inter: disnake.ApplicationCommandInteraction,
         save_data_before_deletion: bool = True,
         delete_votes=False,

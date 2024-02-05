@@ -24,7 +24,7 @@ import os
 
 PaginatorView = helpful_modules.paginator_view.PaginatorView
 
-FINAL_BYTES = "\x31\x41\x59\x26\x53\x59"
+FINAL_BYTES = b"\x31\x41\x59\x26\x53\x59"
 FINAL_VALUE = "314159265359"
 
 
@@ -142,7 +142,8 @@ class TestPaginatorView(unittest.IsolatedAsyncioTestCase):
     async def test_go_to_page_button_valid_input_2(self):
         # Mock interaction with the expected user
         interaction = AsyncMock(
-            spec=disnake.MessageInteraction, author=AsyncMock(id=self.user_id)
+            spec=disnake.MessageInteraction, author=AsyncMock(id=self.user_id),
+            response = AsyncMock(spec=disnake.InteractionResponse)
         )
         interaction.response.send_modal.return_value = AsyncMock()
 
@@ -155,11 +156,13 @@ class TestPaginatorView(unittest.IsolatedAsyncioTestCase):
         with unittest.mock.patch("os.urandom", return_value=FINAL_BYTES):
 
             # Call the go_to_page_button method
-            await self.paginator_view.go_to_page_button.callback(interaction)
+            modal = await self.paginator_view.go_to_page_button.callback(interaction)
 
         # Assertions
         interaction.response.send_modal.assert_called_once()
-        interaction.edit_original_message.assert_called_once_with(
+        modal_interaction = AsyncMock(spec=disnake.ModalInteraction, response=AsyncMock())
+        await modal.callback(modal_interaction)
+        modal_interaction.response.edit_original_message.assert_called_once_with(
             embed=self.paginator_view.create_embed(), view=self.paginator_view
         )
 
@@ -189,7 +192,9 @@ class TestPaginatorView(unittest.IsolatedAsyncioTestCase):
 
     async def test_go_to_page_button_invalid_input_out_of_bounds(self):
         interaction = AsyncMock(
-            spec=disnake.MessageInteraction, author=AsyncMock(id=self.user_id)
+            spec=disnake.MessageInteraction,
+            author=AsyncMock(id=self.user_id),
+            response=AsyncMock()
         )
         original_message = AsyncMock(
             spec=disnake.Message,
@@ -200,9 +205,10 @@ class TestPaginatorView(unittest.IsolatedAsyncioTestCase):
         modal_interaction = unittest.mock.AsyncMock(
             spec=disnake.ModalInteraction,
             text_values={"page_num_ui_modal314159265359": "10"},
+            response=AsyncMock(),
+            check = lambda *args, **kwargs: True
         )  # Out of bounds
         # Mock the modal response
-        print(str(FINAL_BYTES))
         with unittest.mock.patch("os.urandom", return_value=FINAL_BYTES):
 
             modal = await self.paginator_view.go_to_page_button.callback(interaction)

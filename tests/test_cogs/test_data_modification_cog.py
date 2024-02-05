@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, AsyncMock, patch
 from disnake.ext import commands
 import disnake
 import cogs
+import json
 class TestDataModificationCog(unittest.IsolatedAsyncioTestCase):
 
     def setUp(self):
@@ -19,14 +20,14 @@ class TestDataModificationCog(unittest.IsolatedAsyncioTestCase):
         interaction.author.id = 123456789
 
         # Call the user_data command
-        with patch.object(self.cog, '_get_json_data_by_user', AsyncMock()):
+        with unittest.mock.patch.object(self.cog, '_get_json_data_by_user', AsyncMock()):
             self.cog.user_data.callback(self.cog, interaction)
         raise Exception("This test is unfinished, and should not pass by default")
         # Add assertions based on expected behavior of user_data command
 
     async def test_delete_all_command(self):
         # Mock interaction for delete_all command
-        interaction = MagicMock(spec=disnake.ApplicationCommandInteraction)
+        interaction = AsyncMock(spec=disnake.ApplicationCommandInteraction)
         interaction.author.id = 123456789
         interaction.response.defer.return_value = None
 
@@ -41,27 +42,32 @@ class TestDataModificationCog(unittest.IsolatedAsyncioTestCase):
             await self.cog.delete_all.callback(self.cog, inter=interaction)
         raise Exception("This test is unfinished, and should not pass by default")
         # Add assertions based on expected behavior of delete_all command
-
     async def test_get_data_command(self):
         # Mock interaction for get_data command
-        interaction = AsyncMock(spec=disnake.ApplicationCommandInteraction)
+        interaction = AsyncMock(spec=disnake.ApplicationCommandInteraction, response = AsyncMock())
         interaction.author.id = 123456789
         interaction.response.defer.return_value = None
+        with patch.object(
+                self.bot.cache,
+                "get_all_by_author_id",
+                AsyncMock(
+                    return_value={
+                        "problems": [],
+                        "quiz_problems": [],
+                        "quiz_submissions": [],
+                        "sessions": [],
+                        "descriptions_created": [],
+                        "appeals": [],
+                    }
+                )
+        ):
+            # Mock cache methods
 
-        # Mock cache methods
-        self.bot.cache.get_all_by_author_id.return_value = {
-            "problems": [],
-            "quiz_problems": [],
-            "quiz_submissions": [],
-            "sessions": [],
-            "descriptions_created": [],
-            "appeals": [],
-        }
 
-        # Call the get_data command
-        await self.cog.get_data.callback(self.cog, inter=interaction)
-        raise Exception("This test is unfinished, and should not pass by default")
-        # Add assertions based on expected behavior of get_data command
+            # Call the get_data command
+            await self.cog.get_data.callback(self.cog, inter=interaction)
+            raise Exception("This test is unfinished, and should not pass by default")
+            # Add assertions based on expected behavior of get_data command
 
 if __name__ == '__main__':
     unittest.main()

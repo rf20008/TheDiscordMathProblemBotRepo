@@ -252,3 +252,8 @@ def cmds_cnt():
         return True
 
     return commands.check(predicate)
+
+async def always_succeeding_check_unwrapped(inter, *args, **kwargs):
+    if callable(inter):
+        raise ValueError("You cannot use this to wrap a function, because it is not a check")
+    return True

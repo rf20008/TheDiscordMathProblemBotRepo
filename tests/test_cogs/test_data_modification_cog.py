@@ -50,7 +50,7 @@ class TestDataModificationCog(unittest.IsolatedAsyncioTestCase):
         with patch.object(
                 self.bot.cache,
                 "get_all_by_author_id",
-                AsyncMock(
+                new=AsyncMock(
                     return_value={
                         "problems": [],
                         "quiz_problems": [],

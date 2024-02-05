@@ -22,6 +22,7 @@ import disnake
 from .my_modals import MyModal
 from .custom_embeds import ErrorEmbed
 import os
+from .checks import always_succeeding_check_unwrapped
 
 
 class PaginatorView(disnake.ui.View):
@@ -42,6 +43,7 @@ class PaginatorView(disnake.ui.View):
     async def next_page_button(
         self: "PaginatorView", _: disnake.ui.Button, inter: disnake.MessageInteraction
     ) -> None:
+        await inter.response.defer()
         if inter.author.id != self.user_id:
             await inter.send(
                 "You can not interact with this because it is not yours", ephemeral=True
@@ -49,12 +51,13 @@ class PaginatorView(disnake.ui.View):
             return
         self.page_num += 1
         self.page_num %= len(self.pages)
-        await inter.edit_original_message(view=self, embed=self.create_embed())
+        await inter.edit_original_response(view=self, embed=self.create_embed())
 
     @disnake.ui.button(emoji="⬅")
     async def prev_page_button(
         self: "PaginatorView", button: disnake.ui.Button, inter: disnake.MessageInteraction
     ) -> None:
+        await inter.response.defer()
         if inter.author.id != self.user_id:
             await inter.send(
                 "You can not interact with this because it is not yours", ephemeral=True
@@ -63,7 +66,7 @@ class PaginatorView(disnake.ui.View):
         self.page_num -= 1
         self.page_num %= len(self.pages)
         # Of course, we need to show this to the user
-        await inter.edit_original_message(view=self, embed=self.create_embed())
+        await inter.edit_original_response(view=self, embed=self.create_embed())
 
     async def on_timeout(self):
         for item in self.items:
@@ -71,7 +74,7 @@ class PaginatorView(disnake.ui.View):
 
     def create_embed(self):
         return disnake.Embed(
-            title=f"Page {self.page_num} of {len(self.pages)}:",
+            title=f"Page {self.page_num+1} of {len(self.pages)}:",
             description=self.pages[self.page_num],
             color=disnake.Color.from_rgb(50, 50, 255),
         )
@@ -84,7 +87,7 @@ class PaginatorView(disnake.ui.View):
             await inter.send(
                 "You can not interact with this because it is not yours", ephemeral=True
             )
-            return
+            return None
         component = disnake.ui.TextInput(
             label="What page do you want to go to?",
             value=None,
@@ -92,7 +95,6 @@ class PaginatorView(disnake.ui.View):
             custom_id="page_num_ui_modal" + os.urandom(20).hex(),
         )
         page_num_custom_id = component.custom_id
-        async
         async def on_timeout(_: disnake.ui.Modal):
             await inter.send(
                 embed=ErrorEmbed(
@@ -136,11 +138,12 @@ class PaginatorView(disnake.ui.View):
             )
 
         modal: disnake.ui.Modal = MyModal(
-            title="What page do you want to go to? You only have **15** seconds to respond.",
+            title="What page do you want to go to?",
             components=[component],
             timeout=15.0,
             on_timeout=on_timeout,
             callback=callback,
+            check = always_succeeding_check_unwrapped
         )
         try:
             await inter.response.send_modal(modal)

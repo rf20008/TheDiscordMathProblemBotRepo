@@ -30,12 +30,13 @@ class AppealsCog(HelperCog):
         pass
 
     @has_privileges(blacklisted=True)
-    @commands.cooldown(1, 86400, commands.BucketType.user)
+    @commands.cooldown(2, 86400, commands.BucketType.user)
     @appeal.sub_command(name="blacklist", description="Appeal your blacklists")
     async def blacklist(self, inter: disnake.ApplicationCommandInteraction):
         """Appeal your blacklists!
 
         You should write out your reasoning beforehand. However, you have 20 minutes to type.
+        If you close the modal without saving your work somewhere else, YOUR WORK WILL BE LOST!!!!
         """
 
         # Make sure they are blacklisted because if they're not blacklisted, they can't appeal
@@ -77,13 +78,10 @@ class AppealsCog(HelperCog):
         # Create an appeal
         # find the appeal
         highest_appeal_num = 0
-        await self.bot.cache.update_cache()
-        for appeal in self.cache.cached_appeals:
-            if appeal.user_id != inter.author.id:
-                continue
-            if appeal.appeal_num > highest_appeal_num:
-                highest_appeal_num = appeal.appeal_num
-        highest_appeal_num += 1
+        try:
+            await self.bot.cache.update_cache()
+        except NotImplementedError:
+            pass
         appeal: problems_module.Appeal = problems_module.Appeal(
             timestamp=time.time(),
             appeal_str=reason,
@@ -93,6 +91,14 @@ class AppealsCog(HelperCog):
             type=problems_module.AppealType.BLACKLIST_APPEAL.value,
         )
         await self.cache.set_appeal_data(appeal)
+        raise NotImplementedError("The program that finds the highest appeal number is not yet implemented. However, your appeal should have been sent")
+        for appeal in self.cache.cached_appeals:
+            if appeal.user_id != inter.author.id:
+                continue
+            if appeal.appeal_num > highest_appeal_num:
+                highest_appeal_num = appeal.appeal_num
+        highest_appeal_num += 1
+
 
 
 def setup(bot):

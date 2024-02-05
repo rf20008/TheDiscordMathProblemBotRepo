@@ -9,18 +9,26 @@ Privacy Policy - https://github.com/rf20008/TheDiscordMathProblemBotRepo/blob/be
 
 ## Table of Contents
 <!----- todo: use links----->
+DISCLAIMERS <br>
+* Legal Disclaimers <br>
 If you run into issues <br>
 Announcements <br>
 Contribute :-) <br>
 Invite my bot! <br>
 Documentation <br>
-DISCLAIMER <br>
 Self-host my bot <br>
  * Steps <br>
  * Update the bot with my changes <br>
- * env key-value pairs required
-Attribution/Contributors
+ * env key-value pairs required <br>
+Attribution/Contributors <br>
+# DISCLAIMER
 
+My bot is just a platform for storing problems. If someone submits a copyrighted problem, I'm not responsible, but they are. You can look up who submitted a problem using /show_problem_info.
+(If you need to, you can submit a request using /submit_a_request)
+# Legal Disclaimers
+1) I am not a lawyer. I did not write this file with assistance from any lawyers, and I did not ask for any legal advice while writing this. As of February 4, 2024, I am a high school student who is not studying law.
+2) This file is not intended to be legal advice, and does not constitute legal advice. This file is supposed to be a README to introduce people to my bot.
+3) This file is NOT LEGALLY BINDING and DOES NOT constitute an agreement between you and me.
 # If you run into issues
 If you run into any issues create an issue or DM me (ay136416#2707).
 However, this bot is mainly for **my fun** and may not be supported that often.
@@ -58,14 +66,10 @@ Recommended invite: https://discord.com/oauth2/authorize?client_id=8457511529017
 
 Documentation for my bot has been replaced with /documentation. I might set up a website soon. However, I don't have a domain.
 
-# DISCLAIMER
-
-My bot is just a platform for storing problems. If someone submits a copyrighted problem, I'm not responsible, but they are. You can look up who submitted a problem using /show_problem_info.
-(If you need to, you can submit a request using /submit_a_request)
 
 
 # Self-host my bot
-My code is open source, so you can! There are bugs, so you should probably help me instead. I won't stop you from self-hosting though.
+My code is open source, so you can! There may be bugs, however. Of course, I cannot stop you from self-hosting due to the GPLv3.
 
 I only recommend self-hosting this if you want to help develop the bot or you want to host your own instance of this bot for your server.
 Just follow the GPLv3 and you're fine!

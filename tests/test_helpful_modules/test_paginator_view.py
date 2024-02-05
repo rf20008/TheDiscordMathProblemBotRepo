@@ -185,7 +185,8 @@ class TestPaginatorView(unittest.IsolatedAsyncioTestCase):
             with unittest.mock.patch.object(
                     interaction.response, "send_modal", return_value=modal_interaction
             ):
-                await self.paginator_view.go_to_page_button.callback(interaction)
+                modal = await self.paginator_view.go_to_page_button.callback(interaction)
+                await modal.callback(modal_interaction)
         # asserts
 
         modal_interaction.assert_not_awaited()
@@ -206,7 +207,7 @@ class TestPaginatorView(unittest.IsolatedAsyncioTestCase):
             spec=disnake.ModalInteraction,
             text_values={"page_num_ui_modal314159265359": "10"},
             response=AsyncMock(),
-            check = lambda *args, **kwargs: True
+            _check = lambda *args, **kwargs: True
         )  # Out of bounds
         # Mock the modal response
         with unittest.mock.patch("os.urandom", return_value=FINAL_BYTES):

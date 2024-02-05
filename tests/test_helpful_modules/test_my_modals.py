@@ -112,8 +112,9 @@ class TestMyModals(unittest.IsolatedAsyncioTestCase):
             timeout=-1.0,
             title="HAHA!",
             custom_id="2171828384858",
-            inter=interaction,
+            _inter=interaction,
             components=[],
+
 
         )
 

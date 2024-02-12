@@ -6,7 +6,7 @@ import typing
 import warnings
 from copy import deepcopy
 from typing import Optional
-
+import mpmath
 import disnake
 
 from .dict_convertible import DictConvertible
@@ -30,6 +30,7 @@ class BaseProblem(DictConvertible):
         solvers: list = None,
         cache=None,
         answers: list = None,
+        tolerance: float = None
     ):
         if voters is None:
             voters = []
@@ -55,7 +56,8 @@ class BaseProblem(DictConvertible):
             raise TypeError("solvers is not a list")
         if not isinstance(answers, list):
             raise TypeError("answers isn't a list")
-
+        if not isinstance(tolerance, float) and tolerance is not None:
+            raise TypeError("tolerance isn't a float")
         if cache is None:
             warnings.warn("_cache is None. This may cause errors", RuntimeWarning)
         # if not isinstance(cache,MathProblemCache) and cache is not None:
@@ -78,6 +80,7 @@ class BaseProblem(DictConvertible):
         self.author = author
         self._cache = cache
         self.answers = answers
+        self.tolerance = tolerance
 
     async def edit(
         self,
@@ -187,6 +190,7 @@ class BaseProblem(DictConvertible):
                 "author": row["author"],
                 "question": row["question"],
                 "id": row["problem_id"],
+                "tolerance": row.get("tolerance", None)
             }
             return cls.from_dict(_Row, cache=cache)
         except BaseException as e:
@@ -204,31 +208,19 @@ class BaseProblem(DictConvertible):
         assert _dict["guild_id"] is None or isinstance(_dict["guild_id"], int)
         problem = _dict
         guild_id = problem["guild_id"]
-        if (
-            guild_id is None
-        ):  # Remove the guild_id null (used for global problems), which is not used any more because of conflicts with sql.
-            problem = cls(
-                question=problem["question"],
-                answers=problem["answers"],
-                id=int(problem["id"]),
-                guild_id=None,
-                voters=problem["voters"],
-                solvers=problem["solvers"],
-                author=problem["author"],
-                cache=cache,
-            )  # Problem-ify the problem, but set the guild_id to None and return it
-            return problem
-        problem2 = cls(
+    # Remove the guild_id null (used for global problems), which is not used any more because of conflicts with sql.
+        problem = cls(
             question=problem["question"],
-            answer=problem["answer"],
+            answers=problem["answers"],
             id=int(problem["id"]),
-            guild_id=guild_id,
+            guild_id=None,
             voters=problem["voters"],
             solvers=problem["solvers"],
             author=problem["author"],
             cache=cache,
-        )
-        return problem2
+            tolerance = problem.get("tolerance", None)
+        )  # Problem-ify the problem, but set the guild_id to None and return it
+        return problem
 
     def to_dict(self, show_answer: bool = True):
         """Convert myself to a dictionary"""
@@ -240,6 +232,7 @@ class BaseProblem(DictConvertible):
             "voters": self.voters,
             "solvers": self.solvers,
             "author": self.author,
+            "tolerance": self.tolerance
         }
         if show_answer:
             _dict["answers"] = self.get_answers()
@@ -310,8 +303,25 @@ class BaseProblem(DictConvertible):
 
     def check_answer(self, answer):
         """Checks the answer. Returns True if it's correct and False otherwise."""
-        warnings.warn("This method is deprecated. please use .", PMDeprecationWarning)
-        return answer in self.get_answers()
+        #warnings.warn("This method is deprecated. please use .", PMDeprecationWarning)
+        if answer in self.get_answers():
+            return True
+        if self.tolerance is None:
+            return False
+        if isinstance(answer, str):
+            # try to partition it to try to parse it as a complex
+            try:
+                try:
+
+                    real, plus, imag = answer.partition("+")
+                    answer = mpmath.mpc(real, imag[:-1])
+                except ValueError:
+                    answer = mpmath.mpc(answer)
+            except ValueError:
+                # we can't parse it as a complex
+                return False
+
+        return any(abs(answer - correct_answer) <= self.tolerance for correct_answer in self.answers)
 
     def my_id(self):
         """Returns id & guild_id in a list. id is first and guild_id is second."""
@@ -395,4 +405,5 @@ class BaseProblem(DictConvertible):
             id=deepcopy(self.id),
             guild_id=deepcopy(self.guild_id),
             cache=self._cache,
+            tolerance=self.tolerance
         )

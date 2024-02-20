@@ -18,8 +18,13 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
 from problems_module import BaseProblem
 import mpmath
+import random
+import numexpr as ne
+import math
 OPERATIONS = ["+", "-", "/", "*"]
-
+COMPLEXITY_LIMIT = 200
+NUMBER_RANGE = (-100, 100)
+ANSWER_RANGE = (-30000, 30000)
 # these are from ChatGPT
 def infix_to_postfix(infix_expression):
     precedence = {'+': 1, '-': 1, '*': 2, '/': 2, '^': 3}
@@ -92,12 +97,8 @@ def perform_operation(operand1, operand2, operator):
     elif operator == '^':
         return operand1 ** operand2
 
-# Test the function with the postfix expression generated previously
-result = evaluate_postfix(postfix_stack)
-print("Result of the expression:", result)
 
 
-# Test the function
 # the following implementation is from GFG. It is not mine
 # link: https://www.geeksforgeeks.org/convert-infix-prefix-notation/
 def is_operator(c: str):
@@ -140,6 +141,55 @@ def infixToPostfix(infix):
     return output
 def evaluate_postfix_expr(expr):
     thing_stack = []
+    raise NotImplementedError("This is not implemented yet")
 
-def generate_arithmetic_problem():
-    raise NotImplementedError("This isn't implemented")
+
+def generate_arithmetic_problem(complexity: int = 7):
+    """Generate an arithmetic problem, the string expression (What is ...) and the answer"""
+    if not isinstance(complexity, int):
+        raise TypeError("Complexity is not an int")
+    if complexity < 0 or complexity > COMPLEXITY_LIMIT:
+        raise RuntimeError("The arithmetic expression is too complex")
+    if complexity == 0:
+        r = random.randint(*NUMBER_RANGE)
+        if r >= 0:
+            return str(r), r
+        return f"({r})", r
+    a = random.randint(0, complexity - 1)
+    bef, bef_res = generate_arithmetic_problem(a)
+    aft, aft_res = generate_arithmetic_problem(complexity - a - 1)
+    while True:
+        op = random.choice(OPERATIONS)
+        match op:
+            case "^":
+
+                if math.log(abs(bef_res)) * aft_res > math.log(ANSWER_RANGE[1]):
+                    continue
+                if aft_res - math.floor(aft_res) >= 0.000001:
+                    continue
+                a = bef_res ** aft_res
+                if isinstance(a, complex):
+                    if abs(a.imag) >= ZERO_TOL:
+                        continue
+                return (f"({bef} ^ {aft})"), (a)
+            case "*":
+                if not (ANSWER_RANGE[0] <= bef_res * aft_res <= ANSWER_RANGE[1]):
+                    continue
+                return (f"({bef} * {aft})", bef_res * aft_res)
+            case "+":
+                if not ANSWER_RANGE[0] <= (bef_res + aft_res) <= ANSWER_RANGE[1]:
+                    continue
+                return (f"({bef} + {aft})", bef_res + aft_res)
+            case "-":
+                if not ANSWER_RANGE[0] <= (bef_res - aft_res) <= ANSWER_RANGE[1]:
+                    continue
+                return (f"({bef}) - ({aft})", bef_res - aft_res)
+            case "/":
+                if abs(aft_res) < ZERO_TOL:
+                    continue
+                if not ANSWER_RANGE[0] <= (bef_res / aft_res) <= ANSWER_RANGE[1]:
+                    continue
+                return (f"({bef}/{aft})", bef_res / aft_res)
+            case _:
+                continue
+

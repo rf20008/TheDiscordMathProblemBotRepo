@@ -17,3 +17,6 @@ pytest>=7.4.3
 pytest-aiofiles>=0.2.0
 func-timeout>=4.3.5
 numexpr>=2.9.0
+func_timeout>=4.3.5
+aiomysql>=0.2.0
+numpy>=1.26.4

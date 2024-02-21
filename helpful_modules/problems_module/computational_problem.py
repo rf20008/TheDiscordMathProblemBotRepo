@@ -20,13 +20,15 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 import base_problem
 import mpmath
 
+
 class ComputationalProblem(base_problem.BaseProblem):
     def __init__(self, *args, **kwargs):
-        tolerance = **kwargs.pop("tolerance", None)
+        tolerance = kwargs.pop("tolerance", 0.001)
         super().__init__(*args, **kwargs)
         if not isinstance(tolerance, float) and tolerance is not None:
             raise TypeError("tolerance isn't a float")
         self.tolerance = tolerance
+
     def check_answer(self, answer):
         if super().check_answer(answer):
             return True
@@ -45,6 +47,10 @@ class ComputationalProblem(base_problem.BaseProblem):
                 # we can't parse it as a complex
                 return False
 
-        return any(abs(answer - correct_answer) <= self.tolerance for correct_answer in self.answers)
+        return any(
+            abs(answer - correct_answer) <= self.tolerance
+            for correct_answer in self.answers
+        )
+
     def get_extra_stuff(self):
         return {"tolerance": self.tolerance}

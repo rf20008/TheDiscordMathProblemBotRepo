@@ -16,6 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 import asyncio
 import logging
 import pickle
@@ -392,7 +393,7 @@ class ProblemsRelatedCache:
                         pickle.dumps(problem.get_voters()),
                         pickle.dumps(problem.get_solvers()),
                         int(problem.author),
-                        str(problem.get_extra_stuff())
+                        str(problem.get_extra_stuff()),
                     ),
                 )
 
@@ -417,7 +418,7 @@ class ProblemsRelatedCache:
                         pickle.dumps(problem.get_voters()),
                         pickle.dumps(problem.get_solvers()),
                         int(problem.author),
-                        str(problem.get_extra_stuff())
+                        str(problem.get_extra_stuff()),
                     ),
                 )
 
@@ -593,7 +594,7 @@ class ProblemsRelatedCache:
                         pickle.dumps(new.get_solvers()),
                         int(new.author),
                         int(problem_id),
-                        str(new.get_extra_stuff())
+                        str(new.get_extra_stuff()),
                     ),
                 )
         else:
@@ -617,7 +618,7 @@ class ProblemsRelatedCache:
                         pickle.dumps(new.solvers),
                         int(new.author),
                         problem_id,
-                        str(new.get_extra_stuff())
+                        str(new.get_extra_stuff()),
                     ),
                 )
 

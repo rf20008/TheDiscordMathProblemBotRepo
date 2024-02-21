@@ -20,6 +20,8 @@
 
 from . import *
 from .base_problem import BaseProblem
+from .computational_problem import ComputationalProblem
+from .linear_algebra_problem import LinearAlgebraProblem
 from .cache import *
 from .cache_rewrite_with_redis import RedisCache
 from .errors import *

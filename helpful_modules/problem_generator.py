@@ -16,15 +16,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
-from problems_module import BaseProblem
-import mpmath
+from problems_module import ComputationalProblem, LinearAlgebraProblem
+import numpy as np
 import random
-import numexpr as ne
 import math
 OPERATIONS = ["+", "-", "/", "*"]
 COMPLEXITY_LIMIT = 200
 NUMBER_RANGE = (-100, 100)
 ANSWER_RANGE = (-30000, 30000)
+ZERO_TOL = 1e-10
 # these are from ChatGPT
 def infix_to_postfix(infix_expression):
     precedence = {'+': 1, '-': 1, '*': 2, '/': 2, '^': 3}
@@ -144,7 +144,7 @@ def evaluate_postfix_expr(expr):
     raise NotImplementedError("This is not implemented yet")
 
 
-def generate_arithmetic_problem(complexity: int = 7):
+def generate_arithmetic_expression(complexity: int = 7):
     """Generate an arithmetic problem, the string expression (What is ...) and the answer"""
     if not isinstance(complexity, int):
         raise TypeError("Complexity is not an int")
@@ -156,8 +156,8 @@ def generate_arithmetic_problem(complexity: int = 7):
             return str(r), r
         return f"({r})", r
     a = random.randint(0, complexity - 1)
-    bef, bef_res = generate_arithmetic_problem(a)
-    aft, aft_res = generate_arithmetic_problem(complexity - a - 1)
+    bef, bef_res = generate_arithmetic_expression(a)
+    aft, aft_res = generate_arithmetic_expression(complexity - a - 1)
     while True:
         op = random.choice(OPERATIONS)
         match op:
@@ -193,3 +193,22 @@ def generate_arithmetic_problem(complexity: int = 7):
             case _:
                 continue
 
+def generate_arithmetic_problem(complexity: int = 7):
+    if not isinstance(complexity, int):
+        raise TypeError("Complexity is not an int")
+    if complexity < 0 or complexity > COMPLEXITY_LIMIT:
+        raise RuntimeError("The arithmetic expression is too complex")
+    expression, equalsto = generate_arithmetic_expression(complexity=complexity)
+    return ComputationalProblem(
+        question=f"Evaluate {expression}. Remember: this uses a computer. "
+                 f"Your answer will be considered correct "
+                 f"if it is within 0.1% relative tolerance or 0.001 absolute tolerance",
+        answer=equalsto,
+        tolerance = 0.001
+    )
+
+def generate_linear_algebra_problem(num_vars: int = 3):
+    vars = np.array([random.randint(*NUMBER_RANGE) for _ in range(num_vars)])
+    matrix = np.array([[random.randint(*NUMBER_RANGE) for _ in range(num_vars)] for __ in range(num_vars)])
+    equal_to = matrix.dot(vars)
+    return LinearAlgebraProblem.from_coefficients(coeffs=list(map(list, matrix)), equal_to=list(equal_to))

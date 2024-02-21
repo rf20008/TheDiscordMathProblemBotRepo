@@ -80,6 +80,7 @@ class RedisCache:
         return list(
             map(BaseProblem.from_dict, await self.redis.hgetall("BaseProblem").values())
         )
+
     async def get_all_things(self):
         """Return a list of EVERYTHING in the data base"""
         return list(self.redis.hgetall(""))
@@ -491,7 +492,9 @@ class RedisCache:
             await self.redis.delete(*things_to_remove)
             await asyncio.sleep(3.0000)
 
-    async def get_guild_data(self, guild_id: int, default: GuildData | None = None) -> GuildData | None:
+    async def get_guild_data(
+        self, guild_id: int, default: GuildData | None = None
+    ) -> GuildData | None:
         result = await self.get_key(f"GuildData:{guild_id}")
         if result is not None:
             try:

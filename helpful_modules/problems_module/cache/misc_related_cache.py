@@ -47,9 +47,9 @@ class MathProblemCache(UserDataRelatedCache):
                         problem.guild_id not in guild_ids
                     ):  # Similar logic: Make sure it's there!
                         guild_ids.append(problem.guild_id)
-                        guild_problems[
-                            problem.guild_id
-                        ] = {}  # For quick, cached access?
+                        guild_problems[problem.guild_id] = (
+                            {}
+                        )  # For quick, cached access?
                     try:
                         guild_problems[problem.guild_id][problem.id] = problem
                     except BaseException as e:
@@ -96,9 +96,9 @@ class MathProblemCache(UserDataRelatedCache):
                         problem.guild_id not in guild_ids
                     ):  # Similar logic: Make sure it's there!
                         guild_ids.append(problem.guild_id)
-                        guild_problems[
-                            problem.guild_id
-                        ] = {}  # For quick, cached access?
+                        guild_problems[problem.guild_id] = (
+                            {}
+                        )  # For quick, cached access?
                     try:
                         guild_problems[problem.guild_id][problem.id] = problem
                     except BaseException as e:
@@ -159,9 +159,11 @@ class MathProblemCache(UserDataRelatedCache):
                         _id,
                         quiz_problems=quiz_problems_dict[_id],
                         submissions=quiz_submissions_dict[_id],
-                        existing_sessions=[quiz_sessions_dict[quiz_id]]
-                        if quiz_id in quiz_sessions_dict.keys()
-                        else [],
+                        existing_sessions=(
+                            [quiz_sessions_dict[quiz_id]]
+                            if quiz_id in quiz_sessions_dict.keys()
+                            else []
+                        ),
                         authors=set(
                             (problem.author for problem in quiz_submissions_dict[_id])
                         ),
@@ -174,9 +176,11 @@ class MathProblemCache(UserDataRelatedCache):
                         _id,
                         quiz_problems=quiz_problems_dict[_id],
                         submissions=[],
-                        existing_sessions=[quiz_sessions_dict[quiz_id]]
-                        if quiz_id in quiz_sessions_dict.keys()
-                        else [],
+                        existing_sessions=(
+                            [quiz_sessions_dict[quiz_id]]
+                            if quiz_id in quiz_sessions_dict.keys()
+                            else []
+                        ),
                         authors=set(
                             (problem.author for problem in quiz_submissions_dict[_id])
                         ),

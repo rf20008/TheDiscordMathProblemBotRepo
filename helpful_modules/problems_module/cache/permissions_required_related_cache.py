@@ -13,6 +13,7 @@ Also, most of the logic is delegated either to UserDataRequiredCache or AsyncFil
 Of course, this is licensed under the GPLv3.
 
 """
+
 import typing
 
 from ...FileDictionaryReader import AsyncFileDict

@@ -16,6 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 import asyncio
 import pickle
 import sys
@@ -48,7 +49,7 @@ class BaseProblem(DictConvertible):
         solvers: list = None,
         cache=None,
         answers: list = None,
-        tolerance: float = None
+        tolerance: float = None,
     ):
         if voters is None:
             voters = []
@@ -208,7 +209,7 @@ class BaseProblem(DictConvertible):
                 "question": row["question"],
                 "id": row["problem_id"],
                 "tolerance": row.get("tolerance", None),
-                **row
+                **row,
             }
             return cls.from_dict(_Row, cache=cache)
         except BaseException as e:
@@ -226,7 +227,7 @@ class BaseProblem(DictConvertible):
         assert _dict["guild_id"] is None or isinstance(_dict["guild_id"], int)
         problem = _dict
         guild_id = problem["guild_id"]
-    # Remove the guild_id null (used for global problems), which is not used any more because of conflicts with sql.
+        # Remove the guild_id null (used for global problems), which is not used any more because of conflicts with sql.
         problem = cls(
             question=problem.pop("question"),
             answers=problem.pop("answers"),
@@ -236,7 +237,7 @@ class BaseProblem(DictConvertible):
             solvers=problem.pop("solvers"),
             author=problem.pop("solvers"),
             cache=cache,
-            **problem
+            **problem,
         )  # Problem-ify the problem, but set the guild_id to None and return it
         return problem
 
@@ -250,7 +251,7 @@ class BaseProblem(DictConvertible):
             "voters": self.voters,
             "solvers": self.solvers,
             "author": self.author,
-            **self.get_extra_stuff()
+            **self.get_extra_stuff(),
         }
         if show_answer:
             _dict["answers"] = self.get_answers()
@@ -288,7 +289,10 @@ class BaseProblem(DictConvertible):
 
     def add_answer(self, answer: str):
         """Add an answer"""
-        warnings.warn("Warning: Answers are not used in the default implementation", category=PMDeprecationWarning)
+        warnings.warn(
+            "Warning: Answers are not used in the default implementation",
+            category=PMDeprecationWarning,
+        )
         if len(self.answers) + 1 > self._cache.max_answers_per_problem:
             raise MathProblemsModuleException("Too many answers!")
         self.answers.append(answer)
@@ -296,12 +300,15 @@ class BaseProblem(DictConvertible):
 
     def get_answer(self):
         """Return my answer. This has been deprecated"""
-        raise PMDeprecationWarning("I have finally deprecated this, due to the new hirearchy. Use check_answer instead")
+        raise PMDeprecationWarning(
+            "I have finally deprecated this, due to the new hirearchy. Use check_answer instead"
+        )
 
     def get_answers(self):
         """Return my possible answers"""
-        raise PMDeprecationWarning("I have finally deprecated this, due to the new hirearchy. Use check_answer instead")
-
+        raise PMDeprecationWarning(
+            "I have finally deprecated this, due to the new hirearchy. Use check_answer instead"
+        )
 
     def get_question(self):
         """Return my question."""
@@ -322,9 +329,8 @@ class BaseProblem(DictConvertible):
 
     def check_answer(self, answer):
         """Checks the answer. Returns True if it's correct and False otherwise."""
-        #warnings.warn("This method is deprecated. please use .", PMDeprecationWarning)
+        # warnings.warn("This method is deprecated. please use .", PMDeprecationWarning)
         return answer in self.answers
-
 
     def my_id(self):
         """Returns id & guild_id in a list. id is first and guild_id is second."""
@@ -381,7 +387,9 @@ class BaseProblem(DictConvertible):
 
     def __repr__(self: "BaseProblem") -> str:
         """A method that when called, returns a string, that when executed, returns an object that is equal to this one. Also implements repr(self)"""
-        extra_stuff_included = " ".join(f"{key}={value}" for key, value in self.get_extra_stuff().items())
+        extra_stuff_included = " ".join(
+            f"{key}={value}" for key, value in self.get_extra_stuff().items()
+        )
 
         return f"""problems_module.BaseProblem(question={self.question},
         answers = {self.answers}, id = {self.id}, guild_id={self.guild_id},
@@ -413,8 +421,9 @@ class BaseProblem(DictConvertible):
             id=deepcopy(self.id),
             guild_id=deepcopy(self.guild_id),
             cache=self._cache,
-            **deepcopy(self.get_extra_stuff())
+            **deepcopy(self.get_extra_stuff()),
         )
+
     def get_extra_stuff(self):
         """Return the extra stuff for this dictionary, that doesn't go in just a BaseProblem. Override this if you're in a subclass"""
         return {}

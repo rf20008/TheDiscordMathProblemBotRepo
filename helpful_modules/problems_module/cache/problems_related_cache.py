@@ -1,3 +1,21 @@
+"""
+This file is part of The Discord Math Problem Bot Repo
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
+"""
 import asyncio
 import logging
 import pickle
@@ -364,8 +382,8 @@ class ProblemsRelatedCache:
                 cursor = await conn.cursor()
                 # We will raise if the problem already exists!
                 await cursor.execute(
-                    """INSERT INTO problems (guild_id, problem_id, question, answers, voters, solvers, author)
-                VALUES (?,?,?,?,?,?,?)""",
+                    """INSERT INTO problems (guild_id, problem_id, question, answers, voters, solvers, author, extra_stuff)
+                VALUES (?,?,?,?,?,?,?,?)""",
                     (
                         problem.guild_id,  # We expect the problem's guild id to be either an integer or None
                         int(problem.id),
@@ -374,6 +392,7 @@ class ProblemsRelatedCache:
                         pickle.dumps(problem.get_voters()),
                         pickle.dumps(problem.get_solvers()),
                         int(problem.author),
+                        str(problem.get_extra_stuff())
                     ),
                 )
 
@@ -388,8 +407,8 @@ class ProblemsRelatedCache:
             ) as connection:
                 cursor = connection.cursor(dictionaries=True)
                 await cursor.execute(
-                    """INSERT INTO problems (guild_id, problem_id, question, answer, voters, solvers, author)
-                VALUES (%s,%s,%s,%b,%b,%b,%s)""",
+                    """INSERT INTO problems (guild_id, problem_id, question, answer, voters, solvers, author, extra_stuff)
+                VALUES (%s,%s,%s,%b,%b,%b,%s, %s)""",
                     (
                         int(problem.guild_id),
                         int(problem.id),
@@ -398,6 +417,7 @@ class ProblemsRelatedCache:
                         pickle.dumps(problem.get_voters()),
                         pickle.dumps(problem.get_solvers()),
                         int(problem.author),
+                        str(problem.get_extra_stuff())
                     ),
                 )
 
@@ -562,7 +582,7 @@ class ProblemsRelatedCache:
                 # We will raise if the problem already exists!
                 await cursor.execute(
                     """UPDATE problems 
-                    SET guild_id = ?, problem_id = ?, question = ?, answers = ?, voters = ?, solvers = ?, author = ?
+                    SET guild_id = ?, problem_id = ?, question = ?, answers = ?, voters = ?, solvers = ?, author = ?, extra_stuff = ?
                     WHERE problem_id = ?;""",
                     (
                         new.guild_id,
@@ -573,6 +593,7 @@ class ProblemsRelatedCache:
                         pickle.dumps(new.get_solvers()),
                         int(new.author),
                         int(problem_id),
+                        str(new.get_extra_stuff())
                     ),
                 )
         else:
@@ -585,8 +606,8 @@ class ProblemsRelatedCache:
                 cursor = connection.cursor(dictionaries=True)
                 cursor.execute(
                     """UPDATE problems 
-                    SET guild_id = '%s', problem_id = '%s', question = %s, answer = %s, voters = %s, solvers = %s, author = '%s'
-                    WHERE AND problem_id = '%s'""",
+                    SET guild_id = '%s', problem_id = '%s', question = %s, answer = %s, voters = %s, solvers = %s, author = '%s', extra_stuff = '%s'
+                    WHERE problem_id = '%s'""",
                     (
                         int(new.guild_id),
                         int(new.id),
@@ -596,6 +617,7 @@ class ProblemsRelatedCache:
                         pickle.dumps(new.solvers),
                         int(new.author),
                         problem_id,
+                        str(new.get_extra_stuff())
                     ),
                 )
 

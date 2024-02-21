@@ -1,3 +1,21 @@
+"""
+This file is part of The Discord Math Problem Bot Repo
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
+"""
 import asyncio
 import pickle
 import sys
@@ -6,7 +24,7 @@ import typing
 import warnings
 from copy import deepcopy
 from typing import Optional
-import mpmath
+
 import disnake
 
 from .dict_convertible import DictConvertible
@@ -56,8 +74,7 @@ class BaseProblem(DictConvertible):
             raise TypeError("solvers is not a list")
         if not isinstance(answers, list):
             raise TypeError("answers isn't a list")
-        if not isinstance(tolerance, float) and tolerance is not None:
-            raise TypeError("tolerance isn't a float")
+
         if cache is None:
             warnings.warn("_cache is None. This may cause errors", RuntimeWarning)
         # if not isinstance(cache,MathProblemCache) and cache is not None:
@@ -190,7 +207,8 @@ class BaseProblem(DictConvertible):
                 "author": row["author"],
                 "question": row["question"],
                 "id": row["problem_id"],
-                "tolerance": row.get("tolerance", None)
+                "tolerance": row.get("tolerance", None),
+                **row
             }
             return cls.from_dict(_Row, cache=cache)
         except BaseException as e:
@@ -210,15 +228,15 @@ class BaseProblem(DictConvertible):
         guild_id = problem["guild_id"]
     # Remove the guild_id null (used for global problems), which is not used any more because of conflicts with sql.
         problem = cls(
-            question=problem["question"],
-            answers=problem["answers"],
-            id=int(problem["id"]),
+            question=problem.pop("question"),
+            answers=problem.pop("answers"),
+            id=int(problem.pop("id")),
             guild_id=None,
-            voters=problem["voters"],
-            solvers=problem["solvers"],
-            author=problem["author"],
+            voters=problem.pop("id"),
+            solvers=problem.pop("solvers"),
+            author=problem.pop("solvers"),
             cache=cache,
-            tolerance = problem.get("tolerance", None)
+            **problem
         )  # Problem-ify the problem, but set the guild_id to None and return it
         return problem
 
@@ -232,7 +250,7 @@ class BaseProblem(DictConvertible):
             "voters": self.voters,
             "solvers": self.solvers,
             "author": self.author,
-            "tolerance": self.tolerance
+            **self.get_extra_stuff()
         }
         if show_answer:
             _dict["answers"] = self.get_answers()
@@ -270,6 +288,7 @@ class BaseProblem(DictConvertible):
 
     def add_answer(self, answer: str):
         """Add an answer"""
+        warnings.warn("Warning: Answers are not used in the default implementation", category=PMDeprecationWarning)
         if len(self.answers) + 1 > self._cache.max_answers_per_problem:
             raise MathProblemsModuleException("Too many answers!")
         self.answers.append(answer)
@@ -277,12 +296,12 @@ class BaseProblem(DictConvertible):
 
     def get_answer(self):
         """Return my answer. This has been deprecated"""
-        warnings.warn("This has been deprecated!", DeprecationWarning, stacklevel=1)
-        return self.answer
+        raise PMDeprecationWarning("I have finally deprecated this, due to the new hirearchy. Use check_answer instead")
 
     def get_answers(self):
         """Return my possible answers"""
-        return list(self.answers)
+        raise PMDeprecationWarning("I have finally deprecated this, due to the new hirearchy. Use check_answer instead")
+
 
     def get_question(self):
         """Return my question."""
@@ -294,7 +313,7 @@ class BaseProblem(DictConvertible):
             potential_solver, disnake.Member
         ):
             raise TypeError("potentialSolver is not a User object")
-        if answer in self.answers:
+        if self.check_answer(answer):
             self.add_solver(potential_solver)
             warnings.warn(
                 "This method no longer automatically updates the problem. You must be in an async context and update the problem in the cache yourself.",
@@ -304,24 +323,8 @@ class BaseProblem(DictConvertible):
     def check_answer(self, answer):
         """Checks the answer. Returns True if it's correct and False otherwise."""
         #warnings.warn("This method is deprecated. please use .", PMDeprecationWarning)
-        if answer in self.get_answers():
-            return True
-        if self.tolerance is None:
-            return False
-        if isinstance(answer, str):
-            # try to partition it to try to parse it as a complex
-            try:
-                try:
+        return answer in self.answers
 
-                    real, plus, imag = answer.partition("+")
-                    answer = mpmath.mpc(real, imag[:-1])
-                except ValueError:
-                    answer = mpmath.mpc(answer)
-            except ValueError:
-                # we can't parse it as a complex
-                return False
-
-        return any(abs(answer - correct_answer) <= self.tolerance for correct_answer in self.answers)
 
     def my_id(self):
         """Returns id & guild_id in a list. id is first and guild_id is second."""
@@ -378,23 +381,28 @@ class BaseProblem(DictConvertible):
 
     def __repr__(self: "BaseProblem") -> str:
         """A method that when called, returns a string, that when executed, returns an object that is equal to this one. Also implements repr(self)"""
+        extra_stuff_included = " ".join(f"{key}={value}" for key, value in self.get_extra_stuff().items())
+
         return f"""problems_module.BaseProblem(question={self.question},
         answers = {self.answers}, id = {self.id}, guild_id={self.guild_id},
-        voters={self.voters},solvers={self.solvers},author={self.author},cache={None})"""  # If I stored the problems, then there would be an infinite loop
+        voters={self.voters},solvers={self.solvers},author={self.author},cache={None} {extra_stuff_included})"""  # If I stored the problems, then there would be an infinite loop
 
     def __str__(self, include_answer: bool = False) -> str:
         _str = f"""Question: '{self.question}', 
         id: {self.id}, 
         guild_id: {self.guild_id}, 
         solvers: {[f'<@{id}>' for id in self.solvers]},
-        author: <@{self.author}>"""
+        author: <@{self.author}>
+        """
+        for key, value in self.get_extra_stuff().items():
+            _str += f"{key}: {value}\n"
         if include_answer:
             _str += f"\nAnswer: {self.answer}"
         return str(_str)
 
     def __deepcopy__(self: "BaseProblem", memo: typing.Any):
         """Deepcopy myself. Required for MathProblemCache.update_cache() to work.
-        Time complexity: O(V^2+S^2) (uh oh)
+        Time complexity: O(V+S) (uh oh)
         """
         return BaseProblem(
             question=deepcopy(self.question),
@@ -405,5 +413,8 @@ class BaseProblem(DictConvertible):
             id=deepcopy(self.id),
             guild_id=deepcopy(self.guild_id),
             cache=self._cache,
-            tolerance=self.tolerance
+            **deepcopy(self.get_extra_stuff())
         )
+    def get_extra_stuff(self):
+        """Return the extra stuff for this dictionary, that doesn't go in just a BaseProblem. Override this if you're in a subclass"""
+        return {}

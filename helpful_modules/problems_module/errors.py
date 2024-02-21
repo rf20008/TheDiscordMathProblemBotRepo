@@ -4,9 +4,7 @@ import aiomysql
 
 class MathProblemsModuleException(Exception):
     """The base exception for problems_module."""
-
     pass
-
 
 class TooLongArgument(MathProblemsModuleException):
     """Raised when an argument passed into MathProblem() is too long."""

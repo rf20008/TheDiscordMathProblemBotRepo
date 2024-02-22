@@ -18,9 +18,9 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
 
 import numbers
-from errors import MathProblemsModuleException
+from .errors import MathProblemsModuleException
 import mpmath
-import base_problem
+from .base_problem import BaseProblem
 
 BOT_ID = 845751152901750824
 TOLERANCE = 1e-3
@@ -34,7 +34,7 @@ of the tokens!!!! The reason for this extreme formatting format is that I don't 
 formats."""
 
 
-class LinearAlgebraProblem(base_problem.BaseProblem):
+class LinearAlgebraProblem(BaseProblem):
     """
     Represents a linear algebra problem.
 
@@ -64,7 +64,7 @@ class LinearAlgebraProblem(base_problem.BaseProblem):
         coeffs: list,
         equal_to: list,
         author_id: int = BOT_ID,
-        guild_id: int | None = None,
+        guild_id: str | None = None,
         *args,
         **kwargs,
     ):

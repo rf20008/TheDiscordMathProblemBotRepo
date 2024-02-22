@@ -17,11 +17,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
 
-import base_problem
+from .base_problem import BaseProblem
 import mpmath
 
 
-class ComputationalProblem(base_problem.BaseProblem):
+class ComputationalProblem(BaseProblem):
     def __init__(self, *args, **kwargs):
         tolerance = kwargs.pop("tolerance", 0.001)
         super().__init__(*args, **kwargs)

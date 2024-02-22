@@ -44,7 +44,7 @@ class BaseProblem(DictConvertible):
         id: int,
         author: int,
         answer: str = None,
-        guild_id: typing.Optional[int] = None,
+        guild_id: typing.Optional[str] = None,
         voters: list = None,
         solvers: list = None,
         cache=None,

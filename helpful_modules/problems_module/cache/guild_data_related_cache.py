@@ -97,3 +97,33 @@ class GuildDataRelatedCache(PermissionsRequiredRelatedCache):
                     raise SQLException(
                         "There were too many rows with the same guild id in guild data"
                     )
+
+    async def initialize_sql_table(self) -> None:
+        """Initialize SQL table for guild data."""
+        await super().initialize_sql_table()
+        if self.use_sqlite:
+            async with aiosqlite.connect(self.db) as conn:
+                cursor = await conn.cursor()
+                await cursor.execute(
+                    """CREATE TABLE IF NOT EXISTS guild_data (
+                        guild_id INTEGER PRIMARY KEY,
+                        blacklisted INTEGER,
+                        can_create_problems_check TEXT,
+                        can_create_quizzes_check TEXT,
+                        mod_check TEXT
+                    )"""
+                )
+                await conn.commit()
+        else:
+            async with self.get_a_connection() as connection:
+                cursor = await connection.cursor(DictCursor)
+                await cursor.execute(
+                    """CREATE TABLE IF NOT EXISTS guild_data (
+                        guild_id BIGINT PRIMARY KEY,
+                        blacklisted BOOLEAN,
+                        can_create_problems_check JSON,
+                        can_create_quizzes_check JSON,
+                        mod_check JSON
+                    )"""
+                )
+                await connection.commit()

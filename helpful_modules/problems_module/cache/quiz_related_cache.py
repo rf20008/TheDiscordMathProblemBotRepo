@@ -255,60 +255,7 @@ class QuizRelatedCache(ProblemsRelatedCache):
                         potential_sessions[0], cache=self
                     )
 
-    async def add_user_data(self, user_id: int, thing_to_add: UserData) -> None:
-        assert isinstance(user_id, int)
-        assert isinstance(thing_to_add, UserData)
-        if (await self.get_user_data(user_id, default=Exception)) != Exception:  # type: ignore
-            # This is because the user_id is None. Then it will return the default instead
-            raise MathProblemsModuleException(
-                "User data already exists"
-            )  # Make sure the user data doesn't already exist
-        if self.use_sqlite:
-            async with aiosqlite.connect(self.db_name) as conn:
-                cursor = await conn.cursor()
-                await cursor.execute(
-                    """INSERT INTO user_data (user_id, trusted, blacklisted)
-                VALUES (?,?,?)""",
-                    (user_id, thing_to_add.trusted, thing_to_add.blacklisted),
-                )  # add the user data
-                await conn.commit()
-                log.debug("Finished adding user data!")
-        else:
-            with mysql_connection(
-                host=self.mysql_db_ip,
-                password=self.mysql_password,
-                user=self.mysql_username,
-                database=self.mysql_db_name,
-            ) as connection:
-                cursor = connection.cursor(dictionaries=True)
-                cursor.execute(
-                    """INSERT INTO user_data (user_id, trusted, blacklisted)
-                VALUES (%s, %s, %s)""",
-                    (user_id, thing_to_add.trusted, thing_to_add.blacklisted),
-                )
-                connection.commit()
 
-    async def del_user_data(self, user_id: int):
-        """Delete user data given the user id"""
-        assert isinstance(user_id, int)
-        if self.use_sqlite:
-            async with aiosqlite.connect(self.db_name) as conn:
-                cursor = await conn.cursor()
-                await cursor.execute(
-                    "DELETE FROM user_data WHERE user_id = ?", (user_id,)
-                )
-                await conn.commit()
-        else:
-            with mysql_connection(
-                host=self.mysql_db_ip,
-                password=self.mysql_password,
-                user=self.mysql_username,
-                database=self.mysql_db_name,
-            ) as connection:
-                cursor = connection.cursor(dictionaries=True)
-                cursor.execute("DELETE FROM user_data WHERE user_id = %s", (user_id,))
-                connection.commit()
-                connection.close()
 
     async def add_quiz(self, quiz: Quiz) -> Quiz:
         """Add a quiz"""
@@ -725,3 +672,143 @@ class QuizRelatedCache(ProblemsRelatedCache):
             kwargs = {}
         await self.update_cache()
         return [quiz for quiz in self.cached_quizzes if func(quiz, *args, **kwargs)]  # type: ignore
+
+    async def initialize_sql_table(self):
+        """Initialize the SQL tables if they don't already exist"""
+        await super().initialize_sql_table()  # Initialize base problem-related tables
+
+        if self.use_sqlite:
+            async with aiosqlite.connect(self.db_name) as conn:
+                cursor = await conn.cursor()
+                await cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS quiz_description (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        quiz_id INTEGER,
+                        description TEXT,
+                        license TEXT,
+                        time_limit INTEGER,
+                        intensity REAL,
+                        category TEXT,
+                        author INTEGER,
+                        guild_id INTEGER,
+                        FOREIGN KEY (quiz_id) REFERENCES quizzes(quiz_id)
+                    )
+                    """
+                )
+                await cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS quizzes (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        guild_id INTEGER,
+                        quiz_id INTEGER,
+                        problem_id INTEGER,
+                        question TEXT,
+                        answer BLOB,
+                        voters BLOB,
+                        solvers BLOB,
+                        author INTEGER,
+                        FOREIGN KEY (quiz_id) REFERENCES quiz_description(quiz_id)
+                    )
+                    """
+                )
+                await cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS quiz_submissions (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        guild_id INTEGER,
+                        quiz_id INTEGER,
+                        user_id INTEGER,
+                        submissions BLOB,
+                        FOREIGN KEY (quiz_id) REFERENCES quiz_description(quiz_id)
+                    )
+                    """
+                )
+                await cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS quiz_submission_sessions (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_id INTEGER,
+                        quiz_id INTEGER,
+                        guild_id INTEGER,
+                        is_finished INTEGER,
+                        answers BLOB,
+                        start_time INTEGER,
+                        expire_time INTEGER,
+                        special_id INTEGER,
+                        attempt_num INTEGER,
+                        FOREIGN KEY (quiz_id) REFERENCES quiz_description(quiz_id)
+                    )
+                    """
+                )
+                await conn.commit()
+        else:
+            with mysql_connection(
+                    host=self.mysql_db_ip,
+                    password=self.mysql_password,
+                    user=self.mysql_username,
+                    database=self.mysql_db_name,
+            ) as connection:
+                cursor = connection.cursor(dictionaries=True)
+                cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS quiz_description (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        quiz_id INT,
+                        description TEXT,
+                        license TEXT,
+                        time_limit INT,
+                        intensity REAL,
+                        category TEXT,
+                        author INT,
+                        guild_id INT,
+                        FOREIGN KEY (quiz_id) REFERENCES quizzes(quiz_id)
+                    )
+                    """
+                )
+                cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS quizzes (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        guild_id INT,
+                        quiz_id INT,
+                        problem_id INT,
+                        question TEXT,
+                        answer LONGBLOB,
+                        voters LONGBLOB,
+                        solvers LONGBLOB,
+                        author INT,
+                        FOREIGN KEY (quiz_id) REFERENCES quiz_description(quiz_id)
+                    )
+                    """
+                )
+                cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS quiz_submissions (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        guild_id INT,
+                        quiz_id INT,
+                        user_id INT,
+                        submissions LONGBLOB,
+                        FOREIGN KEY (quiz_id) REFERENCES quiz_description(quiz_id)
+                    )
+                    """
+                )
+                cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS quiz_submission_sessions (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        user_id INT,
+                        quiz_id INT,
+                        guild_id INT,
+                        is_finished INT,
+                        answers LONGBLOB,
+                        start_time INT,
+                        expire_time INT,
+                        special_id INT,
+                        attempt_num INT,
+                        FOREIGN KEY (quiz_id) REFERENCES quiz_description(quiz_id)
+                    )
+                    """
+                )
+                connection.commit()

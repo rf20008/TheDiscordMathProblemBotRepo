@@ -2,14 +2,14 @@ import unittest
 import unittest.mock
 import disnake
 from helpful_modules.problems_module import BaseProblem, PMDeprecationWarning
-
+import pickle
 
 # Define a standard sample problem for testing
 sample_problem = BaseProblem(
     question="What is 2+2?",
     id=-1,
     author=-123456789,
-    guild_id="-987654321",
+    guild_id=None,
     answer="4",
     voters=[],
     solvers=[],
@@ -38,37 +38,37 @@ class TestBaseProblem(unittest.TestCase):
             "problem_id": -2,
             "guild_id": None,
             "author": "-987654321",
-            "answers": ["6"],
-            "voters": [],
-            "solvers": [],
+            "answers": pickle.dumps(["6"]),
+            "voters": pickle.dumps([]),
+            "solvers": pickle.dumps([]),
             "tolerance": 0.2
         }
-        problem = BaseProblem.from_row(row)
-        self.assertEqual(problem.question, "What is 3+3?")
-        self.assertEqual(problem.id, -2)
-        self.assertEqual(problem.author, "-987654321")
-        self.assertIsNone(problem.guild_id)
-        self.assertEqual(problem.answers, ["6"])
-        self.assertEqual(problem.tolerance, 0.2)
+        recieved_problem = BaseProblem.from_row(row)
+        self.assertEqual(recieved_problem.question, "What is 3+3?")
+        self.assertEqual(recieved_problem.id, -2)
+        self.assertEqual(recieved_problem.author, "-987654321")
+        self.assertIsNone(recieved_problem.guild_id)
+        self.assertEqual(recieved_problem.answers, ["6"])
+        self.assertEqual(recieved_problem.tolerance, 0.2)
 
     def test_from_dict(self):
         problem_dict = {
             "question": "What is 4+4?",
             "id": "-3",
-            "guild_id": "-987654321",
+            "guild_id": None,
             "voters": [],
             "solvers": [],
             "author": -123456789,
             "answers": ["8"],
             "tolerance": 0.3
         }
-        problem = BaseProblem.from_dict(problem_dict)
-        self.assertEqual(problem.question, "What is 4+4?")
-        self.assertEqual(problem.id, -3)
-        self.assertEqual(problem.author, -123456789)
-        self.assertEqual(problem.guild_id, "-987654321")
-        self.assertEqual(problem.answers, ["8"])
-        self.assertEqual(problem.tolerance, 0.3)
+        problem_gotten = BaseProblem.from_dict(problem_dict)
+        self.assertEqual(problem_gotten.question, "What is 4+4?")
+        self.assertEqual(problem_gotten.id, -3)
+        self.assertEqual(problem_gotten.author, -123456789)
+        self.assertEqual(problem_gotten.guild_id, None)
+        self.assertEqual(problem_gotten.answers, ["8"])
+        self.assertEqual(problem_gotten.tolerance, 0.3)
 
     def test_to_dict(self):
         problem_dict = sample_problem.to_dict()
@@ -88,13 +88,13 @@ class TestBaseProblem(unittest.TestCase):
     # Tests for other methods...
     def test_add_voter(self):
         problem = sample_problem
-        problem.add_voter("-987654321")  # Adding a voter
-        self.assertIn("-987654321", problem.voters)
+        problem.add_voter(unittest.mock.AsyncMock(spec=disnake.User, id=-987654321))  # Adding a voter
+        self.assertIn(-987654321, problem.voters)
 
     def test_add_solver(self):
         problem = sample_problem
         problem.add_solver(unittest.mock.AsyncMock(spec=disnake.User, id=-987654321))  # type: ignore  # Adding a solver
-        self.assertIn("-987654321", problem.solvers)
+        self.assertIn(unittest.mock.AsyncMock(spec=disnake.User, id=-987654321), problem.solvers)
 
     def test_add_answer(self):
         problem = sample_problem
@@ -117,7 +117,7 @@ class TestBaseProblem(unittest.TestCase):
 
     def test_check_answer_and_add_checker(self):
         problem = sample_problem
-        problem.check_answer_and_add_checker("4", "-987654321")  # Checking answer and adding a solver
+        problem.check_answer_and_add_checker("4", unittest.mock.AsyncMock(spec=disnake.User, id="-987654321"))  # Checking answer and adding a solver
         self.assertIn("-987654321", problem.solvers)
 
     def test_check_answer(self):
@@ -151,7 +151,7 @@ class TestBaseProblem(unittest.TestCase):
 
     def test_get_author(self):
         problem = sample_problem
-        self.assertEqual(problem.get_author(), -123456789)
+        self.assertEqual(problem.get_author(), unittest.mock.AsyncMock(spec=disnake.User, id=-123456789))
 
     def test__int_guild_id(self):
         problem = sample_problem
@@ -159,7 +159,7 @@ class TestBaseProblem(unittest.TestCase):
 
     def test_is_author(self):
         problem = sample_problem
-        self.assertTrue(problem.is_author(-123456789))  # Is the author
+        self.assertTrue(problem.is_author(unittest.mock.AsyncMock(spec=disnake.User, id=-123456789)))  # Is the author
 
     def test___eq__(self):
         problem1 = sample_problem
@@ -170,14 +170,18 @@ class TestBaseProblem(unittest.TestCase):
         problem = sample_problem
         self.assertEqual(
             repr(problem),
-            "BaseProblem(question='What is 2+2?', answers = ['4'], id = -1, guild_id=-1, voters=[],solvers=[],author=-987654321,cache=None )"
+            "BaseProblem(question='What is 2+2?', answers = ['4'], id = -1, guild_id=None, voters=[],solvers=[],author=-123456789,cache=None )"
         )  # Representation matches expected value
 
     def test___str__(self):
         problem = sample_problem
         self.assertEqual(
             str(problem),
-            "Question: 'What is 2+2?', \n        id: -1, \n        guild_id: -1, \n        solvers: [],\n        author: <@-987654321>\n        "
+            "Question: 'What is 2+2?', \n"
+            "        id: -1, \n"
+            "        guild_id: None, \n"
+            "        solvers: [],\n"
+            "        author: <@-987654321>\n        "
         )  # String representation matches expected value
 
     def test___deepcopy__(self):

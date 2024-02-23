@@ -637,3 +637,49 @@ class ProblemsRelatedCache:
     @property
     def max_answer_length(self):
         return self._max_answer_length
+
+    async def initialize_sql_table(self):
+        """Initialize the SQL tables if they don't already exist"""
+        if self.use_sqlite:
+            async with aiosqlite.connect(self.db_name) as conn:
+                cursor = await conn.cursor()
+                await cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS problems (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        guild_id INTEGER,
+                        problem_id INTEGER,
+                        question TEXT,
+                        answers BLOB,
+                        voters BLOB,
+                        solvers BLOB,
+                        author INTEGER,
+                        extra_stuff TEXT
+                    )
+                    """
+                )
+                await conn.commit()
+        else:
+            with mysql_connection(
+                    host=self.mysql_db_ip,
+                    password=self.mysql_password,
+                    user=self.mysql_username,
+                    database=self.mysql_db_name,
+            ) as connection:
+                cursor = connection.cursor(dictionaries=True)
+                cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS problems (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        guild_id INT,
+                        problem_id INT,
+                        question TEXT,
+                        answers LONGBLOB,
+                        voters LONGBLOB,
+                        solvers LONGBLOB,
+                        author INT,
+                        extra_stuff TEXT
+                    )
+                    """
+                )
+                connection.commit()

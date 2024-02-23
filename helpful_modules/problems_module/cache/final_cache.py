@@ -4,6 +4,6 @@ from . import *
 
 from .appeals_related_cache import AppealsRelatedCache
 
-
+# TODO: make the initialize_sql_table
 class MathProblemCache(AppealsRelatedCache):
     pass

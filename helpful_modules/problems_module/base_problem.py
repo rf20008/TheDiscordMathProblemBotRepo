@@ -30,11 +30,11 @@ import disnake
 
 from .dict_convertible import DictConvertible
 from .errors import *
-
+MAX_ANSWERS_PER_PROBLEM = 30
 ANSWER_CHAR_LIMIT = 1000
 QUESTION_CHAR_LIMIT = 2000
 
-
+# TODO: finish from_dict so that it knows to convert to a ComputationalProblem or a LinearAlgebraProblem or some other kind of problem
 class BaseProblem(DictConvertible):
     """For readability purposes :) This also isn't an ABC."""
 
@@ -200,16 +200,15 @@ class BaseProblem(DictConvertible):
             solvers = pickle.loads(row["voters"])
             _Row = {
                 "guild_id": row["guild_id"],  # Could be None
-                "problem_id": row["problem_id"],
+                "id": row["problem_id"],
                 "answer": Exception,  # Placeholder,
                 "answers": answers,
                 "voters": voters,
                 "solvers": solvers,
                 "author": row["author"],
                 "question": row["question"],
-                "id": row["problem_id"],
                 "tolerance": row.get("tolerance", None),
-                **row,
+                **row.get("extra_stuff", {})
             }
             return cls.from_dict(_Row, cache=cache)
         except BaseException as e:
@@ -226,18 +225,18 @@ class BaseProblem(DictConvertible):
         assert isinstance(_dict, dict)
         assert _dict["guild_id"] is None or isinstance(_dict["guild_id"], int)
         problem = _dict
-        guild_id = problem["guild_id"]
         # Remove the guild_id null (used for global problems), which is not used any more because of conflicts with sql.
+        other_stuff = {key: value for key,value in problem.items() if key not in {"question", "answers", "id", "voters", "guild_id", "solvers", "author"}}
         problem = cls(
-            question=problem.pop("question"),
-            answers=problem.pop("answers"),
-            id=int(problem.pop("id")),
-            guild_id=None,
-            voters=problem.pop("id"),
-            solvers=problem.pop("solvers"),
-            author=problem.pop("solvers"),
+            question=problem["question"],
+            answers=problem["answers"],
+            id=int(problem["id"]),
+            guild_id=problem["guild_id"],
+            voters=problem["voters"],
+            solvers=problem["solvers"],
+            author=problem["author"],
             cache=cache,
-            **problem,
+            **other_stuff,
         )  # Problem-ify the problem, but set the guild_id to None and return it
         return problem
 
@@ -293,7 +292,7 @@ class BaseProblem(DictConvertible):
             "Warning: Answers are not used in the default implementation",
             category=PMDeprecationWarning,
         )
-        if len(self.answers) + 1 > self._cache.max_answers_per_problem:
+        if len(self.answers) + 1 > MAX_ANSWERS_PER_PROBLEM:
             raise MathProblemsModuleException("Too many answers!")
         self.answers.append(answer)
         asyncio.run(self.update_self())
@@ -427,3 +426,16 @@ class BaseProblem(DictConvertible):
     def get_extra_stuff(self):
         """Return the extra stuff for this dictionary, that doesn't go in just a BaseProblem. Override this if you're in a subclass"""
         return {}
+    def __eq__(self, other: "BaseProblem"):
+        if not isinstance(other, type(self)):
+            return False
+        return (
+                self.question == other.question and
+                self.answers == other.answers and
+                self.id == other.id and
+                self.guild_id == other.guild_id and
+                self.voters == other.voters and
+                self.solvers == other.solvers and
+                self.author == other.author and
+                self.get_extra_stuff() == other.get_extra_stuff()
+        )

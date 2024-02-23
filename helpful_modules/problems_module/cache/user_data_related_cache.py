@@ -130,3 +130,56 @@ class UserDataRelatedCache(QuizRelatedCache):
                 connection.commit()
                 log.debug("Finished!")
                 return
+
+
+    async def del_user_data(self, user_id: int):
+        """Delete user data given the user id"""
+        assert isinstance(user_id, int)
+        if self.use_sqlite:
+            async with aiosqlite.connect(self.db_name) as conn:
+                cursor = await conn.cursor()
+                await cursor.execute(
+                    "DELETE FROM user_data WHERE user_id = ?", (user_id,)
+                )
+                await conn.commit()
+        else:
+            with mysql_connection(
+                host=self.mysql_db_ip,
+                password=self.mysql_password,
+                user=self.mysql_username,
+                database=self.mysql_db_name,
+            ) as connection:
+                cursor = connection.cursor(dictionaries=True)
+                cursor.execute("DELETE FROM user_data WHERE user_id = %s", (user_id,))
+                connection.commit()
+                connection.close()
+
+    async def initialize_sql_table(self) -> None:
+        """Initialize SQL tables if they don't exist."""
+        if self.use_sqlite:
+            async with aiosqlite.connect(self.db_name) as conn:
+                cursor = await conn.cursor()
+                await cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS user_data (
+                        user_id INTEGER PRIMARY KEY,
+                        trusted INTEGER,
+                        blacklisted INTEGER
+                    )
+                """)
+                await cursor.commit()
+        else:
+            with mysql_connection(
+                    host=self.mysql_db_ip,
+                    password=self.mysql_password,
+                    user=self.mysql_username,
+                    database=self.mysql_db_name,
+            ) as connection:
+                cursor = connection.cursor()
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS user_data (
+                        user_id INT PRIMARY KEY,
+                        trusted BOOLEAN,
+                        blacklisted BOOLEAN
+                    )
+                """)
+                connection.commit()

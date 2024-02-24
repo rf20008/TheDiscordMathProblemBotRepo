@@ -1,23 +1,17 @@
 import logging
-import sqlite3
+import pickle
 import typing
-import warnings
-from copy import copy, deepcopy
-from types import FunctionType
+from copy import copy
 from typing import *
 
 import aiosqlite
-import disnake
 
 from helpful_modules.dict_factory import dict_factory
-from helpful_modules.threads_or_useful_funcs import get_log
 
-from ..base_problem import BaseProblem
 from ..errors import *
 from ..mysql_connector_with_stmt import *
 from ..quizzes import Quiz, QuizProblem, QuizSolvingSession, QuizSubmission
 from ..quizzes.quiz_description import QuizDescription
-from ..user_data import UserData
 from .problems_related_cache import ProblemsRelatedCache
 
 log = logging.getLogger(__name__)
@@ -36,7 +30,7 @@ class QuizRelatedCache(ProblemsRelatedCache):
                 await cursor.execute("SELECT * WHERE quiz_id = ?", (quiz_id,))
                 # For each row retrieved: use from_sqlite_dict to turn into a QuizSolvingSession and return it
                 return [
-                    QuizSolvingSession.from_sqlite_dict(item, cache=self)
+                    QuizSolvingSession.from_sqlite_dict(item)
                     for item in await cursor.fetchall()
                 ]
         else:
@@ -53,7 +47,7 @@ class QuizRelatedCache(ProblemsRelatedCache):
                 )
                 # For each row retrieved: turn it into a QuizSolvingSession using from_mysql_dict and return the result
                 return [
-                    QuizSolvingSession.from_mysql_dict(item, cache=self)
+                    QuizSolvingSession.from_mysql_dict(item)
                     for item in cursor.fetchall()
                 ]
 
@@ -227,7 +221,7 @@ class QuizRelatedCache(ProblemsRelatedCache):
                     )
                 else:
                     return QuizSolvingSession.from_sqlite_dict(
-                        potential_sessions[0], cache=self
+                        potential_sessions[0]
                     )
         else:
             with mysql_connection(
@@ -280,7 +274,7 @@ class QuizRelatedCache(ProblemsRelatedCache):
                 except BaseException as exc:
                     # Not writeable?
                     try:
-                        dict_factory  # Check for name error
+                        dict_factory()  # Check for name error
                     except NameError as exc2:
                         raise MathProblemsModuleException(
                             "dict_factory could not be found"
@@ -368,7 +362,7 @@ class QuizRelatedCache(ProblemsRelatedCache):
                 except BaseException as exc:
                     # Not writeable?
                     try:
-                        dict_factory  # Check for name error
+                        dict_factory()  # Check for name error
                     except NameError as exc2:
                         raise MathProblemsModuleException(
                             "dict_factory could not be found"
@@ -657,7 +651,7 @@ class QuizRelatedCache(ProblemsRelatedCache):
                 connection.commit()
 
     async def get_quizzes_by_func(
-        self: "MathProblemCache",
+        self: "QuizRelatedCache",
         func: typing.Callable[[Quiz, Any], bool] = lambda quiz: False,
         args: typing.Union[tuple, list] = None,
         kwargs: dict = None,

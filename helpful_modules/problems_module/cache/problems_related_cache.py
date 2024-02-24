@@ -111,6 +111,25 @@ class ProblemsRelatedCache:
         asyncio.run(self.update_cache())
         self.cached_sessions = {}
 
+    async def bgsave(self, schedule: typing.Any, path: str = None, wait: bool = False, raise_on_error: bool = False, replace: bool = False):
+        """
+        Perform a background save operation.
+
+        This method is specific to Redis caches and is not supported for SQL caches.
+        Attempting to call this method on a SQL cache will raise a BGSaveNotSupportedOnSQLException.
+
+        Parameters:
+        - schedule: An argument representing the schedule for the background save operation.
+        - path (str): The path to save the data to.
+        - wait (bool): Whether to wait for the operation to complete.
+        - raise_on_error (bool): Whether to raise an error if the operation encounters an error.
+        - replace (bool): Whether to replace existing data at the specified path.
+
+        Raises:
+        - BGSaveNotSupportedOnSQLException: If the cache is a SQL cache and does not support background save operations.
+        """
+        raise BGSaveNotSupportedOnSQLException("Only Redis caches can do bgsave")
+
     async def convert_to_dict(self) -> dict:
         """A method that converts self to a dictionary (not used, will probably be removed soon)"""
         e = {}
@@ -646,7 +665,7 @@ class ProblemsRelatedCache:
                 await cursor.execute(
                     """
                     CREATE TABLE IF NOT EXISTS problems (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        id INTEGER PRIMARY KEY,
                         guild_id INTEGER,
                         problem_id INTEGER,
                         question TEXT,
@@ -670,7 +689,7 @@ class ProblemsRelatedCache:
                 cursor.execute(
                     """
                     CREATE TABLE IF NOT EXISTS problems (
-                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        id INT PRIMARY KEY,
                         guild_id INT,
                         problem_id INT,
                         question TEXT,

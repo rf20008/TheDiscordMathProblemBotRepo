@@ -64,7 +64,9 @@ class QuizSolvingSession(DictConvertible):
     @property
     def overtime(self: "QuizSolvingSession") -> bool:
         return time.time() > self.expire_time
-
+    @property
+    def is_finished(self: "QuizSolvingSession"):
+        return self.overtime
     @classmethod
     def better_init(
         cls,
@@ -94,7 +96,6 @@ class QuizSolvingSession(DictConvertible):
     @classmethod
     def from_sqlite_dict(cls, dict: dict) -> "QuizSolvingSession":
         """Convert a dict returned from sql into a QuizSolvingSession"""
-        _quiz = run(cache.get_quiz(dict["quiz_id"]))
         return cls.better_init(
             start_time=dict["start_time"],
             expire_time=dict["expire_time"],

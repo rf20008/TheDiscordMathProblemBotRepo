@@ -290,14 +290,20 @@ class DebugCog(HelperCog):
         raise NotImplementedError("This isn't implemented yet")
 
     @commands.is_owner()
-    @checks.has_privileges(
-        trusted=True,
-    )
+    @checks.trusted_users_only()
     @commands.slash_command(
         name="eval2",
         description="Evaluate Python code (for owners only)- this uses a modal",
+        options = [
+            disnake.Option(
+                name="ephemeral",
+                description="Whether to send the results ephermally",
+                type=disnake.OptionType.boolean,
+                required=False
+            )
+        ]
     )
-    async def eval2(self, inter):
+    async def eval2(self, inter, ephemeral: bool=False):
         """/eval2
 
         This does Eval2. It is restricted to owners only. This command gives a modal"""
@@ -343,4 +349,4 @@ class DebugCog(HelperCog):
         )
         # await modal_inter.send("Yes!")
 
-        await self.eval_code(inter, code_to_run)
+        await self.eval_code(inter, code_to_run, ephemeral=ephemeral)

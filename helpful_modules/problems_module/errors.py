@@ -7,7 +7,9 @@ class MathProblemsModuleException(Exception):
     """The base exception for problems_module."""
 
     pass
-
+class BGSaveNotSupportedOnSQLException(MathProblemsModuleException):
+    """Raised when someone tries to call .bgsave but we're using SQL (BGsave is only used in redis"""
+    pass
 
 class TooLongArgument(MathProblemsModuleException):
     """Raised when an argument passed into MathProblem() is too long."""

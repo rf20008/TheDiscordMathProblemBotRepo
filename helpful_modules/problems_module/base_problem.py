@@ -197,11 +197,11 @@ class BaseProblem(DictConvertible):
                 row["answers"]
             )  # Load answers from bytes to a list (which should contain only pickleable objects)!
             voters = pickle.loads(row["voters"])  # Do the same for voters and solvers
-            solvers = pickle.loads(row["voters"])
+            solvers = pickle.loads(row["solvers"])
             _Row = {
                 "guild_id": row["guild_id"],  # Could be None
                 "id": row["problem_id"],
-                "answer": Exception,  # Placeholder,
+                "answer": "",  # Placeholder,
                 "answers": answers,
                 "voters": voters,
                 "solvers": solvers,
@@ -216,7 +216,7 @@ class BaseProblem(DictConvertible):
                 type(e), e, e.__traceback__, file=sys.stderr
             )  # Log to stderr
             raise SQLException(
-                "Uh oh..."
+                f"Uh oh... a row {row} is not of the expected format, and _Row={_Row}"
             ) from e  # Re-raise the exception to the user (so that they can help me debug (error_logs/** is git-ignored))
 
     @classmethod
@@ -253,7 +253,7 @@ class BaseProblem(DictConvertible):
             **self.get_extra_stuff(),
         }
         if show_answer:
-            _dict["answers"] = self.get_answers()
+            _dict["answers"] = self.answers
         return _dict
 
     def convert_to_dict(self, show_answer: bool = True):

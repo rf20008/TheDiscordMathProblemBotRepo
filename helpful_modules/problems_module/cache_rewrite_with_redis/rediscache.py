@@ -517,7 +517,34 @@ class RedisCache:
             await self.del_key(f"GuildData:{thing.guild_id}")
         else:
             await self.del_key(f"GuildData:{thing}")
+    async def bgsave(
+            self,
+            schedule: typing.Any,
+            path: str = None,
+            wait: bool = False,
+            raise_on_error: bool = False,
+            replace: bool = False,
+            **kwargs
+    ):
+        """
+        Perform a background save operation.
 
+        This method is specific to Redis caches and is not supported for SQL caches.
+        Attempting to call this method on a SQL cache will raise a BGSaveNotSupportedOnSQLException.
+
+        Time complexity: O(1)
+
+        Parameters:
+        - schedule: An argument representing the schedule for the background save operation.
+        - path (str): The path to save the data to.
+        - wait (bool): Whether to wait for the operation to complete.
+        - raise_on_error (bool): Whether to raise an error if the operation encounters an error.
+        - replace (bool): Whether to replace existing data at the specified path.
+
+        Raises:
+        - BGSaveNotSupportedOnSQLException: If the cache is a SQL cache and does not support background save operations.
+        """
+        await self.redis.bgsave(schedule=schedule, path=path, wait=wait, raise_on_error=raise_on_error, replace=replace, **kwargs)
 
 # TODO: fix the rest of the commands such that this cache can work
 # TODO: get a redis server

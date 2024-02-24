@@ -1,9 +1,26 @@
+"""
+This file is part of The Discord Math Problem Bot Repo
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
+"""
 import random
 import typing
-from copy import copy
 
 import disnake
-from disnake import *
+from disnake import Option, OptionType
 from disnake.ext import commands
 
 from helpful_modules import (
@@ -11,11 +28,13 @@ from helpful_modules import (
     problems_module,
 )
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
-from helpful_modules.custom_embeds import ErrorEmbed, SuccessEmbed, SimpleEmbed
-from helpful_modules.problem_generator import *
-from helpful_modules.threads_or_useful_funcs import generate_new_id
+from helpful_modules.custom_embeds import ErrorEmbed, SuccessEmbed
+from helpful_modules.problem_generator import generate_arithmetic_problem, generate_linear_algebra_problem
 
+from helpful_modules.threads_or_useful_funcs import generate_new_id
 from .helper_cog import HelperCog
+
+PROBLEM_GENERATORS = [generate_arithmetic_problem, generate_linear_algebra_problem]
 class ProblemGenerationCog(HelperCog):
     def __init__(self, bot: TheDiscordMathProblemBot):
         super().__init__(bot)
@@ -55,64 +74,21 @@ class ProblemGenerationCog(HelperCog):
                 ephemeral=True,
             )
 
-        for i in range(num_new_problems_to_generate):  # basic problems for now.... :(
+        for _ in range(num_new_problems_to_generate):  # basic problems for now.... :(
             # TODO: linear equations, etc
-
-            operation = random.choice(["+", "-", "*", "/", "^"])
-            if operation == "^":
-                num1 = random.randint(1, 20)
-                num2 = random.randint(1, 20)
-            else:
-                num1 = random.randint(-1000, 1000)
-                num2 = random.randint(-1000, 1000)
-                while num2 == 0 and operation == "/":  # Prevent ZeroDivisionError
-                    num2 = random.randint(-1000, 1000)
-
-            if operation == "^":
-                try:
-                    answer = num1**num2
-
-                except OverflowError:  # Too big?
-                    try:
-                        del answer
-                    except NameError:
-                        pass
-                    continue
-            elif operation == "+":
-                answer = num1 + num2
-            elif operation == "-":
-                answer = num1 - num2
-            elif operation == "*":
-                answer = num1 * num2
-            elif operation == "/":
-                answer = round(num1 * 100 / num2) / 100
-
             while True:
                 problem_id = generate_new_id()
                 if problem_id not in [
                     problem.id for problem in await self.cache.get_global_problems()
                 ]:  # All problem_ids
                     break
-            question = (
-                f"What is {num1} "
-                + {
-                    "*": "times",
-                    "+": "times",
-                    "-": "minus",
-                    "/": "divided by",
-                    "^": "to the power of",
-                }[operation]
-                + f" {str(num2)}?"
-            )
-            Problem = problems_module.BaseProblem(
-                question=question,
-                answer=str(answer),
-                author=845751152901750824,
-                guild_id=None,
-                id=problem_id,
-                cache=copy(self.cache),
-            )
-            await self.cache.add_problem(problem_id, Problem)
+            problem_generator = random.choice(PROBLEM_GENERATORS)
+            problem = problem_generator()
+            await self.cache.add_problem(problem_id, problem)
+        try:
+            await self.cache.bgsave()
+        except problems_module.errors.BGSaveNotSupportedOnSQLException:
+            pass
         await inter.send(
             embed=SuccessEmbed(
                 f"Successfully created {str(num_new_problems_to_generate)} new problems!"

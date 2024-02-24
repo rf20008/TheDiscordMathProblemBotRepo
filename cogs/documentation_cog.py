@@ -1,21 +1,29 @@
-import json
-import typing
-from collections import defaultdict
-from typing import Optional
+"""
+This file is part of The Discord Math Problem Bot Repo
 
-import aiofiles
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
+"""
+import typing
+
 import disnake
 from disnake import Option, OptionChoice, OptionType
 from disnake.ext import commands, tasks
 
-from helpful_modules import (
-    FileDictionaryReader,
-    _error_logging,
-    checks,
-    custom_bot,
-    custom_embeds,
-    dict_factory,
-)
+from helpful_modules import custom_bot, custom_embeds, the_documentation_file_loader
+from helpful_modules.custom_embeds import SuccessEmbed, ErrorEmbed, SimpleEmbed
 
 TYPES_TO_NAMES = {
     commands.InvokableUserCommand: "user",
@@ -33,6 +41,7 @@ FILENAME = "help.json"
 
 class HelpCog(HelperCog):
     def __init__(self, bot):
+        super().__init__(bot)
         self.bot = bot
         self.cache = bot.cache
         self.cached_command_dict = {}
@@ -193,6 +202,7 @@ class HelpCog(HelperCog):
             await inter.send(
                 embed=SuccessEmbed(
                     f"""<@{inter.author.id}> [Click here](https://github.com/rf20008/TheDiscordMathProblemBotRepo/tree/master/docs) for my documentation.
+        Warning: It is deprecated
         """
                 ),
                 ephemeral=True,

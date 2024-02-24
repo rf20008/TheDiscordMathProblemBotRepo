@@ -41,7 +41,7 @@ class DocumentationFileLoader:
         )
         dictToStoreFileContent = {}
         docs_json = self._load_documentation_file()
-        for key in docs_json.keys():
+        for key in docs_json:
             dictToStoreFileContent[
                 docs_json["file_name"]  # item is a key, but i forgot what this does
             ] = "<!This file is dynamically generated from documentation.json. If you want to contribute/this is your fork, edit that instead :)>\n"

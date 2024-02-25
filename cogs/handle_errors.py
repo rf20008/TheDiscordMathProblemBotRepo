@@ -31,7 +31,6 @@ class ErrorHandlerCog(HelperCog):
     def __init__(self, bot):
         super().__init__(bot)
         self.bot = bot
-        self.slash = bot.slash
 
     @staticmethod
     async def handle_errors(ctx, error, print_stack_traceback: tuple = (True, sys.stderr)):

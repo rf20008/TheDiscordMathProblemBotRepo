@@ -232,7 +232,7 @@ class DataModificationCog(HelperCog):
         is_blacklisted = user_data.blacklisted
 
         new_data = {
-            "Problems": [problem.to_dict() for problem in raw_data["problems"]],
+            "Problems": [problem.to_dict(show_answer=True) for problem in raw_data["problems"]],
             "Quiz Problems": [
                 quiz_problem.to_dict() for quiz_problem in raw_data["quiz_problems"]
             ],

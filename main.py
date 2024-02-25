@@ -1,7 +1,25 @@
+"""
+This file is part of The Discord Math Problem Bot Repo
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
+"""
 # Written by @rf20008
 # Licensed under GPLv3 (or later)
 # Feel free to contribute! :-)
-# Python 3.10+ is required.
+# Python 3.12+ is required.
 
 # imports - standard library
 import asyncio
@@ -233,6 +251,11 @@ _the_daemon_file_saver.start()
 # bot.slash = slash
 # Add the commands
 bot.add_check(checks.cmds_cnt)
+bot.add_cog(AppealsCog(bot))
+bot.add_cog(GuildConfigCog(bot))
+bot.add_cog(ErrorHandlerCog(bot))
+bot.add_cog(SuggestionCog(bot))
+bot.add_cog(TestCog(bot))
 bot.add_cog(DebugCog(bot))
 bot.add_cog(DeveloperCommands(bot))
 bot.add_cog(ProblemsCog(bot))
@@ -243,6 +266,7 @@ bot.CONSTANTS = bot_constants
 bot.add_check(checks.is_not_blacklisted())
 bot.add_cog(InterestingComputationCog(bot))
 bot.add_cog(DataModificationCog(bot))
+bot.add_cog(ProblemGenerationCog(bot))
 # Events
 
 

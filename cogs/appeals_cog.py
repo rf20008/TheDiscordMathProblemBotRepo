@@ -9,7 +9,7 @@ from helpful_modules.checks import has_privileges
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules.custom_embeds import ErrorEmbed, SuccessEmbed
 from helpful_modules.my_modals import MyModal
-from helpful_modules.threads_or_useful_funcs import _generate_appeal_id
+from helpful_modules.threads_or_useful_funcs import _generate_special_id
 
 from .helper_cog import HelperCog
 

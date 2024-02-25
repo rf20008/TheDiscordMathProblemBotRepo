@@ -11,7 +11,7 @@ import disnake
 
 from helpful_modules.dict_factory import dict_factory
 from helpful_modules.threads_or_useful_funcs import get_log
-
+from ..appeal import Appeal, AppealType
 from ..base_problem import BaseProblem
 from ..errors import *
 from ..mysql_connector_with_stmt import mysql_connection
@@ -243,7 +243,11 @@ class MathProblemCache(UserDataRelatedCache):
                     QuizDescription.from_dict(data, cache=self)
                     for data in await cursor.fetchall()
                 ]
-
+                await cursor.execute("SELECT * FROM appeals WHERE user_id=?", (author_id,))
+                appeals = [
+                    Appeal.from_dict(data, cache=self)
+                    for data in await cursor.fetchall()
+                ]
         else:
             with mysql_connection(
                 host=self.mysql_db_ip,
@@ -285,11 +289,16 @@ class MathProblemCache(UserDataRelatedCache):
                     for item in cursor.fetchall()
                 ]
                 cursor.execute(
-                    "SELECT * FROM quiz_description WHERE author = ?", (user_id,)
+                    "SELECT * FROM quiz_description WHERE author = %s", (author_id,)
                 )
                 descriptions = [
                     QuizDescription.from_dict(cache=self, data=data)
                     for data in cursor.fetchall()
+                ]
+                await cursor.execute("SELECT * FROM appeals WHERE user_id=%s", (author_id,))
+                appeals = [
+                    Appeal.from_dict(data, cache=self)
+                    for data in await cursor.fetchall()
                 ]
 
         return {
@@ -298,6 +307,7 @@ class MathProblemCache(UserDataRelatedCache):
             "problems": problems,
             "sessions": sessions,
             "descriptions_created": descriptions,
+            "appeals": appeals
         }
 
     async def delete_all_by_user_id(self, user_id: int) -> None:
@@ -322,7 +332,7 @@ class MathProblemCache(UserDataRelatedCache):
                 await cursor.execute(
                     "DELETE FROM quiz_description WHERE author= ?", (user_id,)
                 )
-
+                await cursor.execute("DELETE FROM appeals WHERE user_id=?", (user_id,))
                 await conn.commit()  # Otherwise, nothing happens and it rolls back!!
         else:
             with mysql_connection(
@@ -343,6 +353,7 @@ class MathProblemCache(UserDataRelatedCache):
                 cursor.execute(
                     "DELETE FROM quiz_description WHERE author = %s", (user_id,)
                 )
+                await cursor.execute("DELETE FROM appeals WHERE user_id=%s", (user_id,))
                 connection.commit()
 
     async def delete_all_by_guild_id(self, guild_id: int) -> None:

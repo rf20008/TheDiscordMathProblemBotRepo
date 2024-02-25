@@ -16,7 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
-from problems_module import ComputationalProblem, LinearAlgebraProblem
+from helpful_modules.problems_module import ComputationalProblem, LinearAlgebraProblem
 import numpy as np
 import random
 import math

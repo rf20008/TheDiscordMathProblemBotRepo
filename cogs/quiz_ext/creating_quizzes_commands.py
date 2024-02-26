@@ -82,7 +82,6 @@ class CreatingQuizzesCommandsCog(HelperCog):
         # Must parse into list
         # If parsing fails, tell the user.
 
-        # TODO: quiz creation rules: make it possible to ensure that only some people can create quizzes to prevent spam
         try:
             _data: dict = json.loads(data)
         except json.JSONDecodeError as e:

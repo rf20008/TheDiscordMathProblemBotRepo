@@ -20,6 +20,8 @@ from helpful_modules.problems_module import ComputationalProblem, LinearAlgebraP
 import numpy as np
 import random
 import math
+from helpful_modules.threads_or_useful_funcs import generate_new_id
+BOT_ID = 845751152901750824
 OPERATIONS = ["+", "-", "/", "*"]
 COMPLEXITY_LIMIT = 200
 NUMBER_RANGE = (-100, 100)
@@ -66,10 +68,6 @@ def infix_to_postfix(infix_expression):
     return postfix_stack
 
 
-# Test the function
-infix_expression = "3 + 4 * 22 / ( 1 - 5 ) ^ 2 ^ 3"
-postfix_stack = infix_to_postfix(infix_expression)
-print("Postfix expression (reversed order):", postfix_stack)
 def evaluate_postfix(postfix_expression):
     stack = []
 
@@ -193,7 +191,7 @@ def generate_arithmetic_expression(complexity: int = 7):
             case _:
                 continue
 
-def generate_arithmetic_problem(complexity: int = 7):
+def generate_arithmetic_problem(complexity: int = 7, guild_id: int | None = None, author_id: int = BOT_ID):
     if not isinstance(complexity, int):
         raise TypeError("Complexity is not an int")
     if complexity < 0 or complexity > COMPLEXITY_LIMIT:
@@ -203,12 +201,21 @@ def generate_arithmetic_problem(complexity: int = 7):
         question=f"Evaluate {expression}. Remember: this uses a computer. "
                  f"Your answer will be considered correct "
                  f"if it is within 0.1% relative tolerance or 0.001 absolute tolerance",
-        answer=equalsto,
-        tolerance = 0.001
+        answers=[equalsto],
+        tolerance = 0.001,
+        guild_id=guild_id,
+        author=author_id,
+        id=generate_new_id()
     )
 
-def generate_linear_algebra_problem(num_vars: int = 3):
+def generate_linear_algebra_problem(num_vars: int = 3, guild_id: int | None = None, author_id: int = BOT_ID):
     vars = np.array([random.randint(*NUMBER_RANGE) for _ in range(num_vars)])
     matrix = np.array([[random.randint(*NUMBER_RANGE) for _ in range(num_vars)] for __ in range(num_vars)])
     equal_to = matrix.dot(vars)
-    return LinearAlgebraProblem.from_coefficients(coeffs=list(map(list, matrix)), equal_to=list(equal_to))
+    return LinearAlgebraProblem.from_coefficients(
+        coeffs=list(map(list, matrix)),
+        equal_to=list(equal_to),
+        guild_id=guild_id,
+        author_id=author_id,
+        id = generate_new_id()
+    )

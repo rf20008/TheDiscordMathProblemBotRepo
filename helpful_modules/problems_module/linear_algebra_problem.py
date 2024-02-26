@@ -130,7 +130,7 @@ class LinearAlgebraProblem(BaseProblem):
             *args,
             coeffs=coeffs,
             equal_to=equal_to,
-            id=author_id,
+            author=author_id,
             guild_id=guild_id,
             **kwargs,
         )

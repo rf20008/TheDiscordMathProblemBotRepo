@@ -48,7 +48,7 @@ class ComputationalProblem(BaseProblem):
                 return False
 
         return any(
-            abs(answer - correct_answer) <= self.tolerance
+            abs(answer - complex(correct_answer)) <= self.tolerance
             for correct_answer in self.answers
         )
 

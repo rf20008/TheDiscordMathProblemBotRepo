@@ -1,3 +1,21 @@
+"""
+This file is part of The Discord Math Problem Bot Repo
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
+"""
 import asyncio
 import json
 import typing
@@ -41,7 +59,7 @@ class ModifyingQuizzesCog(HelperCog):
         options=[
             disnake.Option(
                 name="quiz_id",
-                description="The ID of the quiz that contains the problem to add the answer to",  # TODO: shorten
+                description="The ID of the quiz that contains the problem to add the answer to",
                 type=disnake.OptionType.integer,
                 required=True,
             ),
@@ -103,7 +121,7 @@ class ModifyingQuizzesCog(HelperCog):
     @commands.cooldown(1, 30, commands.BucketType.user)
     @quiz_edit.sub_command(
         name="add_problem",
-        description="Add a problem to a quiz. You must be an author of the quiz to add a problem",  # TODO: shorten
+        description="Add a problem to a quiz. You must be an author of the quiz to add a problem",
         options=[
             disnake.Option(
                 name="quiz_id",
@@ -131,14 +149,13 @@ class ModifyingQuizzesCog(HelperCog):
             ),
             disnake.Option(
                 name="is_written",
-                description="Whether this problem is a written problem and manually graded",  # TODO: shorten
+                description="Whether this problem is a written problem and manually graded",
                 type=disnake.OptionType.boolean,
                 required=False,
             ),
             disnake.Option(
                 name="points",
                 description="The number of points this question is worth. This must be greater than 0!",
-                # TODO: shorten
                 type=disnake.OptionType.number,
                 required=False,
             ),

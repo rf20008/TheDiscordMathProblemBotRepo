@@ -63,7 +63,7 @@ class ProblemGenerationCog(HelperCog):
         Generate new Problems."""
         # TODO: problem_generator class (and use formulas :-))
         await inter.response.defer()
-        if inter.author.id not in self.bot.trusted_users:
+        if not self.bot.is_trusted(inter.author):
             await inter.send(embed=ErrorEmbed("You aren't trusted!"), ephemeral=True)
             return
         if num_new_problems_to_generate > 200:
@@ -78,10 +78,11 @@ class ProblemGenerationCog(HelperCog):
             # TODO: linear equations, etc
             while True:
                 problem_id = generate_new_id()
-                if problem_id not in [
-                    problem.id for problem in await self.cache.get_global_problems()
-                ]:  # All problem_ids
+                try:
+                    already_existing_problem=await self.cache.get_problem(None, problem_id)
+                except problems_module.ProblemNotFound:
                     break
+
             problem_generator = random.choice(PROBLEM_GENERATORS)
             problem = problem_generator()
             await self.cache.add_problem(problem_id, problem)

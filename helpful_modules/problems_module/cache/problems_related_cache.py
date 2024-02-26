@@ -43,7 +43,7 @@ from ..user_data import UserData
 
 log = logging.getLogger(__name__)
 
-
+# TODO: make a function that takes into account the 3 types of problems, and make a function that given a problem dictionary, converts the problem to the right type
 class ProblemsRelatedCache:
     def __init__(
         self,
@@ -408,7 +408,7 @@ class ProblemsRelatedCache:
                         problem.guild_id,  # We expect the problem's guild id to be either an integer or None
                         int(problem.id),
                         problem.get_question(),
-                        pickle.dumps(problem.get_answers()),
+                        pickle.dumps(problem.answers),
                         pickle.dumps(problem.get_voters()),
                         pickle.dumps(problem.get_solvers()),
                         int(problem.author),
@@ -433,7 +433,7 @@ class ProblemsRelatedCache:
                         int(problem.guild_id),
                         int(problem.id),
                         problem.get_question(),
-                        pickle.dumps(problem.get_answers()),
+                        pickle.dumps(problem.answers),
                         pickle.dumps(problem.get_voters()),
                         pickle.dumps(problem.get_solvers()),
                         int(problem.author),
@@ -608,7 +608,7 @@ class ProblemsRelatedCache:
                         new.guild_id,
                         int(new.id),
                         new.get_question(),
-                        pickle.dumps(new.get_answers()),
+                        pickle.dumps(new.answers),
                         pickle.dumps(new.get_voters()),
                         pickle.dumps(new.get_solvers()),
                         int(new.author),
@@ -632,7 +632,7 @@ class ProblemsRelatedCache:
                         int(new.guild_id),
                         int(new.id),
                         new.question,
-                        pickle.dumps(new.get_answers()),
+                        pickle.dumps(new.answers),
                         pickle.dumps(new.voters),
                         pickle.dumps(new.solvers),
                         int(new.author),

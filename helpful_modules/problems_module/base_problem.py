@@ -30,6 +30,7 @@ import disnake
 
 from .dict_convertible import DictConvertible
 from .errors import *
+import orjson
 MAX_ANSWERS_PER_PROBLEM = 30
 ANSWER_CHAR_LIMIT = 1000
 QUESTION_CHAR_LIMIT = 2000
@@ -198,25 +199,26 @@ class BaseProblem(DictConvertible):
             )  # Load answers from bytes to a list (which should contain only pickleable objects)!
             voters = pickle.loads(row["voters"])  # Do the same for voters and solvers
             solvers = pickle.loads(row["solvers"])
-            _Row = {
-                "guild_id": row["guild_id"],  # Could be None
-                "id": row["problem_id"],
-                "answer": "",  # Placeholder,
-                "answers": answers,
-                "voters": voters,
-                "solvers": solvers,
-                "author": row["author"],
-                "question": row["question"],
-                "tolerance": row.get("tolerance", None),
-                **row.get("extra_stuff", {})
-            }
-            return cls.from_dict(_Row, cache=cache)
+            our_row = dict()
+            our_row.update(row)
+            del our_row["problem_id"]
+            our_row["id"] = row["id"]
+            our_row["answers"]=answers
+            our_row["voters"]=voters
+            our_row["solvers"]=solvers
+            our_row["tolerance"] = row.get("tolerance", None),
+            our_row.update(orjson.loads(row.get("extra_stuff", "{}").replace("'", '"')))
+            try:
+                del our_row["extra_stuff"]
+            except KeyError:
+                pass
+            return cls.from_dict(our_row, cache=cache)
         except BaseException as e:
             traceback.print_exception(
                 type(e), e, e.__traceback__, file=sys.stderr
             )  # Log to stderr
             raise SQLException(
-                f"Uh oh... a row {row} is not of the expected format, and _Row={_Row}"
+                f"Uh oh... a row {row} is not of the expected format"
             ) from e  # Re-raise the exception to the user (so that they can help me debug (error_logs/** is git-ignored))
 
     @classmethod

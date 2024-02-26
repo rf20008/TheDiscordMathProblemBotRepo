@@ -10,7 +10,7 @@ The only data we'll store about you without your consent is whether you're black
 # Definitions
 "the bot" means The Discord Math Problem Bot.
 "you" means the user / the person who is reading this Policy.
-"me/I" means @rf20008 (however, when there are other maintainers, this will definitely change)
+"me/I" means @rf20008 (however, when there are more maintainers, this will definitely change)
 
 
 ## Why I store your data
@@ -49,3 +49,8 @@ If there are significant changes to the Terms, I will try to notify you :-) (but
 
 For legal reasons, all contributions to this application *must* be licensed under GPLv3 or later. I am not legally allowed to accept contributions licensed under any other license. I greatly appreciate your contributions!
 
+# Retention policy
+
+There is *no* retention policy, which is a problem.
+Any data that is deleted is permanently deleted, and it is *not* recoverable. Also, data that is deleted does not get stored on my servers for any period of time.
+In the future, I may try to fix this.

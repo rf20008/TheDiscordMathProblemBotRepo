@@ -260,7 +260,7 @@ class DataModificationCog(HelperCog):
             "Appeals": [appeal.to_dict() for appeal in raw_data["appeals"]],
             "total_session_command_stats": [
                 usage.to_dict()
-                for usage in self.total_stats.usages
+                for usage in self.bot.total_stats.usages
                 if usage.user_id == author.id
             ],
         }

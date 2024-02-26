@@ -75,8 +75,6 @@ if DISCORD_TOKEN is None:
     raise RuntimeError("Cannot start bot; no discord_token environment variable")
 
 # TODO: use logging + changelog.json + debugging :-)
-# TODO: fix SQL errors
-# TODO: store logs
 
 should_we_connect = True
 if len(argv) >= 3:
@@ -220,7 +218,6 @@ bot = TheDiscordMathProblemBot(
     loop=loop
     # activity = nextcord.CustomActivity(name="Making sure that the bot works!", emoji = "🙂") # This didn't work anyway, will set the activity in on_connect
 )
-# TODO: move bot events + initializing to custom_bot.py
 bot._sync_commands_debug = True
 # setup(bot)
 # bot._transport_modules = {

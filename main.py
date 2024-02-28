@@ -82,10 +82,10 @@ if len(argv) >= 3:
         should_we_connect = False
 
 TRFHB = handlers.TimedRotatingFileHandler(
-    filename="logs/bot.log", when="midnight", encoding="utf-8", backupCount=300
+    filename="logs/bot.log", when="midnight", encoding="utf-8", backupCount=3000
 )  # TimedRotatingFileHandler(for the)Bot
 TRFHD = handlers.TimedRotatingFileHandler(
-    filename="logs/disnake.log", when="midnight", encoding="utf-8", backupCount=300
+    filename="logs/disnake.log", when="midnight", encoding="utf-8", backupCount=3000
 )  # TimedRotatingFileHandler(for) Disnake
 assert TRFHD != TRFHB
 if __name__ == "__main__":

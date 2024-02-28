@@ -392,9 +392,7 @@ class BaseProblem(DictConvertible):
             f"{key}={value}" for key, value in self.get_extra_stuff().items()
         )
 
-        return f"""problems_module.BaseProblem(question={self.question},
-        answers = {self.answers}, id = {self.id}, guild_id={self.guild_id},
-        voters={self.voters},solvers={self.solvers},author={self.author},cache={None} {extra_stuff_included})"""  # If I stored the problems, then there would be an infinite loop
+        return f"""problems_module.BaseProblem(question={self.question}, answers = {self.answers}, id = {self.id}, guild_id={self.guild_id}, voters={self.voters},solvers={self.solvers},author={self.author},cache={None} {extra_stuff_included})"""  # If I stored the problems, then there would be an infinite loop
 
     def __str__(self, include_answer: bool = False) -> str:
         _str = f"""Question: '{self.question}', 

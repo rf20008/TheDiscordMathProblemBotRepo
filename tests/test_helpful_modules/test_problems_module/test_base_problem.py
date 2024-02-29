@@ -19,6 +19,7 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 
 import unittest
 import unittest.mock
+from unittest.mock import AsyncMock
 import disnake
 from helpful_modules.problems_module import BaseProblem, PMDeprecationWarning
 import pickle
@@ -113,7 +114,8 @@ class TestBaseProblem(unittest.TestCase):
     def test_add_solver(self):
         problem = sample_problem
         problem.add_solver(unittest.mock.AsyncMock(spec=disnake.User, id=-987654321))  # type: ignore  # Adding a solver
-        self.assertIn(unittest.mock.AsyncMock(spec=disnake.User, id=-987654321), problem.solvers)
+        print(problem.solvers)
+        self.assertIn(-987654321, problem.solvers)
 
     def test_add_answer(self):
         problem = sample_problem
@@ -146,11 +148,15 @@ class TestBaseProblem(unittest.TestCase):
 
     def test_my_id(self):
         problem = sample_problem
-        self.assertEqual(problem.my_id(), [-1, "-987654321"])
+        self.assertEqual(problem.my_id(), [-1, None])
 
     def test_get_voters(self):
         problem = sample_problem
+        problem.voters.clear()
         self.assertEqual(problem.get_voters(), [])
+        problem.add_voter("hi i am a voter")
+        self.assertEqual(problem.get_voters, ["hi i am a voter"])
+        problem.voters.clear()
 
     def test_get_num_voters(self):
         problem = sample_problem
@@ -158,19 +164,21 @@ class TestBaseProblem(unittest.TestCase):
 
     def test_is_voter(self):
         problem = sample_problem
-        self.assertFalse(problem.is_voter("-987654321"))  # Not a voter
+        self.assertFalse(problem.is_voter(AsyncMock(spec=disnake.User, id="-987654321")))  # Not a voter
 
     def test_get_solvers(self):
         problem = sample_problem
+        problem.solvers.clear()
         self.assertEqual(problem.get_solvers(), [])
 
     def test_is_solver(self):
         problem = sample_problem
-        self.assertFalse(problem.is_solver("-987654321")) # Not a solver
+        problem.solvers.clear()
+        self.assertFalse(problem.is_solver(AsyncMock(spec=disnake.User, id="-987654321"))) # Not a solver
 
     def test_get_author(self):
         problem = sample_problem
-        self.assertEqual(problem.get_author(), unittest.mock.AsyncMock(spec=disnake.User, id=-123456789))
+        self.assertEqual(problem.get_author(), -123456789)
 
     def test__int_guild_id(self):
         problem = sample_problem
@@ -189,18 +197,19 @@ class TestBaseProblem(unittest.TestCase):
         problem = sample_problem
         self.assertEqual(
             repr(problem),
-            "problems_module.BaseProblem(question='What is 2+2?', answers = ['4'], id = -1, guild_id=None, voters=[],solvers=[],author=-123456789,cache=None )"
+            "problems_module.BaseProblem(question='What is 2+2?', answers = ['4'], id = -1, guild_id=None, voters=[], solvers=[], author=-123456789, cache=None )"
         )  # Representation matches expected value
 
     def test___str__(self):
         problem = sample_problem
         self.assertEqual(
-            str(problem),
+
             "Question: 'What is 2+2?', \n"
             "        id: -1, \n"
             "        guild_id: None, \n"
             "        solvers: [],\n"
-            "        author: <@-987654321>\n        "
+            "        author: <@-123456789>\n        ",
+            str(problem),
         )  # String representation matches expected value
 
     def test___deepcopy__(self):

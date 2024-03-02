@@ -44,7 +44,7 @@ class TestBaseProblem(unittest.TestCase):
         self.assertEqual(problem.question, "What is 2+2?")
         self.assertEqual(problem.id, -1)
         self.assertEqual(problem.author, -123456789)
-        self.assertEqual(problem.guild_id, "-987654321")
+        self.assertEqual(problem.guild_id, None)
         self.assertEqual(problem.answer, "4")
         self.assertEqual(problem.voters, [])
         self.assertEqual(problem.solvers, [])
@@ -154,12 +154,13 @@ class TestBaseProblem(unittest.TestCase):
         problem = sample_problem
         problem.voters.clear()
         self.assertEqual(problem.get_voters(), [])
-        problem.add_voter("hi i am a voter")
+        problem.add_voter(AsyncMock(spec=disnake.User, id="hi i am a voter"))
         self.assertEqual(problem.get_voters, ["hi i am a voter"])
         problem.voters.clear()
 
     def test_get_num_voters(self):
         problem = sample_problem
+        problem.voters.clear()
         self.assertEqual(problem.get_num_voters(), 0)
 
     def test_is_voter(self):

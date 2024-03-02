@@ -23,7 +23,8 @@ from disnake import Option, OptionChoice, OptionType
 from disnake.ext import commands, tasks
 
 from helpful_modules import custom_bot, custom_embeds, the_documentation_file_loader
-from helpful_modules.custom_embeds import SuccessEmbed, ErrorEmbed, SimpleEmbed
+from helpful_modules.custom_embeds import SuccessEmbed, ErrorEmbed
+from helpful_modules.paginator_view import PaginatorView
 
 TYPES_TO_NAMES = {
     commands.InvokableUserCommand: "user",
@@ -255,15 +256,20 @@ class HelpCog(HelperCog):
             await inter.send(_documentation)
         elif documentation_type == "privacy_policy":
             with open("PRIVACY_POLICY.md") as file:
-                await inter.send(
-                    embed=SuccessEmbed("".join([str(line) for line in file]))
-                )  # Concatenate the lines in the file and send them
+                text = "".join(file.readlines())
+
+            await inter.send(
+                view=await PaginatorView.paginate(text=text, user_id=inter.author.id, max_page_length=2300)
+            )  # Concatenate the lines in the file and send them
             return
         elif documentation_type == "terms_of_service":
-            with open("TERMS_AND_CONDITIONS.md") as file:
-                await inter.send(
-                    embed=SuccessEmbed("".join([line for line in file]))
-                )  # Concatenate the lines in the file + send them
+            with open("TERMS_OF_SERVICE.md") as file:
+                text = "".join(file.readlines())
+
+            await inter.send(
+                view=await PaginatorView.paginate(text=text, user_id=inter.author.id, max_page_length=2300)
+            )  # Concatenate the lines in the file and send them
+            return
         else:
             raise NotImplementedError(
                 "This hasn't been implemented yet. Please contribute something!"

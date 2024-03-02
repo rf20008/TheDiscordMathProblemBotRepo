@@ -78,8 +78,8 @@ Just follow the GPLv3 and you're fine!
 If you don't, you can either help me with my code (if you want to modify the code and help everyone out) or invite my bot.
 No privileged intents are required (the bot has been designed to not require privileged intents, but this is causing some non-essential features to be not-so-great)
 1. Create a new Discord application with a bot user. Save the token (you will need it later)
-2. You will need Python 3.10. I have only tested this bot with CPython (which is the official Python implementation). If you don't already have Python 3.10 on your computer., install it [here](https://www.python.org/downloads/release/python-3101/).
-3. Create a venv (execute ``python3.10 -m venv /path/to/new/virtual/environment``)
+2. You will need Python ~3.10~3.12. I have only tested this bot with CPython (which is the official Python implementation). If you don't already have Python 3.10 on your computer., install it [here](https://www.python.org/downloads/release/python-3101/).
+3. Create a venv (execute ``python3.12 -m venv /path/to/new/virtual/environment``)
 4. Move to your new venv (use the cd command)
 5. Install poetry, a dependency installer (``pip3 install git+https://github.com/python-poetry/poetry.git``). You can also optionally install it outside.
 6. Clone my repo (``git clone https://github.com/rf20008/TheDiscordMathProblemBotRepo``)
@@ -109,8 +109,8 @@ mysql_db_username: Your username to the MySQL database
 mysql_db_pass: Your password to the MySQL database
 mysql_db_name: Your MySQL database name
 source_code_link: link to the place that contains the bot's source code. This must be public and have the actual source code 
- Filling it out __should__ fulfill the "Disclose source" requirement of GPLv3, if it is valid). However, unless I am sued or legally obligated to check if it's valid, I won't check.
-
+ Filling it out __should__ fulfill the "Disclose source" requirement of GPLv3, if it is valid). However, unless I am sued or legally obligated to check if it's valid, I won't check. 
+I might still check
 
 ## Attribution / Contributors
 

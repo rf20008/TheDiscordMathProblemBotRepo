@@ -23,7 +23,7 @@ from .my_modals import MyModal
 from .custom_embeds import ErrorEmbed
 import os
 from .checks import always_succeeding_check_unwrapped
-
+from typing import List
 
 class PaginatorView(disnake.ui.View):
     user_id: int
@@ -35,6 +35,74 @@ class PaginatorView(disnake.ui.View):
         self.user_id = user_id
         self.pages = pages
         self.page_num = 0
+
+    @classmethod
+    async def paginate(cls, user_id: int, text: str, max_page_length: int = 1500, **kwargs) -> 'PaginatorView':
+        pages = cls.break_into_pages(text, max_page_length)
+        return cls(user_id, pages, **kwargs)
+    @staticmethod
+    def break_into_pages(text: str, max_page_length: int = 1500, *, breaking_chars: str = " .!?-,:;-\n\t") -> List[str]:
+        """
+        Breaks a long text into smaller pages suitable for pagination.
+
+        Args:
+            text (str): The input text to be paginated.
+            max_page_length (int, optional): The maximum length of each page. Defaults to 1500.
+            breaking_chars (str, optional): Characters used for breaking the text into tokens. Defaults to " .!?\\n".
+
+        Returns:
+            list[str]: A list of pages, each containing a portion of the input text.
+        """
+        if not isinstance(text, str):
+            raise TypeError("Expected 'text' to be a string.")
+        if not isinstance(max_page_length, int):
+            raise TypeError("Expected 'max_page_length' to be an integer.")
+        if not isinstance(breaking_chars, str):
+            raise TypeError("Expected 'breaking_chars' to be a string.")
+
+        pages = []
+        breaking_chars = set(breaking_chars)
+        tokens = []
+        cur_token = []
+
+        # Tokenize the text based on breaking characters
+        for char in text:
+            cur_token.append(char)
+            if char in breaking_chars:
+                tokens.append("".join(cur_token))
+                cur_token.clear()
+        if cur_token:
+            tokens.append("".join(cur_token))
+
+        del cur_token
+
+        cur_page = []
+        cur_length = 0
+
+        # Iterate through tokens to create pages
+        for token_idx in range(len(tokens)):
+            cur_token = tokens[token_idx]
+
+            # If the current token exceeds the max page length, split it into smaller chunks
+            if len(cur_token) > max_page_length:
+                for i in range(0, len(cur_token), max_page_length):
+                    pages.append(cur_token[i:i + max_page_length]) # let's debug this (a token might not snugly fit)
+            else:
+                # If adding the current token exceeds the max page length, start a new page
+                if cur_length + len(cur_token) > max_page_length:
+                    pages.append("".join(cur_page))
+                    cur_page.clear()
+                    cur_length = 0
+
+                # Add the token to the current page and update the page length
+                cur_page.append(cur_token)
+                cur_length += len(cur_token)
+
+        # Append the remaining tokens to the last page
+        if cur_page:
+            pages.append("".join(cur_page))
+
+        return pages
 
     async def interaction_check(self, interaction: disnake.Interaction) -> bool:
         return interaction.author.id == self.user_id

@@ -23,7 +23,7 @@ import helpful_modules.paginator_view
 import os
 
 PaginatorView = helpful_modules.paginator_view.PaginatorView
-
+break_into_pages = PaginatorView.break_into_pages
 FINAL_BYTES = b"\x31\x41\x59\x26\x53\x59"
 FINAL_VALUE = "314159265359"
 
@@ -218,6 +218,44 @@ class TestPaginatorView(unittest.IsolatedAsyncioTestCase):
             )
             self.assertNotEqual(self.paginator_view.page_num, 10)
             modal_interaction.send.assert_awaited()
+
+class TestBreakIntoPages(unittest.TestCase):
+    def test_example_1(self):
+        text = "Hello!!!!!"
+        max_page_length = 20
+        expected_result = ['Hello!!!!!']
+        self.assertEqual(break_into_pages(text, max_page_length), expected_result)
+
+    def test_example_2(self):
+        text = "Hello!!!!!"
+        max_page_length = 5
+        expected_result = ['Hello', '!', '!!!!']
+        self.assertEqual(break_into_pages(text, max_page_length), expected_result)
+
+    def test_example_3(self):
+        text = "HELLOOO"
+        max_page_length = 1
+        expected_result = ['H', 'E', 'L', 'L', 'O', 'O', 'O']
+        self.assertEqual(break_into_pages(text, max_page_length), expected_result)
+
+    def test_example_4(self):
+        text = "Hello! I am rf20008"
+        max_page_length = 6
+        expected_result = ['Hello!', ' I am ', 'rf20008']
+        self.assertEqual(break_into_pages(text, max_page_length), expected_result)
+
+    def test_custom_1(self):
+        text = "A long text with many characters."
+        max_page_length = 10
+        expected_result = ['A long tex', 't with man', 'y characte', 'rs.']
+        self.assertEqual(break_into_pages(text, max_page_length), expected_result)
+
+    def test_custom_2(self):
+        text = "Short"
+        max_page_length = 10
+        expected_result = ['Short']
+        self.assertEqual(break_into_pages(text, max_page_length), expected_result)
+
 
 if __name__ == "__main__":
     unittest.main()

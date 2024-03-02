@@ -202,4 +202,5 @@ eval_log/*
 #PyCharm-specific, can be ignored
 .idea/**
 
-
+# sometimes
+stderr.txt

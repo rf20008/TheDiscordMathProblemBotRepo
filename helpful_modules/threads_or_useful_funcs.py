@@ -3,24 +3,15 @@ import datetime
 import logging
 import pathlib
 import random
-import subprocess
 import traceback
 import types
-from copy import deepcopy
 from functools import partial, wraps
 from logging import handlers
-from sys import exc_info, stderr
-from time import asctime
 from typing import Any, Optional
 
 import aiofiles
 import disnake
-from disnake.ext import commands
-
-from ._error_logging import log_error
-from .cooldowns import OnCooldown
-from .custom_embeds import *
-from .problems_module.errors import LockedCacheException
+import io
 from .the_documentation_file_loader import DocumentationFileLoader
 
 # Licensed under GPLv3
@@ -227,3 +218,13 @@ def secure_fisher_yates_shuffle(sequence):
         )
 
     return shuffled_sequence
+
+def file_version_of_item(item: str, file_name: str) -> disnake.File:
+    """
+    Return a disnake.File with the specified filename that contains the string provided.
+    """
+    if not isinstance(item, str):
+        raise TypeError("item is not a string")
+    if not isinstance(file_name, str):
+        raise TypeError("file_name is not a string")
+    return disnake.File(io.BytesIO(bytes(item, "utf-8")), filename=file_name)

@@ -241,13 +241,13 @@ class TestBreakIntoPages(unittest.TestCase):
     def test_example_4(self):
         text = "Hello! I am rf20008"
         max_page_length = 6
-        expected_result = ['Hello!', ' I am ', 'rf20008']
-        self.assertEqual(break_into_pages(text, max_page_length), expected_result)
+        expected_result = ['Hello!', ' I am ', 'rf2000', '8']
+        self.assertEqual(expected_result, break_into_pages(text, max_page_length))
 
     def test_custom_1(self):
         text = "A long text with many characters."
         max_page_length = 10
-        expected_result = ['A long tex', 't with man', 'y characte', 'rs.']
+        expected_result = ['A long ', 'text with ', 'many ', 'characters', '.']
         self.assertEqual(break_into_pages(text, max_page_length), expected_result)
 
     def test_custom_2(self):

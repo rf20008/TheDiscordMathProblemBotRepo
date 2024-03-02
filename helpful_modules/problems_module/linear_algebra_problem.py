@@ -188,4 +188,4 @@ class LinearAlgebraProblem(BaseProblem):
         Returns:
             dict: A dictionary containing extra information.
         """
-        return {"coeffs": self.coeffs, "equal_to": self.equal_to}
+        return {"coeffs": self.coeffs, "equal_to": self.equal_to, "type": "LinearAlgebraProblem"}

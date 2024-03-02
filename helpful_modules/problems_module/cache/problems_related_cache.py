@@ -31,15 +31,12 @@ import aiosqlite
 import disnake
 
 from helpful_modules.dict_factory import dict_factory
-from helpful_modules.threads_or_useful_funcs import get_log
+from ..parse_problem import convert_dict_to_problem
 
 from ..base_problem import BaseProblem
 from ..errors import *
-from ..mysql_connector_with_stmt import *
 from ..mysql_connector_with_stmt import mysql_connection
 from ..quizzes import Quiz, QuizProblem, QuizSolvingSession, QuizSubmission
-from ..quizzes.quiz_description import QuizDescription
-from ..user_data import UserData
 
 log = logging.getLogger(__name__)
 
@@ -146,7 +143,7 @@ class ProblemsRelatedCache:
     def convert_dict_to_math_problem(self, problem: dict, use_from_dict: bool = True):
         """Convert a dictionary into a math problem. It must be in the expected format. (Overridden by from_dict, but still used) Possibly not used due to SQL."""
         if use_from_dict:
-            return BaseProblem.from_dict(
+            return convert_problem_to_dict(
                 problem, cache=self
             )  # Use the base problem.from_dict method
         try:
@@ -240,7 +237,7 @@ class ProblemsRelatedCache:
                         row = dict_factory(cursor, rows[0])  #
                     else:
                         row = rows[0]
-                    return BaseProblem.from_row(row, cache=copy(self))
+                    return convert_dict_to_problem(row, cache=copy(self))
             else:
                 with mysql_connection(
                     host=self.mysql_db_ip,
@@ -259,7 +256,7 @@ class ProblemsRelatedCache:
                         raise TooManyProblems(
                             "Uh oh... 2 problems exist with the same guild id and the same problem id"
                         )
-                    return BaseProblem.from_row(cache=copy(self), row=rows[0])
+                    return convert_row_to_problem(cache=copy(self), row=rows[0])
 
     async def get_guild_problems(
         self, guild: disnake.Guild

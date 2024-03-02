@@ -425,7 +425,7 @@ class BaseProblem(DictConvertible):
 
     def get_extra_stuff(self):
         """Return the extra stuff for this dictionary, that doesn't go in just a BaseProblem. Override this if you're in a subclass"""
-        return {}
+        return {"type": "BaseProblem"}
     def __eq__(self, other: "BaseProblem"):
         if not isinstance(other, type(self)):
             return False

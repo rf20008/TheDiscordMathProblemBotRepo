@@ -1,3 +1,4 @@
+
 import logging
 import sqlite3
 import typing
@@ -8,7 +9,7 @@ from typing import *
 
 import aiosqlite
 import disnake
-
+from ..parse_problem import convert_row_to_problem
 from helpful_modules.dict_factory import dict_factory
 from helpful_modules.threads_or_useful_funcs import get_log
 from ..appeal import Appeal, AppealType
@@ -38,11 +39,11 @@ class MathProblemCache(UserDataRelatedCache):
                 await cursor.execute("SELECT * FROM problems")  # Get all problems
                 for row in await cursor.fetchall():  # For each problem:
                     if not isinstance(row, dict):
-                        problem = BaseProblem.from_row(
+                        problem = convert_row_to_problem(
                             pickle.loads(row), cache=copy(self)
                         )  # Convert the problems to problem objects
                     else:
-                        problem = BaseProblem.from_row(row=row, cache=copy(self))
+                        problem = convert_row_to_problem(row=row, cache=copy(self))
                     if (
                         problem.guild_id not in guild_ids
                     ):  # Similar logic: Make sure it's there!
@@ -91,7 +92,7 @@ class MathProblemCache(UserDataRelatedCache):
                 cursor = connection.cursor(dictionaries=True)
                 cursor.execute("SELECT * FROM problems")  # Get all problems
                 for row in cursor.fetchall():
-                    problem = BaseProblem.from_row(row, cache=copy(self))
+                    problem = convert_row_to_problem(row, cache=copy(self))
                     if (
                         problem.guild_id not in guild_ids
                     ):  # Similar logic: Make sure it's there!
@@ -225,7 +226,7 @@ class MathProblemCache(UserDataRelatedCache):
                     "SELECT * FROM problems WHERE author = ?", (author_id,)
                 )
                 problems = [
-                    BaseProblem.from_row(row) for row in await cursor.fetchall()
+                    convert_row_to_problem(row) for row in await cursor.fetchall()
                 ]
                 await cursor.execute(
                     """SELECT * FROM quiz_submission_sessions WHERE user_id = ?""",
@@ -456,7 +457,8 @@ class MathProblemCache(UserDataRelatedCache):
                         answers BLOB NOT NULL, 
                         author INT NOT NULL,
                         voters BLOB NOT NULL,
-                        solvers BLOB NOT NULL
+                        solvers BLOB NOT NULL,
+                        extra_stuff TEXT(20000) NOT NULL
                         )"""
                 )  # Blob types will be compiled with pickle.loads() and pickle.dumps() (they are lists)
                 # author: int = user_id
@@ -553,7 +555,8 @@ class MathProblemCache(UserDataRelatedCache):
                         answers BLOB NOT NULL, 
                         author BIGINT NOT NULL,
                         voters BLOB NOT NULL,
-                        solvers BLOB NOT NULL
+                        solvers BLOB NOT NULL,
+                        extra_stuff TEXT(20000) NOT NULL
                         )"""
                 )  # Blob types will be compiled with pickle.loads() and pickle.dumps() (they are lists)
                 # author: int = user_id

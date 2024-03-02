@@ -25,6 +25,7 @@ from disnake.ext import commands
 from helpful_modules import checks, custom_bot, problems_module
 from helpful_modules.custom_buttons import ConfirmationButton, BasicButton, MyView
 from helpful_modules.custom_embeds import SimpleEmbed, SuccessEmbed, ErrorEmbed
+from helpful_modules.threads_or_useful_funcs import file_version_of_item
 from .helper_cog import HelperCog
 import io
 import copy
@@ -93,7 +94,7 @@ class DataModificationCog(HelperCog):
             json_data: dict = await self._get_json_data_by_user(
                 inter.author
             )  # Get the data
-            file_version = self._file_version_of_item(
+            file_version = file_version_of_item(
                 str(json_data), file_name="your_data.json"
             )  # Turn it into a dictionary
 
@@ -266,13 +267,6 @@ class DataModificationCog(HelperCog):
         }
         return new_data
 
-    @staticmethod
-    def _file_version_of_item(item: str, file_name: str) -> disnake.File:
-        """
-        Return a disnake.File with the specified filename that contains the string provided.
-        """
-        assert isinstance(item, str)
-        return disnake.File(io.BytesIO(bytes(item, "utf-8")), filename=file_name)
 
     @disnake.ext.commands.cooldown(1, 100, disnake.ext.commands.BucketType.user)
     @user_data.sub_command(

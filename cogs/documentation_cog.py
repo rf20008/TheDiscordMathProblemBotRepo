@@ -263,7 +263,7 @@ class HelpCog(HelperCog):
             )  # Concatenate the lines in the file and send them
             return
         elif documentation_type == "terms_of_service":
-            with open("TERMS_OF_SERVICE.md") as file:
+            with open("TERMS_AND_CONDITIONS.md") as file:
                 text = "".join(file.readlines())
 
             await inter.send(

@@ -1,10 +1,27 @@
+"""
+The Discord Math Problem Bot Repo - DictConvertible
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
+"""
 import asyncio
 import typing
 from typing import List
 
 import orjson
 from redis import asyncio as aioredis  # type: ignore
-
+from ..parse_problem import convert_dict_to_problem
 from ...FileDictionaryReader import AsyncFileDict
 from ..appeal import Appeal
 from ..base_problem import BaseProblem
@@ -68,17 +85,17 @@ class RedisCache:
             raise TypeError("guild_id is not an int")
         result = await self.get_key(f"BaseProblem:{guild_id}:{problem_id}")
         if result is not None:
-            return BaseProblem.from_dict(orjson.loads(result))
+            return convert_dict_to_problem(orjson.loads(result))
         result = await self.get_key(f"QuizProblem:{guild_id}:{problem_id}")
         if result is not None:
-            return BaseProblem.from_dict(orjson.loads(result))
+            return convert_dict_to_problem(orjson.loads(result))
         raise ProblemNotFoundException("That problem is not found")
 
     async def get_all_problems(self):
         """Return a list of all problems!
         Time complexity: O(N)"""
         return list(
-            map(BaseProblem.from_dict, await self.redis.hgetall("BaseProblem").values())
+            map(convert_dict_to_problem, await self.redis.hgetall("BaseProblem").values())
         )
 
     async def get_all_things(self):
@@ -90,7 +107,7 @@ class RedisCache:
         Time complexity: O(N)"""
         return list(
             map(
-                BaseProblem.from_dict,
+                convert_dict_to_problem,
                 await self.redis.hgetall(f"BaseProblem:{guild_id}").values(),
             )
         )

@@ -53,4 +53,4 @@ class ComputationalProblem(BaseProblem):
         )
 
     def get_extra_stuff(self):
-        return {"tolerance": self.tolerance}
+        return {"tolerance": self.tolerance, "type": "ComputationalProblem"}

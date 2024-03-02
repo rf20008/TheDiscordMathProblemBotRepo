@@ -40,6 +40,7 @@ class PaginatorView(disnake.ui.View):
     async def paginate(cls, user_id: int, text: str, max_page_length: int = 1500, **kwargs) -> 'PaginatorView':
         pages = cls.break_into_pages(text, max_page_length)
         return cls(user_id, pages, **kwargs)
+
     @staticmethod
     def break_into_pages(text: str, max_page_length: int = 1500, *, breaking_chars: str = " .!?-,:;-\n\t") -> List[str]:
         """
@@ -73,7 +74,6 @@ class PaginatorView(disnake.ui.View):
                 cur_token.clear()
         if cur_token:
             tokens.append("".join(cur_token))
-
         del cur_token
 
         cur_page = []
@@ -82,11 +82,16 @@ class PaginatorView(disnake.ui.View):
         # Iterate through tokens to create pages
         for token_idx in range(len(tokens)):
             cur_token = tokens[token_idx]
-
             # If the current token exceeds the max page length, split it into smaller chunks
             if len(cur_token) > max_page_length:
+                if cur_page:
+                    # Add the old page we were working on first
+                    pages.append("".join(cur_page))
+                    cur_page.clear()
+                    cur_length = 0
+
                 for i in range(0, len(cur_token), max_page_length):
-                    pages.append(cur_token[i:i + max_page_length]) # let's debug this (a token might not snugly fit)
+                    pages.append(cur_token[i:i + max_page_length])  # let's debug this (a token might not snugly fit)
             else:
                 # If adding the current token exceeds the max page length, start a new page
                 if cur_length + len(cur_token) > max_page_length:

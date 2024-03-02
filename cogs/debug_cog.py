@@ -16,9 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
-import asyncio
 import contextlib
-import copy
 import datetime
 import io
 import textwrap
@@ -28,16 +26,17 @@ from traceback import format_exception
 import disnake
 from disnake.ext import commands
 
-from helpful_modules import checks, problems_module
+from helpful_modules import checks
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
-from helpful_modules.custom_embeds import ErrorEmbed, SimpleEmbed, SuccessEmbed
+from helpful_modules.custom_embeds import SuccessEmbed
 from helpful_modules.my_modals import MyModal
 from helpful_modules.problems_module.cache_rewrite_with_redis import RedisCache
 from helpful_modules.threads_or_useful_funcs import (
-    ensure_eval_logs_exist,
     get_log,
     log_evaled_code,
+    file_version_of_item
 )
+import orjson
 
 from .helper_cog import HelperCog
 from .interesting_computation_ import InterestingComputationCog
@@ -176,7 +175,7 @@ class DebugCog(HelperCog):
         except AssertionError:
             await inter.send("I don't believe you own me.")
             raise
-        except CheckFailure:
+        except disnake.ext.commands.CheckFailure:
             raise
         try:
             result = await self.cache.run_sql(query)
@@ -185,8 +184,14 @@ class DebugCog(HelperCog):
                 "An exception occurred while running the SQL!", ephemeral=ephemeral
             )
             raise
-
-        await inter.send(f"Result: {result}", ephemeral=ephemeral)
+        if len(f"Result: {result}") < 1800:
+            await inter.send(f"Result: {result}", ephemeral=ephemeral)
+        else:
+            await inter.send(
+                "The result is in the attached file!",
+                ephemeral=ephemeral,
+                file=file_version_of_item(result, "sql_result.txt")
+            )
         return
 
     @commands.is_owner()
@@ -222,12 +227,12 @@ class DebugCog(HelperCog):
         new_stdout = io.StringIO()
         new_stderr = io.StringIO()
         try:
-            if not await self.cog_slash_command_check(inter):
+            if not await self.cog_slash_command_check(inter) or not await self.bot.is_owner(inter.author):
                 await inter.send(
                     "I know that you don't own me. You cannot use /eval. Goodbye."
                 )
                 return
-        except CheckFailure:
+        except disnake.ext.commands.CheckFailure:
             raise
 
         await self.eval_code(inter, code, ephemeral)

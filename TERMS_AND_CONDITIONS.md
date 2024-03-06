@@ -96,6 +96,8 @@ Suggestions to this are welcome (as of right now)! If you make any TOS changes t
 These Terms shall not be construed to prevent you from doing anything that the GPLv3 License allows you to do.  
 In other words, if the GPLv3 or later allows you to do something that my terms prevent you from doing, you can still do it.
 
+You have the rights to copy, modify, analyze, run, distribute, etc my code, **but only as long as you follow the rules of the GPLv3**.
+If you do not follow the GPLv3, you must not copy my code and take it closed sourced, or do any other interaction with my code.
 ## 8: Remember to follow the Discord ToS
 
 As my bot is being hosted and run according to the Discord API and interacts with Discord in such a way that their terms apply, you must follow [Discord's Terms and Conditions](https://discord.com/tos).
@@ -105,6 +107,9 @@ You must not use my bot to break Discord's Terms of Service
 
 For legal reasons, those are licensed under GPLv3 or later! The maintainers of the fork have the right to change these Terms, but the modified Terms do not apply to this version unless the changes are merged into the main version!
 Note that I am not liable for forks/modifications of this bot as I do not have control over them.
+
+You have the rights to copy, modify, analyze, run, distribute, etc my code, **but only as long as you follow the rules of the GPLv3**.
+If you do not follow the GPLv3, you must not copy my code and take it closed sourced, or do any other interaction with my code.
 
 ## 10: Termination
 Note the tone change does not mean these following terms are less relevant or less applicable than normal! They still have **the same power** as the rest of these Terms!
@@ -146,6 +151,19 @@ This includes commands such as /solve, /check_answer, and /help.
 However, some commands, like /user_data get_data, and /user_data delete_all, are still accessible.
 Being on the denylist restricts your ability to interact fully with the bot.
 
-### 10.5: Contract termination???
 
-To be finished. 
+### 10.5: How will I know?
+
+Currently, there is **no** real-time notification system to notify people that they've been deny-listed. This might change in the future.
+The only way you will know whether you are deny-listed will be when you run a command that only non-denylisted users can run.
+
+
+### 10.6: Contract termination???
+
+When you are denylisted, you will only be able to interact partially with my bot, but you are not completely banned.
+Therefore, the Terms of Service will still apply to you in the ways that you use this, and the Privacy Policy will still apply to you.
+
+You are **still as free** as you were before to exercise your rights under the GPLv3 to my program. 
+In particular, you can still make pull requests and issues (until there's a contribution agreement), look at my code as usual, copy it, modify it, run it, distribute it, analyze it.
+
+However, you **must** follow the requirements of the GPLv3.

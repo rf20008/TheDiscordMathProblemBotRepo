@@ -1,24 +1,36 @@
+"""
+The Discord Math Problem Bot Repo - DictConvertible
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
+"""
 import logging
-import sqlite3
 import typing
-import warnings
 from copy import copy, deepcopy
-from types import FunctionType
 from typing import *
+import pickle
+from warnings import warn
 
 import aiosqlite
-import disnake
 from ..parse_problem import convert_row_to_problem
 from helpful_modules.dict_factory import dict_factory
-from helpful_modules.threads_or_useful_funcs import get_log
-from ..appeal import Appeal, AppealType
+from ..appeal import Appeal
 from ..base_problem import BaseProblem
 from ..errors import *
 from ..mysql_connector_with_stmt import mysql_connection
 from ..quizzes import Quiz, QuizProblem, QuizSolvingSession, QuizSubmission
 from ..quizzes.quiz_description import QuizDescription
-from ..user_data import UserData
 from .user_data_related_cache import UserDataRelatedCache
 
 log = logging.getLogger(__name__)
@@ -27,7 +39,10 @@ log = logging.getLogger(__name__)
 class MathProblemCache(UserDataRelatedCache):
     async def update_cache(self: "MathProblemCache") -> None:
         """Method revamped! This method updates the cache of the guilds, the guild problems, and the cache of the global problems. Takes O(N) time"""
+        warn(message="update_cache hangs", category=PMDeprecationWarning, stacklevel=-1)
+        await self.get_all_problems()
         guild_problems = {}
+
         guild_ids = []
         quiz_problems_dict = {}
         quiz_sessions_dict = {}
@@ -36,46 +51,25 @@ class MathProblemCache(UserDataRelatedCache):
             async with aiosqlite.connect(self.db_name) as conn:
                 conn.row_factory = dict_factory
                 cursor = await conn.cursor()
-                await cursor.execute("SELECT * FROM problems")  # Get all problems
-                for row in await cursor.fetchall():  # For each problem:
-                    if not isinstance(row, dict):
-                        problem = convert_row_to_problem(
-                            pickle.loads(row), cache=copy(self)
-                        )  # Convert the problems to problem objects
-                    else:
-                        problem = convert_row_to_problem(row=row, cache=copy(self))
-                    if (
-                        problem.guild_id not in guild_ids
-                    ):  # Similar logic: Make sure it's there!
-                        guild_ids.append(problem.guild_id)
-                        guild_problems[problem.guild_id] = (
-                            {}
-                        )  # For quick, cached access?
+                await cursor.execute("SELECT * FROM quizzes")
+                for Row in await cursor.fetchall():
+                    quiz_problem = QuizProblem.from_row(Row, cache=copy(self))
+                    # Add the problem to the cache
                     try:
-                        guild_problems[problem.guild_id][problem.id] = problem
-                    except BaseException as e:
-                        raise SQLException(
-                            "The cache could not be updated because assigning the problem failed!"
-                        ) from e
-                    await cursor.execute("SELECT * FROM quizzes")
-                    for Row in await cursor.fetchall():
-                        quiz_problem = QuizProblem.from_row(Row, cache=copy(self))
-                        # Add the problem to the cache
-                        try:
-                            quiz_problems_dict[quiz_problem.id].append(quiz_problem)
-                        except KeyError:
-                            quiz_problems_dict[quiz_problem.id] = [quiz_problem]
-                    await cursor.execute("SELECT submissions from quiz_submissions")
-                    for Row in await cursor.fetchall():
-                        submission = QuizSubmission.from_dict(
-                            pickle.loads(Row["submission"]), cache=copy(self)
-                        )
-                        try:
-                            quiz_submissions_dict[submission.quiz_id].append(submission)
-                        except KeyError:
-                            quiz_submissions_dict[submission.quiz_id] = [submission]
-                    await cursor.execute("SELECT * FROM quiz_submission_sessions")
-                    for _row in await cursor.fetchall():
+                        quiz_problems_dict[quiz_problem.id].append(quiz_problem)
+                    except KeyError:
+                        quiz_problems_dict[quiz_problem.id] = [quiz_problem]
+                await cursor.execute("SELECT submissions from quiz_submissions")
+                for Row in await cursor.fetchall():
+                    submission = QuizSubmission.from_dict(
+                        pickle.loads(Row["submission"]), cache=copy(self)
+                    )
+                    try:
+                        quiz_submissions_dict[submission.quiz_id].append(submission)
+                    except KeyError:
+                        quiz_submissions_dict[submission.quiz_id] = [submission]
+                await cursor.execute("SELECT * FROM quiz_submission_sessions")
+                for _row in await cursor.fetchall():
                         session = QuizSolvingSession.from_sqlite_dict(_row, cache=self)
                         try:
                             quiz_sessions_dict[session.quiz_id].append(session)
@@ -137,7 +131,6 @@ class MathProblemCache(UserDataRelatedCache):
                     except KeyError:
                         quiz_sessions_dict[session.quiz_id] = [session]
         try:
-            print(guild_problems[None])
             global_problems = deepcopy(
                 guild_problems[None]
             )  # Must deepcopy or weird warnings will occur

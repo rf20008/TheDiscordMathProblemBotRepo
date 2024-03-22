@@ -16,7 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
-
+from copy import deepcopy
 from .base_problem import BaseProblem
 import mpmath
 
@@ -54,3 +54,14 @@ class ComputationalProblem(BaseProblem):
 
     def get_extra_stuff(self):
         return {"tolerance": self.tolerance, "type": "ComputationalProblem"}
+    def __deepcopy__(self, memodict: dict):
+        return ComputationalProblem(
+            question=deepcopy(self.question),
+            voters=deepcopy(self.voters),
+            answers=deepcopy(self.answers),
+            solvers=deepcopy(self.solvers),
+            author=deepcopy(self.author),
+            id=deepcopy(self.id),
+            guild_id=deepcopy(self.guild_id),
+            **deepcopy(self.get_extra_stuff()),
+        )

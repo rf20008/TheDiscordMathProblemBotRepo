@@ -6,19 +6,21 @@ I am *not* experienced in crafting legally binding documents!
 
 Most of this language should be self-explanatory. Please create an issue if it isn't!
 
-By using the application (The Discord Math Problem Bot), you agree to these Terms.
+By using the application (The Discord Math Problem Bot), you agree to these Terms. <br>
+Note: This language of this document is quite informal.
+
 
 ## 1: Definitions
 "us/we" means the people who develop/maintain The Discord Math Problem Bot (on the official instance, it's @rf20008)
-"trusted users": people who have the trusted user status in the bot.
-"these Terms" refer to these Terms and Conditions.
-"Discord's Terms and Conditions" (or "Discord's Terms") refer to Discord's terms and conditions.
-"the bot" means The Discord Math Problem Bot.
-"I/me" means @rf20008 (but for *fork instances of the bot*, the pronoun" would not refer to @rf20008, but instead to the owner and runner of the fork.
-"fork instances of the bot" refer to instances of the Bot that are not the official instance (ran in this repository.)
-"guild administrators" means people who have the 'administrator' permission in the guild.
-"you" refers to any user of this bot, or any entity that accesses any part of The Discord Math Problem Bot in such a way that these Terms apply, or both.
-"NSFW" stands for *N*ot *S*afe *F*or *W*ork, and
+"trusted users": people who have the trusted user status in the bot. <br>
+"these Terms" refer to these Terms and Conditions. <br>
+"Discord's Terms and Conditions" (or "Discord's Terms") refer to Discord's terms and conditions. <br>
+"the bot" means The Discord Math Problem Bot. </br> 
+"I/me" means @rf20008 (but for *fork instances of the bot*, the pronoun" would not refer to @rf20008, but instead to the owner and runner of the fork. </br>
+"fork instances of the bot" refer to instances of my bot that I do not run. If someone forked my repository and ran a version of my bot from their computer, that instance would be considered a "fork instance of the bot". <br> 
+"guild administrators" means people who have the 'administrator' permission in the guild. <br>
+"you" refers to any user of this bot, or any entity that accesses any part of The Discord Math Problem Bot in such a way that these Terms apply, or both. <br>
+"NSFW" stands for *N*ot *S*afe *F*or *W*ork, and 
 "NSFL" stands for *N*ot *S*afe *F*or *L*ife.
 ## 2: Rules/things I have the right to do.
 

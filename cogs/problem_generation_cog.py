@@ -62,7 +62,7 @@ class ProblemGenerationCog(HelperCog):
         """/generate_new_problems [num_new_problems_to_generate: int]
         Generate new Problems."""
         # TODO: problem_generator class (and use formulas :-))
-        await inter.response.defer()
+
         if not self.bot.is_trusted(inter.author):
             await inter.send(embed=ErrorEmbed("You aren't trusted!"), ephemeral=True)
             return
@@ -73,21 +73,29 @@ class ProblemGenerationCog(HelperCog):
                 ),
                 ephemeral=True,
             )
-
-        for _ in range(num_new_problems_to_generate):  # basic problems for now.... :(
+        if num_new_problems_to_generate < 0:
+            return await inter.send(
+                embed=ErrorEmbed("You can only create a positive number of problems")
+            )
+        for i in range(num_new_problems_to_generate):  # basic problems for now.... :(
+            print(i)
             # TODO: linear equations, etc
+
             while True:
                 problem_id = generate_new_id()
                 try:
                     already_existing_problem=await self.cache.get_problem(None, problem_id)
+                    print(already_existing_problem)
                 except problems_module.ProblemNotFound:
                     break
 
             problem_generator = random.choice(PROBLEM_GENERATORS)
             problem = problem_generator()
+            print(problem)
             await self.cache.add_problem(problem_id, problem)
+
         try:
-            await self.cache.bgsave()
+            await self.cache.bgsave(schedule=True)
         except problems_module.errors.BGSaveNotSupportedOnSQLException:
             pass
         await inter.send(

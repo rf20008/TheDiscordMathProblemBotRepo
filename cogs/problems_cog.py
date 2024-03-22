@@ -1,3 +1,21 @@
+"""
+This file is part of The Discord Math Problem Bot Repo
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
+"""
 import threading
 import typing
 from asyncio import run
@@ -11,7 +29,7 @@ from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules.custom_embeds import ErrorEmbed, SimpleEmbed, SuccessEmbed
 from helpful_modules.problems_module import *
 from helpful_modules.threads_or_useful_funcs import generate_new_id
-
+from helpful_modules.paginator_view import PaginatorView
 from .helper_cog import HelperCog
 
 # TODO: implement /edit_problem remove_answer (but only for authors. Warn the user and confirm using buttons if they are removing the last answer of a problem)
@@ -250,16 +268,6 @@ class ProblemsCog(HelperCog):
         except ProblemNotFound:  # Problem not found
             await inter.send(embed=ErrorEmbed("Problem not found!"))
             return
-        try:
-            Problem_as_str = f"""Question: {problem.get_question()}
-            Author: {str(problem.get_author())}
-            Number of Voters/Vote Threshold: {problem.get_num_voters()}/{self.bot.vote_threshold}
-            Number of solvers: {len(problem.get_solvers())}"""
-        except NameError:
-            await inter.send(
-                "Uh oh - problem not found! This wasn't handled earlier, so I'm raising an error so my developer can figure out why this is the case. :-)"
-            )
-            raise
         if show_all_data:
             if not (
                 (
@@ -275,15 +283,16 @@ class ProblemsCog(HelperCog):
                     embed=ErrorEmbed("Insufficient permissions!"), ephemeral=True
                 )
                 return
-            Problem_as_str += f"\nAnswer: {problem.get_answer}"
 
             if raw:
                 await inter.send(
-                    embed=SuccessEmbed(str(problem.to_dict())), ephemeral=True
+                    embed=SuccessEmbed(str(problem.to_dict(show_answer=True))), ephemeral=True
                 )
                 return
-            await inter.send(embed=SuccessEmbed(Problem_as_str), ephemeral=True)
-        await inter.send(embed=SuccessEmbed(Problem_as_str), ephemeral=True)
+            await inter.send(embed=SuccessEmbed(problem.__str__(include_answer=True)), ephemeral=True)
+        if raw:
+            await inter.send(embed=SuccessEmbed(problem.to_dict(show_answer=False)))
+        await inter.send(embed=SuccessEmbed(problem.__str__(include_answer=False)), ephemeral=True)
 
     @commands.cooldown(1, 2.5, commands.BucketType.user)
     @commands.slash_command(
@@ -333,7 +342,6 @@ class ProblemsCog(HelperCog):
             global_problems = global_problems.values()
         thing_to_write = "\n".join([str(problem.id) for problem in global_problems])
         await inter.send(embed=SuccessEmbed(thing_to_write))
-
     @commands.cooldown(1, 5, commands.BucketType.user)
     @commands.slash_command(
         name="list_all_problems",
@@ -371,70 +379,41 @@ class ProblemsCog(HelperCog):
         List all problems.
         If show_solved_problems is set to true,"""
         if inter.guild is None and show_guild_problems:
-            await inter.send("You must be in a guild to see guild problems!")
+            await inter.send(embed=ErrorEmbed("You must be in a guild to see guild problems!"))
             return
-        showSolvedProblems = show_solved_problems
-        guild_id = inter.guild.id
-        # Check for no problems
-        if len(await self.bot.cache.get_guild_problems(inter.guild)) == 0:
-            await inter.send("No problems currently exist.")
+        if show_only_guild_problems and not show_guild_problems:
+            await inter.send(
+                embed=ErrorEmbed(
+                    "You want to show only guild problems but you don't want to show guild problems. "
+                    "I need to display some problems to you though. "
+                    "Hmm..."
+                )
+            )
             return
+
+
+        guilds_to_append_from = []
+        if show_guild_problems:
+            if inter.guild is None:
+                await inter.send(embed=ErrorEmbed("You can not show guild problems if you are in an embed"))
+            guilds_to_append_from.append(inter.guild_id)
+        if not show_only_guild_problems:
+            guilds_to_append_from.append(None)
         # if not showSolvedProblems and False not in [inter.author.id in mathProblems[id]["solvers"] for id in mathProblems.keys()] or (show_guild_problems and (show_only_guild_problems and (guildMathProblems[inter.guild.id] == {}) or False not in [inter.author.id in guildMathProblems[guild_id][id]["solvers"] for id in guildMathProblems[guild_id].keys()])) or show_guild_problems and not show_only_guild_problems and False not in [inter.author.id in mathProblems[id]["solvers"] for id in mathProblems.keys()] and False not in [inter.author.id in guildMathProblems[guild_id][id]["solvers"] for id in guildMathProblems[guild_id].keys()]:
         # await inter.send("You solved all the problems! You should add a new one.", ephemeral=True)
         # return
-        problem_info_as_str = ""
-        problem_info_as_str += "Problem Id \t Question \t numVotes \t numSolvers"
-        if show_guild_problems:
-            for problem in await self.cache.get_problems_by_guild_id(guild_id):
-                if len(problem_info_as_str) >= 1930:
-                    problem_info_as_str += "The combined length of the questions is too long.... shortening it!"  # May be removed
-                    await inter.send(embed=SuccessEmbed(problem_info_as_str[:1930]))
-                    return
-                if not showSolvedProblems and problem.is_solver(
-                    inter.author
-                ):  # If the user solved the problem, don't show the problem
+        pages = []
+        for guild_id in guilds_to_append_from:
+            await self.cache.cache_all_problems()
+            for problem in (await self.cache.get_problems_by_guild_id(guild_id, replace_cache=False)).values():
+                # the user solved the problem, so don't show it
+                if not show_solved_problems and problem.is_solver(inter.author):
                     continue
-                problem_info_as_str += "\n"
-                problem_info_as_str += str(problem.id) + "\t"
-                problem_info_as_str += str(problem.get_question()) + "\t"
-                problem_info_as_str += "("
-                problem_info_as_str += (
-                    str(problem.get_num_voters())
-                    + "/"
-                    + str(self.bot.vote_threshold)
-                    + ")"
-                    + "\t"
-                )
-                problem_info_as_str += str(len(problem.get_solvers())) + "\t"
-                problem_info_as_str += "(guild)"
-        if len(problem_info_as_str) > 1930:
-            await inter.send(embed=SuccessEmbed(problem_info_as_str[:1930]))
+                pages.append(problem.__str__(vote_threshold=self.bot.vote_threshold))
+        if len(pages) == 0:
+            await inter.send(embed=ErrorEmbed("No problems match the filter..."))
             return
-        if show_only_guild_problems:
-            await inter.send(problem_info_as_str[:1930])
-            return
-        global_problems = (await self.bot.get_global_problems()).values()
-        for problem in global_problems:
-            if len(problem) >= 1930:
-                problem_info_as_str += "The combined length of the questions is too long.... shortening it!"
-                await inter.send(embed=SuccessEmbed(problem_info_as_str[:1930]))
-                return
-            if not showSolvedProblems and problem.is_solver(inter.author):
-                continue  # Don't show solved problems if the user doesn't want to see solved problems
-            # Probably will be overhauled with str(problem)
-            problem_info_as_str += "\n"
-            problem_info_as_str += str(problem.id) + "\t"
-            problem_info_as_str += str(problem.get_question()) + "\t"
-            problem_info_as_str += "("
-            problem_info_as_str += (
-                str(problem.get_num_voters())
-                + "/"
-                + str(self.bot.vote_threshold)
-                + ")"
-                + "\t"
-            )
-            problem_info_as_str += str(len(problem.get_solvers())) + "\t"
-        await inter.send(embed=SuccessEmbed(problem_info_as_str[:1930]))
+        await inter.send(view=PaginatorView(user_id = inter.author.id, pages=pages))
 
     @commands.slash_command(
         name="delallbotproblems",

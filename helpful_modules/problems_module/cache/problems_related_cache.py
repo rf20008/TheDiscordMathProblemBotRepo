@@ -31,12 +31,12 @@ import aiosqlite
 import disnake
 
 from helpful_modules.dict_factory import dict_factory
-from ..parse_problem import convert_dict_to_problem
+from ..parse_problem import convert_dict_to_problem, convert_row_to_problem
 
 from ..base_problem import BaseProblem
 from ..errors import *
 from ..mysql_connector_with_stmt import mysql_connection
-from ..quizzes import Quiz, QuizProblem, QuizSolvingSession, QuizSubmission
+from ..quizzes import QuizProblem
 
 log = logging.getLogger(__name__)
 
@@ -99,16 +99,15 @@ class ProblemsRelatedCache:
         self.update_cache_by_default_when_requesting = (
             update_cache_by_default_when_requesting
         )
-        self.guild_ids = []
-        self.global_problems = {}
+        self.guild_ids = set()
         self.cached_submissions = []
         self.cached_quizzes = []
-        self.guild_problems = {}
+        self.guild_problems = dict()
         self._guilds: typing.List[disnake.Guild] = []
-        asyncio.run(self.update_cache())
+        #asyncio.run(self.update_cache())
         self.cached_sessions = {}
 
-    async def bgsave(self, schedule: typing.Any, path: str = None, wait: bool = False, raise_on_error: bool = False, replace: bool = False):
+    async def bgsave(self, schedule: bool = True, path: str = None, wait: bool = False, raise_on_error: bool = False, replace: bool = False):
         """
         Perform a background save operation.
 
@@ -143,9 +142,8 @@ class ProblemsRelatedCache:
     def convert_dict_to_math_problem(self, problem: dict, use_from_dict: bool = True):
         """Convert a dictionary into a math problem. It must be in the expected format. (Overridden by from_dict, but still used) Possibly not used due to SQL."""
         if use_from_dict:
-            return convert_problem_to_dict(
-                problem, cache=self
-            )  # Use the base problem.from_dict method
+
+            return problem.to_dict()
         try:
             assert isinstance(problem, dict)
         except AssertionError:
@@ -257,27 +255,96 @@ class ProblemsRelatedCache:
                             "Uh oh... 2 problems exist with the same guild id and the same problem id"
                         )
                     return convert_row_to_problem(cache=copy(self), row=rows[0])
+    async def cache_all_problems(self):
+        self.guild_ids = set()
+        self.guild_problems={}
+        if self.use_sqlite:
+            async with aiosqlite.connect(self.db_name) as conn:
+                conn.row_factory = dict_factory
+                cursor = await conn.cursor()
+                await cursor.execute("SELECT * FROM problems")  # Get all problems
+                for row in await cursor.fetchall():  # For each problem:
+                    if not isinstance(row, dict):
 
+                        problem = convert_row_to_problem(
+                            pickle.loads(row), cache=copy(self)
+                        )  # Convert the problems to problem objects
+                    else:
+                        problem = convert_row_to_problem(row=row, cache=copy(self))
+                    if (
+                        problem.guild_id not in self.guild_ids
+                    ):  # Similar logic: Make sure it's there!
+                        self.guild_ids.add(problem.guild_id)
+                        self.guild_problems[problem.guild_id] = (
+                            {}
+                        )  # For quick, cached access?
+                    try:
+                        self.guild_problems[problem.guild_id][problem.id] = problem
+                    except BaseException as e:
+                        raise SQLException(
+                            "The cache could not be updated because assigning the problem failed!"
+                        ) from e
+            return
+
+        with mysql_connection(
+                host=self.mysql_db_ip,
+                password=self.mysql_password,
+                user=self.mysql_username,
+                database=self.mysql_db_name,
+        ) as connection:
+            cursor = connection.cursor(dictionaries=True)
+            cursor.execute("SELECT * FROM problems")  # Get all problems
+            for row in cursor.fetchall():
+                problem = convert_row_to_problem(row, cache=copy(self))
+                if (
+                        problem.guild_id not in self.guild_ids
+                ):  # Similar logic: Make sure it's there!
+                    self.guild_ids.add(problem.guild_id)
+                    self.guild_problems[problem.guild_id] = (
+                        {}
+                    )  # For quick, cached access?
+                try:
+                    self.guild_problems[problem.guild_id][problem.id] = problem
+                except BaseException as e:
+                    raise SQLException(
+                        "An error occurred while assigning the problem..."
+                    ) from e
+
+    @property
+    def global_problems(self):
+        return self.guild_problems.get(None, {})
+    @global_problems.setter
+    def global_problems(self, value):
+        self.guild_problems[None] = value
+    async def get_all_problems(
+        self,
+        replace_cache: bool = False
+    ):
+        if replace_cache:
+            await self.cache_all_problems()
+        return self.guild_problems
     async def get_guild_problems(
-        self, guild: disnake.Guild
+        self, guild: disnake.Guild, replace_cache: bool = False
     ) -> typing.Dict[int, BaseProblem]:
         """Gets the guild problems! Guild must be a Guild object. If you are trying to get global problems, use get_global_problems."""
         assert isinstance(guild, disnake.Guild)
-        if self.update_cache_by_default_when_requesting:
-            await self.update_cache()
+        if replace_cache:
+            await self.cache_all_problems()
         try:
             return self.guild_problems[guild.id]
         except KeyError:
             return {}
 
     async def get_problems_by_guild_id(
-        self, guild_id: int
+        self, guild_id: int, replace_cache: bool = False
     ) -> typing.Dict[int, BaseProblem]:
         if not isinstance(guild_id, int) and guild_id is not None:
             raise AssertionError
 
         if guild_id is None:
             return await self.get_global_problems()
+        if replace_cache:
+            await self.cache_all_problems()
         try:
             return self.guild_problems[guild_id]
         except KeyError:
@@ -286,15 +353,18 @@ class ProblemsRelatedCache:
     async def get_problems_by_func(
         self: "MathProblemCache",
         func: FunctionType = lambda problem: False,
+        replace_cache: bool = False,
         args: typing.Optional[typing.Union[tuple, list]] = None,
         kwargs: Optional[dict] = None,
+
     ) -> typing.List[BaseProblem]:
         """Returns the list of all problems that match the given function. args and kwargs are extra parameters to give to the function"""
         if args is None:
             args = []
         if kwargs is None:
             kwargs = {}
-        await self.update_cache()
+        if replace_cache:
+            await self.cache_all_problems()
         guild_problems = []
         for item in self.guild_problems.values():
             guild_problems.extend(
@@ -312,10 +382,10 @@ class ProblemsRelatedCache:
         problems_that_meet_the_criteria.extend(guild_problems_that_meet_the_criteria)
         return problems_that_meet_the_criteria
 
-    async def get_global_problems(self: "MathProblemCache") -> typing.List[BaseProblem]:
+    async def get_global_problems(self: "MathProblemCache", replace_cache: bool = False) -> typing.List[BaseProblem]:
         """Returns global problems"""
-        if self.update_cache_by_default_when_requesting:
-            await self.update_cache()
+        if replace_cache:
+            await self.cache_all_problems()
         return self.global_problems
 
     def add_empty_guild(self, guild) -> typing.NoReturn:
@@ -349,23 +419,22 @@ class ProblemsRelatedCache:
                 raise TypeError("problem_id is not a integer.")
 
         # Make sure the problem does not exist!
+
         try:
             if (await self.get_problem(None, problem_id)) is not None:
                 raise MathProblemsModuleException(
                     "Problem already exists! Use update_problem instead"
                 )
-        except (
-            ProblemNotFound
-        ):  # an exception raised when the problem does not exist! That means we're good to add the problem!
+        except (ProblemNotFound):
+            # an exception raised when the problem does not exist! That means we're good to add the problem!
             pass
-        if (
-            self.update_cache_by_default_when_requesting
-        ):  # Used to determine whether it has reached the limit! Takes O(N) time
+
+        if self.update_cache_by_default_when_requesting:
+            # Used to determine whether it has reached the limit! Takes O(N) time
             await self.update_cache()
         try:
-            if (
-                guild_id is None
-            ):  # There is no limit for global problems (which could be exploited!)
+            if guild_id is None:
+                # There is no limit for global problems (which could be exploited!)
                 pass
             elif (
                 len(self.guild_problems[guild_id]) >= self.max_guild_problems
@@ -386,12 +455,6 @@ class ProblemsRelatedCache:
                     conn.row_factory = dict_factory  # Make sure the row_factory can be set to dict_factory
                 except BaseException as exc:
                     # Not writeable?
-                    try:
-                        dict_factory  # Check for name error
-                    except NameError as exc2:
-                        raise MathProblemsModuleException(
-                            "dict_factory could not be found"
-                        ) from exc2
                     if isinstance(exc, AttributeError):  # Can't set attribute
                         pass
                     else:
@@ -416,13 +479,13 @@ class ProblemsRelatedCache:
                 await conn.commit()
             return problem
         else:
-            with mysql_connection(
+            async with mysql_connection(
                 host=self.mysql_db_ip,
                 password=self.mysql_password,
                 user=self.mysql_username,
                 database=self.mysql_db_name,
             ) as connection:
-                cursor = connection.cursor(dictionaries=True)
+                cursor = await connection.cursor(dictionaries=True)
                 await cursor.execute(
                     """INSERT INTO problems (guild_id, problem_id, question, answer, voters, solvers, author, extra_stuff)
                 VALUES (%s,%s,%s,%b,%b,%b,%s, %s)""",

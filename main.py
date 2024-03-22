@@ -22,16 +22,12 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 # Python 3.12+ is required.
 
 # imports - standard library
-import asyncio
-import logging
 import signal
 import threading
-import typing
 import warnings
 from asyncio import sleep as asyncio_sleep
 from copy import copy
-from logging import handlers
-from sys import argv, exc_info, exit, stdout
+from sys import argv, exc_info, exit, stdout, stderr
 from time import sleep
 
 # Imports - 3rd party
@@ -47,12 +43,11 @@ from helpful_modules import (
     the_documentation_file_loader,
 )
 from helpful_modules.constants_loader import *
-from helpful_modules.cooldowns import check_for_cooldown
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
-from helpful_modules.StatsTrack import CommandStats, CommandUsage, StreamWrapperStorer
+from helpful_modules.StatsTrack import StreamWrapperStorer
 from helpful_modules.threads_or_useful_funcs import *
 from helpful_modules.base_on_error import base_on_error
-
+from helpful_modules._error_logging import log_error, log_error_to_file
 # Imports - My own files
 
 
@@ -75,7 +70,7 @@ if DISCORD_TOKEN is None:
     raise RuntimeError("Cannot start bot; no discord_token environment variable")
 
 # TODO: use logging + changelog.json + debugging :-)
-
+warnings.filterwarnings(action="always", category=problems_module.errors.PMDeprecationWarning)
 should_we_connect = True
 if len(argv) >= 3:
     if argv[2] == "DO_NOT_CONNECT":
@@ -297,7 +292,7 @@ async def on_connect():
 
 @bot.event
 async def on_error(event, *args, **kwargs):
-    print(f"Error in {event}... uh oh", file=stderr)
+    print(f"Error in {event}... uh oh", file=sys.stderr)
     error = exc_info()
     # print the traceback to the file
     print(
@@ -319,14 +314,20 @@ async def on_slash_command_error(inter, error):
     """Function called when a slash command errors, which will inevitably happen. All the functionality was moved to base_on_error :-)"""
     # print the traceback to the file
     dict_args = await base_on_error(inter, error)
+
     try:
-        return await inter.send(**dict_args)
-    except AttributeError:
+        if inter.response.is_done():
+            await inter.followup.send(**dict_args)
+        else:
+            await inter.response.send_message(**dict_args)
+    except AttributeError as err:
+        print(error, err)
         log_error(error, f"error_logs/{str(datetime.datetime.now())}")
         await inter.send(
-            "An error occured, and the error message couldn't be sent. However, it has been saved!"
+            "An error occurred, and the error message couldn't be sent. However, it has been saved!"
         )
-        raise error
+
+        raise ExceptionGroup(error, err)
 
 
 # @bot.command(help = """Adds a trusted user!

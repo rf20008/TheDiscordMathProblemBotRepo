@@ -51,7 +51,9 @@ class BaseProblem(DictConvertible):
         cache=None,
         answers: list = None,
         tolerance: float = None,
+        type: str = "BaseProblem"
     ):
+        self.type = type
         if voters is None:
             voters = []
         if solvers is None:
@@ -192,7 +194,6 @@ class BaseProblem(DictConvertible):
         """Convert a dictionary-ified row into a MathProblem"""
         if not isinstance(row, dict):
             raise TypeError("The problem has not been dictionary-ified")
-
         try:
             answers = pickle.loads(
                 row["answers"]
@@ -202,7 +203,7 @@ class BaseProblem(DictConvertible):
             our_row = dict()
             our_row.update(row)
             del our_row["problem_id"]
-            our_row["id"] = row["id"]
+            our_row["id"] = row["problem_id"]
             our_row["answers"]=answers
             our_row["voters"]=voters
             our_row["solvers"]=solvers
@@ -394,13 +395,16 @@ class BaseProblem(DictConvertible):
 
         return f"""problems_module.BaseProblem(question='{self.question}', answers = {self.answers}, id = {self.id}, guild_id={self.guild_id}, voters={self.voters}, solvers={self.solvers}, author={self.author}, cache={None} {extra_stuff_included})"""  # If I stored the problems, then there would be an infinite loop
 
-    def __str__(self, include_answer: bool = False) -> str:
+    def __str__(self, include_answer: bool = False, vote_threshold: int = 0) -> str:
         _str = f"""Question: '{self.question}', 
         id: {self.id}, 
         guild_id: {self.guild_id}, 
         solvers: {[f'<@{id}>' for id in self.solvers]},
         author: <@{self.author}>
-        """
+        number of votes: {len(self.voters)}"""
+        if vote_threshold != 0:
+            _str += f"/{vote_threshold}"
+        _str += "\n"
         for key, value in self.get_extra_stuff().items():
             _str += f"{key}: {value}\n"
         if include_answer:

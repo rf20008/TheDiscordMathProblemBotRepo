@@ -21,7 +21,7 @@ import numbers
 from .errors import MathProblemsModuleException
 import mpmath
 from .base_problem import BaseProblem
-
+from copy import deepcopy
 BOT_ID = 845751152901750824
 TOLERANCE = 1e-3
 FORMAT_HELP = """To answer this question, give your answer in the form var1 var2 var3 ... varN. You must put the 
@@ -189,3 +189,14 @@ class LinearAlgebraProblem(BaseProblem):
             dict: A dictionary containing extra information.
         """
         return {"coeffs": self.coeffs, "equal_to": self.equal_to, "type": "LinearAlgebraProblem"}
+    def __deepcopy__(self, memodict: dict):
+        return LinearAlgebraProblem(
+            question=deepcopy(self.question),
+            voters=deepcopy(self.voters),
+            answers=deepcopy(self.answers),
+            solvers=deepcopy(self.solvers),
+            author=deepcopy(self.author),
+            id=deepcopy(self.id),
+            guild_id=deepcopy(self.guild_id),
+            **deepcopy(self.get_extra_stuff()),
+        )

@@ -36,7 +36,7 @@ from helpful_modules.threads_or_useful_funcs import (
     log_evaled_code,
     file_version_of_item
 )
-import orjson
+from helpful_modules.paginator_view import PaginatorView
 
 from .helper_cog import HelperCog
 from .interesting_computation_ import InterestingComputationCog
@@ -104,14 +104,32 @@ class DebugCog(HelperCog):
             except BaseException as e:
                 new_stderr.write("".join(format_exception(e)))
                 err = None
-        await inter.send(
-            embed=SuccessEmbed(
-                f"""The code was successfully executed!
+        text = f"""The code was successfully executed!
             stdout: ```{new_stdout.getvalue()} ```
             stderr: ```{new_stderr.getvalue()} ```"""
-            ),
-            ephemeral=ephemeral,
-        )
+        if len(text) <= 4096:
+            await inter.send(embed=SuccessEmbed(text), ephemeral=ephemeral)
+        else:
+            await inter.response.defer()
+            stdout_pages = PaginatorView.break_into_pages(new_stdout.getvalue(), max_page_length=2994)
+
+            for i in range(len(stdout_pages)):
+                stdout_pages[i] = f"```{stdout_pages[i]}```"
+            if stdout_pages:
+                stdout_pages[0] = "Stdout: " + stdout_pages[0]
+            else:
+                stdout_pages = ["Stdout: ``` ```"]
+            stderr_pages = PaginatorView.break_into_pages(new_stderr.getvalue(), max_page_length=2994)
+            for i in range(len(stderr_pages)):
+                stderr_pages[i] = f"```{stderr_pages[i]}```"
+            if stderr_pages:
+                stderr_pages[0] = "Stderr: " + stderr_pages[0]
+            else:
+                stderr_pages = ["Stderr: ``` ```"]
+            all_pages = []
+            all_pages.extend(stdout_pages)
+            all_pages.extend(stderr_pages)
+            await inter.send(view=PaginatorView(user_id=inter.author.id, pages=all_pages))
         new_stdout.close()
         new_stderr.close()
         if err is not None:
@@ -190,7 +208,7 @@ class DebugCog(HelperCog):
             await inter.send(
                 "The result is in the attached file!",
                 ephemeral=ephemeral,
-                file=file_version_of_item(result, "sql_result.txt")
+                file=file_version_of_item(str(result), "sql_result.txt")
             )
         return
 

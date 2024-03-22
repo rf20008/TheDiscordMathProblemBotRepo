@@ -37,7 +37,7 @@ class PaginatorView(disnake.ui.View):
         self.page_num = 0
 
     @classmethod
-    async def paginate(cls, user_id: int, text: str, max_page_length: int = 1500, **kwargs) -> 'PaginatorView':
+    def paginate(cls, user_id: int, text: str, max_page_length: int = 1500, **kwargs) -> 'PaginatorView':
         pages = cls.break_into_pages(text, max_page_length)
         return cls(user_id, pages, **kwargs)
 
@@ -112,20 +112,6 @@ class PaginatorView(disnake.ui.View):
     async def interaction_check(self, interaction: disnake.Interaction) -> bool:
         return interaction.author.id == self.user_id
 
-    @disnake.ui.button(emoji="➡️")
-    async def next_page_button(
-        self: "PaginatorView", _: disnake.ui.Button, inter: disnake.MessageInteraction
-    ) -> None:
-        await inter.response.defer()
-        if inter.author.id != self.user_id:
-            await inter.send(
-                "You can not interact with this because it is not yours", ephemeral=True
-            )
-            return
-        self.page_num += 1
-        self.page_num %= len(self.pages)
-        await inter.edit_original_response(view=self, embed=self.create_embed())
-
     @disnake.ui.button(emoji="⬅")
     async def prev_page_button(
         self: "PaginatorView", button: disnake.ui.Button, inter: disnake.MessageInteraction
@@ -139,6 +125,20 @@ class PaginatorView(disnake.ui.View):
         self.page_num -= 1
         self.page_num %= len(self.pages)
         # Of course, we need to show this to the user
+        await inter.edit_original_response(view=self, embed=self.create_embed())
+
+    @disnake.ui.button(emoji="➡️")
+    async def next_page_button(
+            self: "PaginatorView", _: disnake.ui.Button, inter: disnake.MessageInteraction
+    ) -> None:
+        await inter.response.defer()
+        if inter.author.id != self.user_id:
+            await inter.send(
+                "You can not interact with this because it is not yours", ephemeral=True
+            )
+            return
+        self.page_num += 1
+        self.page_num %= len(self.pages)
         await inter.edit_original_response(view=self, embed=self.create_embed())
 
     async def on_timeout(self):

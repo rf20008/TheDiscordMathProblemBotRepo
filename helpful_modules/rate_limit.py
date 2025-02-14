@@ -38,8 +38,21 @@ def rate_limit_check():
     async def predicate(inter: disnake.ApplicationCommandInteraction):
         if not isinstance(inter, TheDiscordMathProblemBot):
             raise TypeError
+
         cur_time = time.time()
         BEFORE = time.time() - ONE_DAY
+        inter.bot.audit_log.add_log_entry(
+            "Someone used a command! We are checking the rate limit",
+            extra_info={
+                "user": inter.author.id,
+                "user_mention": inter.author.mention,
+                "guild_id": inter.guild_id,
+                "guild_name": inter.guild.name if inter.guild else "No Name",
+                "channel": inter.channel.id,
+                "command_name": inter.command.qualified_name,
+                "arguments": inter.options
+            }
+        )
         usage_deque.append_right(cur_time)
 
         if inter.author.id not in DEQUES.keys():

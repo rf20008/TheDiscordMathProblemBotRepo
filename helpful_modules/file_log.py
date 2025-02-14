@@ -25,12 +25,23 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)"""
 from .FileDictionaryReader import AsyncFileDict
 import abc
 import time
+import enum
 import orjson
 import aiofiles
 import asyncio
 import math
 import farmhash
 
+
+class SecrecyLevel(enum.IntEnum):
+    PUBLIC = 0  # Fully accessible to everyone
+    REQUESTABLE = 50  # Not fully public, but can be accessed upon request
+
+    USER_AND_MODS_ONLY = 100  # Accessible to the user and moderators
+    MODS_AND_DEVS_ONLY = 200  # Accessible to moderators and developers
+    DEVS_ONLY = 300  # Accessible only to developers
+    OWNER_ONLY = 400  # Accessible only to the bot owner
+    TOP_SECRET = 500
 
 def frac(x):
     return x - math.floor(x)
@@ -77,7 +88,7 @@ class AuditLog:
     max_buffer_size: int
 
     @abc.abstractmethod
-    def add_log_entry(self, log_entry: str, priority: int = 3, extra_info: dict | None = None):
+    def add_log_entry(self, log_entry: str, priority: int = 3, secrecy: SecrecyLevel = SecrecyLevel.MODS_AND_DEVS_ONLY, extra_info: dict | None = None):
         if extra_info is None:
             extra_info = dict()
         if not isinstance(extra_info, dict):
@@ -86,6 +97,8 @@ class AuditLog:
             raise TypeError("Priority is not an int")
         if not isinstance(log_entry, str):
             raise TypeError("Log entry is not a string")
+        if not isinstance(secrecy, SecrecyLevel):
+            raise TypeError("secrecy is not a SecrecyLevel")
         raise NotImplementedError("Subclasses must implement this method!")
 
     @abc.abstractmethod
@@ -96,8 +109,8 @@ class AuditLog:
     async def read_from_log(self, n: int = -1):
         pass
 
-    async def add_log_entry_with_clear(self, log_entry: str, priority: int = 3, extra_info: dict | None = None):
-        self.add_log_entry(log_entry, priority, extra_info)
+    async def add_log_entry_with_clear(self, log_entry: str, priority: int = 3, secrecy: SecrecyLevel = SecrecyLevel.MODS_AND_DEVS_ONLY, extra_info: dict | None = None):
+        self.add_log_entry(log_entry, priority, secrecy, extra_info)
         if len(self.buffer) >= self.max_buffer_size:
             await self.clear_buffer()
 
@@ -114,7 +127,7 @@ class FileLog(AuditLog):
         self.max_buffer_size = max_buffer_size
         self.lock = asyncio.Lock()
 
-    def add_log_entry(self, log_entry: str, priority: int = 3, extra_info: dict | None = None):
+    def add_log_entry(self, log_entry: str, priority: int = 3, secrecy: SecrecyLevel = SecrecyLevel.MODS_AND_DEVS_ONLY, extra_info: dict | None = None, secrecy: int = 0):
         if extra_info is None:
             extra_info = dict()
         if not isinstance(extra_info, dict):
@@ -123,17 +136,19 @@ class FileLog(AuditLog):
             raise TypeError("Priority is not an int")
         if not isinstance(log_entry, str):
             raise TypeError("Log entry is not a string")
+        if not isinstance(secrecy, SecrecyLevel):
+            raise TypeError("secrecy is not a SecrecyLevel")
         if '\n' in log_entry:
             raise ValueError("Log entries must not contain newlines")
         if '|' in log_entry:
             raise ValueError("Log entries must not contain pipe characters")
         cur_time = time.asctime(time.localtime())
-        self.buffer.append((cur_time, log_entry, priority, extra_info))
+        self.buffer.append((cur_time, log_entry, priority, secrecy, extra_info))
 
     async def clear_buffer(self):
         async with self.lock:
             things = "\n".join(
-                [f"[{cur_time} | {priority}]: {log_entry} | {extra_info}" for cur_time, log_entry, priority, extra_info
+                [f"[{cur_time} | {priority} | {secrecy.value}]: {log_entry} | {extra_info}" for cur_time, log_entry, priority, secrecy, extra_info
                  in self.buffer])
             async with aiofiles.open(self.filename, "a") as file:
                 await file.write(f"{things}\n")
@@ -160,7 +175,7 @@ class FileDictLog(AuditLog):
         self.buffer = []  # Initialize the buffer
         self.max_buffer_size = max_buffer_size
 
-    def add_log_entry(self, log_entry: str, priority: int = 3, extra_info: dict | None = None):
+    def add_log_entry(self, log_entry: str, priority: int = 3, secrecy: SecrecyLevel = SecrecyLevel.MODS_AND_DEVS_ONLY, extra_info: dict | None = None):
         if extra_info is None:
             extra_info = {}
         if not isinstance(extra_info, dict):
@@ -175,6 +190,7 @@ class FileDictLog(AuditLog):
             "cur_time": cur_time,
             "log_msg": log_entry,
             "priority": priority,
+            "secrecy": secrecy.value,
             "extra_info": extra_info
         }))
 
@@ -222,32 +238,36 @@ class AppendingFileLog(AuditLog):
     async def read_last_n_lines(self, n: int = -1) -> list[str]:
         return await read_last_n_lines(self.filename, n)
 
-    def format_entry(self, log_entry: str, priority: int = 3, extra_info: dict | None = None):
+    def format_entry(self, log_entry: str, priority: int = 3, secrecy: SecrecyLevel = SecrecyLevel.MODS_AND_DEVS_ONLY, extra_info: dict | None = None):
         timestamp = time.asctime(time.localtime())
         if extra_info is None:
             parsed_extra_info = "{}"
         else:
             parsed_extra_info = orjson.dumps(extra_info)
         encoded_extra_info = self.encode_log_entry(parsed_extra_info)
-        return f"{timestamp} | {priority} | {self.encode_log_entry(log_entry)} | {encoded_extra_info}"
+        return f"{timestamp} | {priority} | {secrecy.value}| {self.encode_log_entry(log_entry)} | {encoded_extra_info}"
 
-    def parse_entry(self, entry: str) -> tuple[time.struct_time, int, str, dict]:
+    def parse_entry(self, entry: str) -> tuple[time.struct_time, int, SecrecyLevel, str, dict]:
         # step 1: extract timestamp
         first_pipe = entry.find("|")
         timestamp: time.struct_time = time.strptime(entry[:first_pipe - 1])  # type: ignore # the space!!
         if first_pipe == -1:
-            raise ValueError("Malformed log entry -- log entries must have at least 2 pipe characters")
+            raise ValueError("Malformed log entry -- log entries must have at least 3 pipe characters")
         # step 2: extract priority
         second_pipe = entry.find("|", first_pipe + 1)
         if second_pipe == -1:
-            raise ValueError("Malformed log entry. Log entries must have at least 2 pipes")
+            raise ValueError("Malformed log entry. Log entries must have at least 3 pipes")
         priority = int(entry[first_pipe + 1:second_pipe])
+        third_pipe = entry.find("|", second_pipe + 1)
+        if third_pipe == -1:
+            raise ValueError("Malformed log entry. Log entries must have at least 3 pipes")
+        secrecy = SecrecyLevel(int(entry[first_pipe + 1:second_pipe]))
         # step 3: extract log entry
         # step 3a: find where log_entry ends!
-        third_pipe = self.find_unescaped_pipe(entry, second_pipe + 1)
-        log_entry = self.decode_log_entry(entry[second_pipe + 1:third_pipe - 1])
-        extra_info = orjson.loads(self.decode_log_entry(entry[third_pipe + 1:]))
-        return timestamp, priority, log_entry, extra_info
+        fourth_pipe = self.find_unescaped_pipe(entry, third_pipe + 1)
+        log_entry = self.decode_log_entry(entry[third_pipe + 1 :fourth_pipe - 1])
+        extra_info = orjson.loads(self.decode_log_entry(entry[fourth_pipe + 1:]))
+        return timestamp, priority, secrecy, log_entry, extra_info
 
     @staticmethod
     def find_unescaped_pipe(string: str, start: int = 0):
@@ -263,7 +283,7 @@ class AppendingFileLog(AuditLog):
                 return i
         return -1
 
-    def add_log_entry(self, log_entry: str, priority: int = 3, extra_info: dict | None = None):
+    def add_log_entry(self, log_entry: str, priority: int = 3, secrecy: SecrecyLevel = SecrecyLevel.MODS_AND_DEVS_ONLY, extra_info: dict | None = None):
         self.buffer.append(self.format_entry(log_entry=log_entry, priority=priority, extra_info=extra_info))
 
     async def clear_buffer(self):
@@ -272,7 +292,7 @@ class AppendingFileLog(AuditLog):
             file.write(to_add)
         self.buffer.clear()
 
-    async def add_log_entry_with_clear(self, log_entry: str, priority: int = 3, extra_info: dict | None = None):
+    async def add_log_entry_with_clear(self, log_entry: str, priority: int = 3, secrecy: SecrecyLevel = SecrecyLevel.MODS_AND_DEVS_ONLY, extra_info: dict | None = None):
         self.add_log_entry(log_entry, priority, extra_info)
         if len(self.buffer) >= self.max_buffer_size:
             await self.clear_buffer()

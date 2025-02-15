@@ -31,6 +31,7 @@ import aiofiles
 import asyncio
 import math
 import farmhash
+from .threads_or_useful_funcs import read_last_n_lines
 
 
 class SecrecyLevel(enum.IntEnum):
@@ -48,39 +49,7 @@ def frac(x):
 
 
 # that is from ChatGPT
-async def read_last_n_lines(filename, n):
-    if n < 0:
-        async with aiofiles.open(filename, "rb") as f:
-            lines = await f.readlines()
-        return lines
-    async with aiofiles.open(filename, 'rb') as f:
-        # Move to the end of the file
-        await f.seek(0, 2)
-        position = await f.tell()
-        lines = []
-        current_line = []
 
-        # Read backwards until we find the last n lines
-        while position >= 0 and len(lines) < n:
-            await f.seek(position)
-            char = await f.read(1)
-
-            # Check for newline character
-            if char == b'\n' and current_line:
-                # Store the completed line
-                lines.append(current_line[::-1].decode())
-                current_line = []
-            else:
-                current_line.append(char)
-
-            position -= 1
-
-        # Capture the last line if it does not end with a newline
-        if current_line:
-            lines.append(current_line[::-1].decode())
-
-        # Reverse the lines to get them in the correct order
-        return lines[::-1][:n]
 
 
 class AuditLog:

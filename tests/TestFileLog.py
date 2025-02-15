@@ -24,3 +24,4 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 import unittest
 
 class TestFileLog(unittest.TestCase):
+    pass

@@ -25,6 +25,7 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)"""
 from .FileDictionaryReader import AsyncFileDict
 import abc
 import time
+from .Merkler import DynamicLengthMerkler
 import enum
 import orjson
 import aiofiles
@@ -53,6 +54,7 @@ def frac(x):
 
 
 class AuditLog:
+    merkler: DynamicLengthMerkler
     buffer: list
     max_buffer_size: int
 
@@ -85,7 +87,9 @@ class AuditLog:
 
 
 class FileLog(AuditLog):
-    log: AsyncFileDict
+    merkler: DynamicLengthMerkler
+    max_buffer_size: int
+    filename: str
 
     def __init__(self, filename: str, max_buffer_size: int = 200, overwrite: bool = False):
         if overwrite:
@@ -116,11 +120,16 @@ class FileLog(AuditLog):
 
     async def clear_buffer(self):
         async with self.lock:
-            things = "\n".join(
-                [f"[{cur_time} | {priority} | {secrecy.value}]: {log_entry} | {extra_info}" for cur_time, log_entry, priority, secrecy, extra_info
-                 in self.buffer])
+            elements = [
+                f"[{cur_time} | {priority} | {secrecy.value}]: {log_entry} | {extra_info}"
+                for cur_time, log_entry, priority, secrecy, extra_info in self.buffer
+            ]
+            things = "\n".join(elements)
+            for element in elements:
+                self.merkler.append(element)
             async with aiofiles.open(self.filename, "a") as file:
                 await file.write(f"{things}\n")
+
             self.buffer.clear()
 
     async def read_from_log(self, num_last_lines: int = -1):
@@ -138,11 +147,31 @@ class FileLog(AuditLog):
 
 class FileDictLog(AuditLog):
     log: AsyncFileDict
-
+    merkler: DynamicLengthMerkler
+    cur_size: int
+    index_initialized_yet: bool
     def __init__(self, filename: str, overwrite: bool = False, max_buffer_size: int = 200):
         self.log = AsyncFileDict(filename, overwrite=overwrite)
+        self.cur_size = -1
+        self.size_initialized_yet = False
         self.buffer = []  # Initialize the buffer
         self.max_buffer_size = max_buffer_size
+    @property
+    def size(self):
+        if not self.size_initialized_yet:
+            raise RuntimeError("This tree's index has not been initialized yet! Run `await <reference to tree>.init_index()` to initialize it")
+        return self.cur_size
+    async def init_index(self):
+        try:
+            self.cur_size = await self.log.get_key("index", use_cached=False)
+        except KeyError:
+            self.cur_size = 0
+            await self.log.set_key("index", 0)
+    async def update_size(self):
+        await self.log.set_key("index", self.cur_size)
+    @size.setter
+    def set_size(self, new_size: int):
+        raise NotImplementedError("Python prohibits me from having async setters to properties!")
 
     def add_log_entry(self, log_entry: str, priority: int = 3, secrecy: SecrecyLevel = SecrecyLevel.MODS_AND_DEVS_ONLY, extra_info: dict | None = None):
         if extra_info is None:
@@ -155,13 +184,15 @@ class FileDictLog(AuditLog):
         cur_time = time.asctime(time.localtime())
         cur_time_hashed = hex(farmhash.FarmHash128(str(cur_time) + str(frac(time.time()))))
 
-        self.buffer.append((cur_time + cur_time_hashed, {
+        self.buffer.append(("entry" + str(cur_time) + str(cur_time_hashed), {
+            "index": self.size,
             "cur_time": cur_time,
             "log_msg": log_entry,
             "priority": priority,
             "secrecy": secrecy.value,
             "extra_info": extra_info
         }))
+        self.cur_size += 1
 
     async def clear_buffer(self):
         if not self.buffer:  # Check if buffer is empty
@@ -172,6 +203,7 @@ class FileDictLog(AuditLog):
         old_dict.update(dict(self.buffer))  # Update the old dictionary with the new logs
         await self.log.update_my_file()  # Ensure this method is defined in AsyncFileDict
         self.buffer.clear()  # Clear the buffer after updating
+        await self.update_size(self.cur_size)
 
     async def read_from_log(self, n: int = -1):
         # read the entire file
@@ -188,6 +220,11 @@ class FileDictLog(AuditLog):
 
 
 class AppendingFileLog(AuditLog):
+    Merkler: DynamicLengthMerkler
+    filename: str
+    buffer: list[str]
+    max_buffer_size: int
+    cur_size: int
     def __init__(self, filename: str, overwrite: bool = False, max_buffer_size=1):
         self.buffer = []
         self.max_buffer_size = max_buffer_size
@@ -195,6 +232,11 @@ class AppendingFileLog(AuditLog):
         if overwrite:
             with open(filename, "w"):
                 pass
+            self.cur_size = 0
+        else:
+            with open(filename, "r") as f:
+                self.cur_size = sum(1 for _ in f)
+
 
     @staticmethod
     def encode_log_entry(log_entry: str) -> str:
@@ -256,6 +298,8 @@ class AppendingFileLog(AuditLog):
         self.buffer.append(self.format_entry(log_entry=log_entry, priority=priority, extra_info=extra_info))
 
     async def clear_buffer(self):
+        for thing in self.buffer:
+            self.merkler.append(thing)
         to_add = "\n".join(self.buffer)
         async with open(self.filename, 'a') as file:
             file.write(to_add)

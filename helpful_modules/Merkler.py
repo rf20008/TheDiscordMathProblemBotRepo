@@ -111,7 +111,7 @@ class FixedLengthMerkler:
             self.tree[index] = self.sha3_hash(new_val)
             return
         mid = (left+right)//2
-        if (pos <= mid):
+        if pos <= mid:
             self.update(index=index*2, left=left, right=mid, pos=pos, new_val=new_val)
         else:
             self.update(index=index * 2 + 1, left=mid + 1, right=right, pos=pos, new_val=new_val)
@@ -260,7 +260,7 @@ class FixedLengthMerkler:
                 )
             return True
         mid = (left+right)//2
-        if (index_to_verify <= mid):
+        if index_to_verify <= mid:
             self._verify_index(sindex = sindex*2, left=left, right=mid, index_to_verify=index_to_verify, should_be_hash=should_be_hash)
         else:
             self._verify_index(sindex=sindex*2+1, left=mid+1, right=right, index_to_verify=index_to_verify, should_be_hash=should_be_hash)
@@ -347,19 +347,19 @@ class FixedLengthMerkler:
         return left_leaves + right_leaves
 
 
-def DynamicLengthMerkler(FixedLengthMerkler):
+class DynamicLengthMerkler(FixedLengthMerkler):
     cur_size: int
     DEFAULT: str = ""
     def __init__(self, initial_size = 16, contents: list[bytes] | None = None):
         if contents is None:
-            contents = [DEFAULT for i in range(initial_size)]
+            contents = [self.DEFAULT for _ in range(initial_size)]
         if len(contents) < initial_size:
             raise ValueError("Contents too small")
         super().__init__(size=initial_size, contents=contents)
         self.cur_size = initial_size
 
     def resize(self, new_size: int):
-        new_tree = [b"" for i in range(4*new_size)]
+        new_tree = [b"" for _ in range(4*new_size)]
         old_leaves = self.get_leaves()
         def build_tree(index: int, left: int, right: int):
             nonlocal new_tree
@@ -367,7 +367,7 @@ def DynamicLengthMerkler(FixedLengthMerkler):
                 if left < self.size:
                     self.tree[index] = old_leaves[left]
                 else:
-                    self.tree[index] = sha3_hash(DEFAULT)
+                    self.tree[index] = self.sha3_hash(self.DEFAULT)
                 return
             mid = (left + right) // 2
             build_tree(index*2, left, mid)
@@ -377,9 +377,15 @@ def DynamicLengthMerkler(FixedLengthMerkler):
         self.tree = new_tree
         self.size = new_size
     @staticmethod
-    def sha3_hash(self, obj: bytes | str):
-        if isinstance(v, str):
+    def sha3_hash(obj: bytes | str):
+        if isinstance(obj, str):
             v = v.encode('utf-8')
-        if not isinstance(v, bytes):
-            raise TypeError(f"`v` must be str or bytes, not type {v.__class__.__name__}")
-        return hashlib.sha3_256(v).digest()
+        if not isinstance(obj, bytes):
+            raise TypeError(f"`v` must be str or bytes, not type {obj.__class__.__name__}")
+        return hashlib.sha3_256(obj).digest()
+    def append(self, thing):
+        if self.cur_size >= self.size:
+            self.resize(self.size * 2 + 1)
+
+        self[self.cur_size] = thing
+        self.cur_size += 1

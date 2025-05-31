@@ -308,83 +308,13 @@ async def on_application_command(inter):
     await bot.process_application_commands(inter)
 
 # TODO: (general) add changelog.json
-@bot.event
-async def on_connect():
-    """Run when the bot connects"""
-
-    print("The bot has connected to Discord successfully.")
-    await asyncio_sleep(0.5)
-    bot.get_cog("HelpCog").update_cached_command_dict()
-    await bot.change_presence(
-        status=disnake.Status.idle,
-    )
-    bot.log.debug(
-        "Deleting data from guilds the bot was kicked from while it was offline"
-    )
-    bot_guild_ids = [
-        guild.id for guild in bot.guilds
-    ]  # The guild_ids of the guilds that the bot is in
-    for (
-        guild_id
-    ) in (
-        await bot.cache.get_guilds()
-    ):  # Obtain all guilds the cache stores data (will need to be upgraded.)
-        if guild_id not in bot_guild_ids:  # It's not in!
-            if guild_id is None:  # Don't delete global problems
-                continue
-            bot.log.debug("The bot is deleting data from a guild it has left.")
-            await bot.cache.delete_all_by_guild_id(guild_id)  # Delete the data
 
 
-@bot.event
-async def on_error(event, *args, **kwargs):
-    print(f"Error in {event}... uh oh", file=sys.stderr)
-    error = exc_info()
-    # print the traceback to the file
-    print(
-        "\n".join(traceback.format_exception(*error)),
-        file=stderr,
-    )
-
-    error_traceback_as_obj = "\n".join(traceback.format_exception(*error))
-    # Log the error?
-    await log_error(error[1])
-    # We don't have an interaction/context, so I can't tell the user that an error happened
-    print("Oh no! An exception occurred!", flush=True, file=stdout)
-
-    print(error_traceback_as_obj, flush=True, file=stdout)
 
 
-@bot.event
-async def on_slash_command_error(inter, error):
-    """Function called when a slash command errors, which will inevitably happen. All the functionality was moved to base_on_error :-)"""
-    # print the traceback to the file
-    try:
-        dict_args = await base_on_error(inter, error)
-    except Exception as e:
-        print(traceback.format_exception(e))
-        raise e
 
-    # print(dict_args)
-    try:
-        await inter.send(**dict_args)
-        return
-    except BaseException as be:
-        await log_error(be)
-        # os._exit(1)
-    try:
-        if inter.response.is_done():
-            await inter.followup.send(**dict_args)
-        else:
-            await inter.response.send_message(**dict_args)
-    except AttributeError as err:
-        print(error, err)
-        log_error(error, f"error_logs/{str(datetime.datetime.now())}")
-        await inter.send(
-            "An error occurred, and the error message couldn't be sent. However, it has been saved!"
-        )
 
-        raise ExceptionGroup(error, err)
+
 
 
 # @bot.command(help = """Adds a trusted user!
@@ -394,27 +324,10 @@ async def on_slash_command_error(inter, error):
 # brief = "Adds a trusted user")
 
 
-@bot.event
-async def on_guild_join(guild):
-    """Ran when the bot joins a guild!"""
-    if guild.id is None:  # Should never happen
-        raise Exception("Uh oh!")  # This is probably causing the bot to do stuff
-
-    if await bot.is_guild_denylisted(guild):
-        await bot.notify_guild_on_guild_leave_because_guild_denylist(guild)
-        if bot.get_guild(guild.id) is not None:
-            await bot.get_guild(guild.id).leave()
-        # await guild.leave()  # This will mess up stuff
-        # print("Oh no")
-        # raise RuntimeError(
-        #     "Oh no..... there is a guild with id None... this will mess up the bot!")
-        #  # Make sure that a guild with id _global doesn't mess up stuff
 
 
-@bot.event
-async def on_guild_remove(guild):
-    await bot.cache.remove_all_by_guild_id(guild.id)  # Remove all guild-related stuff
-    # uh oh?
+
+
 
 
 def handle_signal(signum):

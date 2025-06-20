@@ -296,7 +296,7 @@ def last_true(lo: int, hi: int, f: Callable[[int], bool]):
     # assume f is monotonically decreasing (f(x) = false implies f(y)=false for all y>x, and f(x)=true implies f(y)=true for all y<x)
     lo-=1
     while hi > lo:
-        mid = (lo + hi)//2
+        mid = (lo + hi+1)//2
         if f(mid):
             lo = mid
         else:

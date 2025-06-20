@@ -100,7 +100,7 @@ class FileLog(AuditLog):
         self.max_buffer_size = max_buffer_size
         self.lock = asyncio.Lock()
 
-    def add_log_entry(self, log_entry: str, priority: int = 3, secrecy: SecrecyLevel = SecrecyLevel.MODS_AND_DEVS_ONLY, extra_info: dict | None = None, secrecy: int = 0):
+    def add_log_entry(self, log_entry: str, priority: int = 3, secrecy: SecrecyLevel = SecrecyLevel.MODS_AND_DEVS_ONLY, extra_info: dict | None = None):
         if extra_info is None:
             extra_info = dict()
         if not isinstance(extra_info, dict):
@@ -254,7 +254,7 @@ class AppendingFileLog(AuditLog):
         if extra_info is None:
             parsed_extra_info = "{}"
         else:
-            parsed_extra_info = orjson.dumps(extra_info)
+            parsed_extra_info = orjson.dumps(extra_info).decode("utf-8")
         encoded_extra_info = self.encode_log_entry(parsed_extra_info)
         return f"{timestamp} | {priority} | {secrecy.value}| {self.encode_log_entry(log_entry)} | {encoded_extra_info}"
 

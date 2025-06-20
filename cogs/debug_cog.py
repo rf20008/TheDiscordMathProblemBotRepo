@@ -425,3 +425,4 @@ class DebugCog(HelperCog):
             await inter.send("The bot is now stopping!")
 
         await self.bot.close()
+        exit()

@@ -32,11 +32,13 @@ import datetime
 import disnake
 import traceback
 import sys
-from sys import stderr, stdout,
+import os
+from sys import stderr, stdout
 from disnake.ext import commands, tasks
 
 import helpful_modules
 from helpful_modules import problems_module
+from helpful_modules.base_on_error import base_on_error
 from helpful_modules.constants_loader import BotConstants
 from helpful_modules.problems_module import GuildData, AppealQuestion
 from helpful_modules.problems_module import MathProblemCache, RedisCache
@@ -54,7 +56,7 @@ from .FileDictionaryReader import AsyncFileDict
 from .message_queue import MessageQueue
 from .StatsTrack import CommandStats, CommandUsage, StreamWrapperStorer
 from .threads_or_useful_funcs import modified_async_wrap
-
+print(os.getpid())
 WAIT = True
 TIME_TO_WAIT = 25
 ANNOUNCEMENTS_CHANNEL = 960725589260652588
@@ -70,7 +72,6 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
     tasks: list[str: disnake.ext.tasks.Loop]
     config_json: AsyncFileDict
     trusted_users: list[int] | None
-    _on_ready_func: typing.Callable
     cache: MathProblemCache | RedisCache
     constants: BotConstants
     audit_log: AuditLog
@@ -89,9 +90,6 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         self.config_json = AsyncFileDict("config.json")
         self.storer = kwargs.pop("storer")
         self.trusted_users = kwargs.pop("trusted_users")
-        self._on_ready_func = kwargs.pop(
-            "on_ready_func"
-        )  # Will be called when the bot is ready (with an argument of itself
         cache = kwargs.pop("cache")
         self.cache = (
             cache
@@ -156,7 +154,33 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
             self.owner_ids = {member.id for member in self.app_info.team.members}
         else:
             self.owner_id = self.app_info.owner
-        await self._on_ready_func(self)
+
+        """Ran when the disnake library detects that the bot is ready"""
+        app_info = await self.application_info()
+        print("The bot is now ready!")
+        print(f"I connected as {self.user.name}#{self.user.discriminator}.")
+        print(
+            f"My owner id is {self.owner_id if self.owner_id is not None else app_info.owner.id}!"
+        )
+        print(
+            f"I am able to connect {self.session_start_limit.total} times before being prohibited today."
+        )
+        if self.owner_id is None and app_info.owner.id is not None:
+            self.owner_id = app_info.owner.id
+
+        print(f"My owner ids are {self.owner_ids}")
+        try:
+            await self.register_appeal_views()
+        except BaseExceptionGroup as begroup:
+            self.log.exception(
+                "Exceptions happened while trying to register appeal views:", begroup
+            )
+            await log_error(begroup)
+        except Exception as e:
+            self.log.exception(
+                "The following exception happened while trying to register appeal views:", e
+            )
+            await log_error(e)
 
     async def owns_and_is_trusted(self, user: disnake.User):
         return await self.is_trusted(user) and await self.is_owner(user)
@@ -171,7 +195,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         try:
 
             self.is_closing = True
-
+            await self.audit_log.clear_buffer()
             await self.queue.stop(
                 msg="Bot is closing",
                 empty=True,
@@ -197,6 +221,11 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
             print(f"An exception of {e} happened while the bot was trying to close.")
             self.log.exception(e)
             await log_error(e)
+            await asyncio.sleep(3)
+        except KeyboardInterrupt as err:
+            print(f"An exception of {err} happened while the bot was trying to close.")
+            self.log.exception(err)
+            await log_error(err)
             await asyncio.sleep(3)
         finally:
             await super().close()
@@ -537,6 +566,8 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
     async def on_slash_command_error(self, inter, error):
         """Function called when a slash command errors, which will inevitably happen. All the functionality was moved to base_on_error :-)"""
         # print the traceback to the file
+        if isinstance(error, KeyboardInterrupt):
+            raise error
         try:
             dict_args = await base_on_error(inter, error)
         except Exception as e:
@@ -566,7 +597,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
 
     async def on_error(self, event, *args, **kwargs):
         print(f"Error in {event}... uh oh", file=stderr)
-        error = exc_info()
+        error = sys.exc_info()
         # print the traceback to the file
         print(
             "\n".join(traceback.format_exception(*error)),
@@ -586,7 +617,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
 
         print("The bot has connected to Discord successfully.")
         await asyncio.sleep(0.5)
-        bot.get_cog("HelpCog").update_cached_command_dict()
+        self.get_cog("HelpCog").update_cached_command_dict()
         await self.change_presence(
             status=disnake.Status.idle,
         )

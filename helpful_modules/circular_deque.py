@@ -217,8 +217,8 @@ class CircularDeque:
         Raises:
             ValueError: If resizing would result in data loss and allow_data_loss is False.
         """
-        if len(self) < new_size and not allow_data_loss:
-            raise ValueError("Data would be lost by this resize!")
+        if len(self) > new_size and not allow_data_loss:
+            raise ValueError(f"Data would be lost by this resize! The old size is {self.size} and the new size is {new_size}")
         old_size = min(self.size, new_size)
         new_data = [None for _ in range(new_size)]
         for i in range(old_size):
@@ -556,4 +556,6 @@ class CircularDeque:
         self.size -= 1
         self.data[(self.front + self.size) % self.capacity] = None  # Clear the last element
     def empty(self):
-        return self.size() == 0
+        return self.size == 0
+    def __str__(self):
+        return str([item for item in self])

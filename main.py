@@ -199,33 +199,7 @@ def get_git_revision_hash() -> str:
 
 
 # @bot.event
-async def on_ready(bot: TheDiscordMathProblemBot):
-    """Ran when the disnake library detects that the bot is ready"""
-    app_info = await bot.application_info()
-    print("The bot is now ready!")
-    print(f"I connected as {bot.user.name}#{bot.user.discriminator}.")
-    print(
-        f"My owner id is {bot.owner_id if bot.owner_id is not None else app_info.owner.id}!"
-    )
-    print(
-        f"I am able to connect {bot.session_start_limit.total} times before being prohibited today."
-    )
-    if bot.owner_id is None and app_info.owner.id is not None:
-        bot.owner_id = app_info.owner.id
 
-    print(f"My owner ids are {bot.owner_ids}")
-    try:
-        await bot.register_appeal_views()
-    except BaseExceptionGroup as begroup:
-        bot.log.exception(
-            "Exceptions happened while trying to register appeal views:", begroup
-        )
-        await log_error(begroup)
-    except Exception as e:
-        bot.log.exception(
-            "The following exception happened while trying to register appeal views:", e
-        )
-        await log_error(e)
 
 
 # Bot creation
@@ -245,7 +219,6 @@ bot = TheDiscordMathProblemBot(
     constants=bot_constants,
     trusted_users=copy(trusted_users),
     tasks={},
-    on_ready_func=on_ready,
     loop=loop,
     # activity = nextcord.CustomActivity(name="Making sure that the bot works!", emoji = "🙂") # This didn't work anyway, will set the activity in on_connect
 )

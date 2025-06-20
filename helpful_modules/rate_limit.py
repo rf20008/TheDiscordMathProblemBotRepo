@@ -1,5 +1,6 @@
 import disnake
 import time
+import traceback
 import disnake.ext.commands
 from .circular_deque import CircularDeque
 from .problems_module import UserData, DenylistType
@@ -10,7 +11,7 @@ ONE_HOUR = 60 * ONE_MINUTE
 ONE_DAY = 24 * ONE_HOUR
 ONE_WEEK = 7 * ONE_DAY
 LIMITS = {
-    "day": 1440,
+    "day": 1,
     "minute": 15,
     "hour": 250,
     "second": 5,
@@ -21,13 +22,14 @@ usage_deque: CircularDeque = CircularDeque([])
 DEQUES: dict[int, CircularDeque] = {}
 async def autoban(user: disnake.User, bot: TheDiscordMathProblemBot, duration: float = 30.0, reason: str = "You've been temporarily denylisted for using the bot too much recently. "):
     user_info: UserData = await bot.cache.get_user_data(user.id, default = None)
+    bot.audit_log.add_log_entry(f"Autoban of {user.id} by {bot} for {duration} seconds because {reason}")
     if user_info.is_denylisted():
         return
     user_info.denylist(
         reason=reason,
         duration=duration,
         denylist_type=DenylistType.GENERAL_USER_DENYLIST,
-        denylisting_moderator=bot.user.id,
+        denylisting_moderator=str(bot.user.name),
     )
     await bot.cache.set_user_data(user.id, user_info)
 
@@ -36,32 +38,39 @@ class RateLimitedException(disnake.ext.commands.CheckFailure):
     pass
 def rate_limit_check():
     async def predicate(inter: disnake.ApplicationCommandInteraction):
-        if not isinstance(inter, TheDiscordMathProblemBot):
-            raise TypeError
-
+        if not isinstance(inter.bot, TheDiscordMathProblemBot):
+            await inter.send("The bot ran into an error.")
+            raise TypeError()
         cur_time = time.time()
-        BEFORE = time.time() - ONE_DAY
-        inter.bot.audit_log.add_log_entry(
-            "Someone used a command! We are checking the rate limit",
-            extra_info={
-                "user": inter.author.id,
-                "user_mention": inter.author.mention,
-                "guild_id": inter.guild_id,
-                "guild_name": inter.guild.name if inter.guild else "No Name",
-                "channel": inter.channel.id,
-                "command_name": inter.command.qualified_name,
-                "arguments": inter.options
-            }
-        )
+        BEFORE = cur_time - ONE_DAY
+        try:
+            command_name = inter.application_command.qualified_name if hasattr(inter, "application_command") and isinstance(inter.application_command, disnake.ext.commands.InvokableApplicationCommand)  else "Unknown Command"
+            # log the checking rate limit
+            inter.bot.audit_log.add_log_entry(
+                "Someone used a command! We are checking the rate limit",
+                extra_info={
+                    "user": inter.author.id,
+                    "user_mention": inter.author.mention,
+                    "guild_id": inter.guild_id,
+                    "guild_name": inter.guild.name if inter.guild else "No Name",
+                    "channel": inter.channel.id,
+                    "command_name": command_name,
+                    "arguments": inter.options
+                }
+            )
+        except KeyboardInterrupt:
+            exit()
+        except Exception as e:
+            await inter.send(f"THe bot ran into an error.\n{'\n'.join(traceback.format_exception(e))}")
+            raise e
         usage_deque.append_right(cur_time)
-
         if inter.author.id not in DEQUES.keys():
             DEQUES[inter.author.id] = CircularDeque([time.time()])
         else:
             DEQUES[inter.author.id].append_right(cur_time)
-        while not DEQUES[inter.author.id].empty() and DEQUES[inter.author.id].left() < BEFORE:
+        while not DEQUES[inter.author.id].empty() and DEQUES[inter.author.id].left < BEFORE:
             DEQUES[inter.author.id].pop_left()
-        while not usage_deque.empty() and usage_deque.left() < cur_time - ONE_MINUTE:
+        while not usage_deque.empty() and usage_deque.left < cur_time - ONE_MINUTE:
             usage_deque.pop_left()
         if len(usage_deque) > GLOBAL_LIMIT_PER_MIN:
             raise RateLimitedException("The bot is currently experiencing a high volume of commands. Please try again later.")
@@ -69,7 +78,7 @@ def rate_limit_check():
             await autoban(
                 user=inter.author,
                 bot=inter.bot,
-                duration = ONE_DAY,
+                duration = float(ONE_DAY),
                 reason = (
                     f"You have been automatically denylisted for using the bot {LIMITS['day']} times in a day. "
                     "This denylist is appealable, and we hope that your appeal will be reviewed, but beware: \n\n"
@@ -85,9 +94,8 @@ def rate_limit_check():
             raise RateLimitedException("You have been denylisted for using the bot too many times today. Please try again later. "
                                        "This denylist is appealable, but you will be automatically denylisted again if you appeal.")
         for unit, duration in (("second", 1), ("minute", ONE_MINUTE), ("hour", ONE_HOUR), ("day", ONE_DAY)):
-            times_last_unit = len(DEQUES[inter.author.id]) - last_true(0, len(DEQUES[inter.author.id]), lambda t: t < cur_time - duration)
+            times_last_unit = len(DEQUES[inter.author.id]) - last_true(0, len(DEQUES[inter.author.id]), lambda idx: DEQUES[inter.author.id][idx]  <= cur_time - duration)
             if times_last_unit > LIMITS[unit]:
                 raise RateLimitedException(f"You've used the bot too many times in the last {unit}. Please try again later.")
-
         return True
     return predicate

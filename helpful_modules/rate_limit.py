@@ -87,7 +87,7 @@ class RateLimiter: # todo: more rate limits
             raise TypeError("does_user_bypass must be callable.")
         self.does_user_bypass = does_user_bypass
         self.global_deque = CircularDeque([])
-        self.user_deques = CircularDeque([])
+        self.user_deques = {}
 
     async def maybe_await(self, func, *args, **kwargs):
         result = func(*args, **kwargs)

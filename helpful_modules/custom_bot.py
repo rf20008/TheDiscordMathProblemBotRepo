@@ -80,6 +80,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
     total_stats: CommandStats | None
     queue: MessageQueue
     closing_things: list[typing.Callable]
+    rate_limiters: list["RateLimiters"]
 
     def __init__(self, *args, **kwargs):
         self.is_closing = False
@@ -124,6 +125,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         #    raise TypeError("trusted_users was not found")
         # self.denylisted_users = kwargs.get("denylisted_users", [])
         self.closing_things = []
+        self.rate_limiters = []
 
     @property
     def support_server(self):

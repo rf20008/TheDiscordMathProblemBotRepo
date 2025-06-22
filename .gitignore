@@ -209,3 +209,5 @@ stderr.txt
 *.db
 audit_log.txt
 !appeal_questions.json
+!helpful_modules/arithmetic_evaluator.py
+!**/*.py

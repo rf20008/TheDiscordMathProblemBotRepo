@@ -40,6 +40,14 @@ log = get_log(__name__)
 
 # Licensed under GPLv3 (or later)
 # TODO: implement everything!
+# TODO: implement a function that's called create_quiz which scours the database for N questions (but only questions that this user has access to),
+#  makes an compiled impromptu quiz, and then gives it to the user
+
+# TODO: use mongo db to store the database (as part of the bot, it would query the mongodb and the answer to the question (some could have 1 answer, 100 answrs)
+#  because sql works only for structured data that all have the same format (these almost have the same format, but there are differences because there are
+#  different types of problems like the Computational problem, THe LinearAlgebraProblem, and I'm thinking of adding a Sudoku Problem, a Diophantine Equation Problem
+
+
 
 
 class QuizCog(HelperCog):
@@ -76,6 +84,7 @@ class QuizCog(HelperCog):
         Creates a quiz from JSON. I suggest you do not use this.
         /quiz create blank
         Creates a blank quiz."""
+        raise NotImplementedError
 
     @create.sub_command(
         name="from_json",

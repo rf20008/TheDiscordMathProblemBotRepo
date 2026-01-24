@@ -50,7 +50,7 @@ class PaginatorPageViewModal(disnake.ui.Modal):
         error_tb = "".join(traceback.format_exc(error))
 
         await log_error(error)
-        await self.original_inter.send(embed=ErrorEmbed(f"An error occured! The error was {e} and its traceback is error_tb"))
+        await self.original_inter.send(embed=ErrorEmbed(f"An error occurred! The error was {error} and its traceback is {error_tb}"))
 
     async def on_timeout(self: "PaginatorPageViewModal"):
         await self.original_inter.send(
@@ -76,7 +76,7 @@ class PaginatorPageViewModal(disnake.ui.Modal):
                 ephemeral=True,
             )
             return
-        if page_num < 1 or page_num >= len(self.paginator.pages):
+        if page_num < 1 or page_num > len(self.paginator.pages):
             await inter.send(
                 embed=ErrorEmbed(
                     f"Your page number is out of bounds. There are only {len(self.paginator.pages)} pages"

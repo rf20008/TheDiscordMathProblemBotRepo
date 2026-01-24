@@ -66,7 +66,6 @@ associativity = {
     "TIMES": "left",
     "*": "left",
     "DIVIDE": "left",
-    "^": "left",
     "BITWISE_AND": "left",
     "&": "left",
     "BITWISE_OR": "left",
@@ -80,7 +79,7 @@ associativity = {
 @dataclasses.dataclass
 class Token:
     token_type: TokenType
-    token_value: str
+    token_value: str | int | float
     def is_operand(self):
         return self.token_type.is_operand()
     def is_number(self):
@@ -90,11 +89,15 @@ def tokenizeregex(expression: str) -> list[Token]:
         raise TypeError("expression must be a string")
     tokens: list[Token] = []
     nesting_level = 0
-    for potential_match in re.finditer(r'\.\d+|\d+(?:\.\d*)?|\+|-|\*|/|\(|\)|\^|&|\|%|\$', expression):
+    for potential_match in re.finditer(r'\.\d+|\d+(?:\.\d*)?|\+|-|\*|/|\(|\)|\^|&|\||\%|\$', expression):
         token_str = potential_match.group()
         token_type: TokenType = TokenType.INVALID
         if token_str.isdigit():
+            if len(token_str) > 20:
+                raise ValueError("Tokens must be less than 20 characters long")
             token_value = int(token_str)
+            if abs(token_value) > 2**64:
+                raise ValueError("Tokens must be less in absolute value than 2**64")
             token_type = TokenType.NUMBER
         elif token_str.isalpha():
             raise ValueError("Variables are not allowed!")
@@ -135,6 +138,8 @@ def tokenizeregex(expression: str) -> list[Token]:
             token_value = "%"
         else:
             if bool(re.fullmatch(r"^\.\d+|\d+(?:\.\d*)?$", token_str)):
+                if len(token_str) > 40:
+                    raise ValueError("Tokens must be less than 40 characters long")
                 token_value = float(token_str)
                 token_type = TokenType.NUMBER
             else:
@@ -216,7 +221,7 @@ def shunting_yard(tokens: list[Token]) -> list[Token]:
                     raise ValueError(f"Unknown token: {item}")
     return L
 def evaluate_RPN(tokens):
-    print("Entered EVALUATION!")
+    #print(f"Entered EVALUATION! {tokens}")
     stack = []
     for token in tokens:
         #print(stack)
@@ -275,9 +280,11 @@ def evaluate_expr(expression):
 #assert evaluate_expr("3+4")==7
 expression = input("Enter an expression: ")
 tokens = tokenizeregex(expression)
+#print(tokens)
 output_queue = shunting_yard(tokens)
 #print(output_queue)
 answer = evaluate_RPN(output_queue)
+print(answer)
 print(f"{tokens}\n{output_queue}\n{answer}")
 
 

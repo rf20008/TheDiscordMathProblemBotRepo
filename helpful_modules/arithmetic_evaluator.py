@@ -91,6 +91,8 @@ class UnaryOperator(enum.StrEnum):
     BNOT = "not"
     def __str__(self):
         return self.value
+    def __call__(self, thing: complex|float|int) -> complex|float|int:
+        return self.evaluate(thing)
     def evaluate(self, thing: complex | float | int) -> complex:
         match self.value:
             case "sin":
@@ -136,14 +138,8 @@ class UnaryOperator(enum.StrEnum):
             case "neg":
                 return -thing
             case "not":
-                if isinstance(thing, complex):
-                    if thing.imag != 0:
-                        raise ValueError(f"{thing} is a non-real number")
-                    else:
-                        thing = thing.real
-                if not isinstance(thing, int) and not thing.is_integer():
-                    raise ValueError(f"{thing} is not an integer thus ~{thing} does not exist")
-                return ~int(thing)
+
+                return ~as_int(thing)
             case _:
                 raise ValueError(f"Unknown operator: {self.value}")
 
@@ -197,6 +193,7 @@ associativity = {
     "-": "left",
     "TIMES": "left",
     "*": "left",
+    "/": "left",
     "DIVIDE": "left",
     "BITWISE_AND": "left",
     "&": "left",
@@ -352,7 +349,7 @@ def evaluate_RPN(tokens):
             operand = stack.pop().token_value
             result = token.token_value(operand)
             if abs(result)>=2**64:
-                raise ValueError(f"All results must be less in absolute value than 2**64, but your result={result}>{2**64}")
+                raise OverflowError(f"All results must be less in absolute value than 2**64, but your result={result}>{2**64}")
             stack.append(Token(TokenType.NUMBER, result))
         elif token.token_type == TokenType.BINARY_OPERATOR:
             if len(stack) < 2:
@@ -368,7 +365,7 @@ def evaluate_RPN(tokens):
             assert isinstance(token.token_value, BinaryOperator)
             result = token.token_value(op_1, op_2) # type: ignore
             if abs(result)>=2**64:
-                raise ValueError(f"All results must be less in absolute value than 2**64, but your result={result}>{2**64}")
+                raise OverflowError(f"All results must be less in absolute value than 2**64, but your result={result}>{2**64}")
             stack.append(Token(TokenType.NUMBER, result))
     if len(stack) != 1:
         raise ValueError(f"Invalid expression: {stack}")

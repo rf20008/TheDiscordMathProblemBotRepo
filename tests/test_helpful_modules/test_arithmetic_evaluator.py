@@ -27,7 +27,7 @@ import unittest.mock
 
 from helpful_modules import arithmetic_evaluator
 from helpful_modules.arithmetic_evaluator import (
-    as_int, Token, TokenType, BinaryOperator, UnaryOperator, tokenizeregex, ALL_BINARY_OPERATORS, ALL_UNARY_OPERATORS, ALL_OPERATORS
+    as_int, Token, TokenType, BinaryOperator, UnaryOperator, tokenizeregex, ALL_BINARY_OPERATORS, ALL_UNARY_OPERATORS, ALL_OPERATORS, shunting_yard, evaluate_RPN, evaluate_expr
 )
 
 class TestTokenType(unittest.TestCase):
@@ -491,5 +491,285 @@ class TestTokenizer(unittest.TestCase):
         self.assertEqual(TOKENS[0], Token(TokenType.NUMBER, 3))
         self.assertEqual(TOKENS[1], Token(TokenType.BINARY_OPERATOR, BinaryOperator.PLUS))
         self.assertEqual(TOKENS[2], Token(TokenType.NUMBER, 4))
+class TestShuntingYard(unittest.TestCase):
+
+    def assertRPN(self, tokens, expected_values):
+        """Helper to compare token values in RPN output"""
+        output = shunting_yard(tokens)
+        result = [t.token_value if t.token_type != TokenType.NUMBER else t.token_value for t in output]
+        self.assertEqual(result, expected_values)
+
+    # ------------------------------
+    # Simple number
+    # ------------------------------
+    def test_single_number(self):
+        tokens = tokenizeregex("42")
+        self.assertRPN(tokens, [42])
+
+    # ------------------------------
+    # Simple binary operations
+    # ------------------------------
+    def test_simple_add(self):
+        tokens = tokenizeregex("1+2")
+        self.assertRPN(tokens, [1, 2, '+'])
+
+    def test_simple_subtract(self):
+        tokens = tokenizeregex("5-3")
+        self.assertRPN(tokens, [5, 3, '-'])
+
+    def test_simple_multiply(self):
+        tokens = tokenizeregex("2*4")
+        self.assertRPN(tokens, [2, 4, '*'])
+
+    def test_simple_divide(self):
+        tokens = tokenizeregex("8/2")
+        self.assertRPN(tokens, [8, 2, '/'])
+
+    # ------------------------------
+    # Operator precedence
+    # ------------------------------
+    def test_precedence_mixed(self):
+        tokens = tokenizeregex("1+2*3")
+        # '*' has higher precedence than '+'
+        self.assertRPN(tokens, [1, 2, 3, '*', '+'])
+
+    def test_precedence_with_parens(self):
+        tokens = tokenizeregex("(1+2)*3")
+        # parentheses force addition first
+        self.assertRPN(tokens, [1, 2, '+', 3, '*'])
+
+    # ------------------------------
+    # Multiple operators same precedence
+    # ------------------------------
+    def test_left_associativity(self):
+        tokens = tokenizeregex("5-3-1")
+        # left-associative: (5-3)-1
+        self.assertRPN(tokens, [5, 3, '-', 1, '-'])
+
+    def test_mixed_same_precedence(self):
+        tokens = tokenizeregex("4+2-1")
+        # left-associative: ((4+2)-1)
+        self.assertRPN(tokens, [4, 2, '+', 1, '-'])
+
+    # ------------------------------
+    # Nested parentheses
+    # ------------------------------
+    def test_nested_parentheses(self):
+        tokens = tokenizeregex("((1+2)*(3-4))")
+        self.assertRPN(tokens, [1, 2, '+', 3, 4, '-', '*'])
+
+    def test_deeply_nested(self):
+        tokens = tokenizeregex("(((1+2)+3)*((4-5)/6))")
+        self.assertRPN(tokens, [1, 2, '+', 3, '+', 4, 5, '-', 6, '/', '*'])
+
+    # ------------------------------
+    # Mismatched parentheses
+    # ------------------------------
+    def test_extra_left_paren(self):
+
+        with self.assertRaises(ValueError):
+            tokens = tokenizeregex("((1+2)")
+            shunting_yard(tokens)
+
+    def test_extra_right_paren(self):
+        tokens = tokenizeregex("(1+2))")
+        with self.assertRaises(ValueError):
+            shunting_yard(tokens)
+
+    # ------------------------------
+    # Single number in parentheses
+    # ------------------------------
+    def test_number_in_parens(self):
+        tokens = tokenizeregex("(42)")
+        self.assertRPN(tokens, [42])
+
+    # ------------------------------
+    # Multiple same-precedence operators
+    # ------------------------------
+    def test_multiplication_and_division(self):
+        tokens = tokenizeregex("8*2/4")
+        # left-associative: ((8*2)/4)
+        self.assertRPN(tokens, [8, 2, '*', 4, '/'])
+
+    def test_addition_and_subtraction(self):
+        tokens = tokenizeregex("7+3-2")
+        # left-associative: ((7+3)-2)
+        self.assertRPN(tokens, [7, 3, '+', 2, '-'])
+
+class TestEvaluateRPN(unittest.TestCase):
+
+    def evalRPN_helper(self, expression, expected):
+        tokens = shunting_yard(tokenizeregex(expression))
+        result = evaluate_RPN(tokens)
+        self.assertEqual(result, expected)
+
+    # ------------------------------
+    # Simple numbers
+    # ------------------------------
+    def test_single_number(self):
+        self.evalRPN_helper("42", 42)
+
+    # ------------------------------
+    # Simple binary operations
+    # ------------------------------
+    def test_addition(self):
+        self.evalRPN_helper("1+2", 3)
+
+    def test_subtraction(self):
+        self.evalRPN_helper("5-3", 2)
+
+    def test_multiplication(self):
+        self.evalRPN_helper("2*3", 6)
+
+    def test_division(self):
+        self.evalRPN_helper("8/2", 4)
+
+    # ------------------------------
+    # Mixed operations with precedence
+    # ------------------------------
+    def test_mixed_precedence(self):
+        self.evalRPN_helper("1+2*3", 7)
+
+    def test_parentheses_precedence(self):
+        self.evalRPN_helper("(1+2)*3", 9)
+
+    # ------------------------------
+    # Multiple same-precedence operators
+    # ------------------------------
+    def test_left_associativity(self):
+        self.evalRPN_helper("5-3-1", 1)
+
+    def test_multiple_multiplication_division(self):
+        self.evalRPN_helper("8*2/4", 4)
+
+    # ------------------------------
+    # Overflow check
+    # ------------------------------
+    def test_overflow_1(self):
+        big = 2**63
+        tokens = [Token(TokenType.NUMBER, big), Token(TokenType.NUMBER, 2),
+                  Token(TokenType.BINARY_OPERATOR, BinaryOperator("*"))]
+        with self.assertRaises(OverflowError):
+            evaluate_RPN(tokens)
+
+    # ------------------------------
+    # Not enough operands
+    # ------------------------------
+    def test_not_enough_operands(self):
+        tokens = [Token(TokenType.BINARY_OPERATOR, BinaryOperator("+"))]
+        with self.assertRaises(ValueError):
+            evaluate_RPN(tokens)
+
+        tokens = [Token(TokenType.NUMBER, 1), Token(TokenType.BINARY_OPERATOR, BinaryOperator("+"))]
+        with self.assertRaises(ValueError):
+            evaluate_RPN(tokens)
+
+    # ------------------------------
+    # Invalid final stack size
+    # ------------------------------
+    def test_final_stack_not_one(self):
+        tokens = [Token(TokenType.NUMBER, 1), Token(TokenType.NUMBER, 2)]
+        with self.assertRaises(ValueError):
+            evaluate_RPN(tokens)
+
+    def test_single_number(self):
+        tokens = [Token(TokenType.NUMBER, 42)]
+        result = evaluate_RPN(tokens)
+        self.assertEqual(result, 42)
+
+    def test_simple_addition(self):
+        tokens = [
+            Token(TokenType.NUMBER, 1),
+            Token(TokenType.NUMBER, 2),
+            Token(TokenType.BINARY_OPERATOR, BinaryOperator("+"))
+        ]
+        result = evaluate_RPN(tokens)
+        self.assertEqual(result, 3)
+
+    def test_simple_multiplication(self):
+        tokens = [
+            Token(TokenType.NUMBER, 2),
+            Token(TokenType.NUMBER, 3),
+            Token(TokenType.BINARY_OPERATOR, BinaryOperator("*"))
+        ]
+        result = evaluate_RPN(tokens)
+        self.assertEqual(result, 6)
+
+    def test_multiple_operations(self):
+        # expression: 1 2 3 * +  => 1 + (2*3) = 7
+        tokens = [
+            Token(TokenType.NUMBER, 1),
+            Token(TokenType.NUMBER, 2),
+            Token(TokenType.NUMBER, 3),
+            Token(TokenType.BINARY_OPERATOR, BinaryOperator("*")),
+            Token(TokenType.BINARY_OPERATOR, BinaryOperator("+"))
+        ]
+        result = evaluate_RPN(tokens)
+        self.assertEqual(result, 7)
+
+    def test_not_enough_operands(self):
+        tokens = [Token(TokenType.BINARY_OPERATOR, BinaryOperator("+"))]
+        with self.assertRaises(ValueError):
+            evaluate_RPN(tokens)
+
+    def test_too_many_operands_left(self):
+        tokens = [
+            Token(TokenType.NUMBER, 1),
+            Token(TokenType.NUMBER, 2)
+        ]
+        with self.assertRaises(ValueError):
+            evaluate_RPN(tokens)
+
+    def test_overflow_2(self):
+        big = 2 ** 63
+        tokens = [
+            Token(TokenType.NUMBER, big),
+            Token(TokenType.NUMBER, 2),
+            Token(TokenType.BINARY_OPERATOR, BinaryOperator("*"))
+        ]
+        with self.assertRaises(OverflowError):
+            evaluate_RPN(tokens)
+
+    def eval_expr(self, expression, expected):
+        """Tokenize, convert to RPN, then evaluate"""
+        tokens = tokenizeregex(expression)
+        rpn = shunting_yard(tokens)
+        result = evaluate_RPN(rpn)
+        self.assertAlmostEqual(result, expected, places=10)  # allow float rounding
+    def test_sin_exp(self):
+        self.eval_expr("sin(5)", math.sin(5))
+
+    @unittest.mock.patch("helpful_modules.arithmetic_evaluator.evaluate_RPN")
+    @unittest.mock.patch("helpful_modules.arithmetic_evaluator.shunting_yard")
+    @unittest.mock.patch("helpful_modules.arithmetic_evaluator.tokenizeregex")
+    def test_call_order(self, mock_tokenize, mock_shunting, mock_eval):
+        # Arrange: set return values
+        mock_tokenize.return_value = ["TOKENS"]
+        mock_shunting.return_value = ["RPN"]
+        mock_eval.return_value = 42
+
+        # Act
+        result = evaluate_expr("1+2")
+
+        # Assert final value is returned correctly
+        self.assertEqual(result, 42)
+
+        # Assert each function called once
+        mock_tokenize.assert_called_once_with("1+2")
+        mock_shunting.assert_called_once_with(["TOKENS"])
+        mock_eval.assert_called_once_with(["RPN"])
+
+        # Assert call order
+        calls = [
+            unittest.mock.call("1+2"),  # tokenizeregex called first
+            unittest.mock.call(["TOKENS"]),  # shunting_yard called second
+            unittest.mock.call(["RPN"])  # evaluate_RPN called last
+        ]
+
+        # Check order using mock_calls
+        self.assertEqual(
+            [mock_tokenize.call_args, mock_shunting.call_args, mock_eval.call_args],
+            calls
+        )
 if __name__ == "__main__":
     unittest.main()

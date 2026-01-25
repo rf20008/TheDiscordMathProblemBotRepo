@@ -771,5 +771,9 @@ class TestEvaluateRPN(unittest.TestCase):
             [mock_tokenize.call_args, mock_shunting.call_args, mock_eval.call_args],
             calls
         )
+    def test_fails_ERROR(self):
+        with self.assertRaises(Exception) as cm:
+            evaluate_expr("1.2.3")
+        #print(cm.exception)
 if __name__ == "__main__":
     unittest.main()

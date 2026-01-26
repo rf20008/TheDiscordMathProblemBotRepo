@@ -559,7 +559,7 @@ class TestShuntingYard(unittest.TestCase):
     # ------------------------------
     def test_nested_parentheses(self):
         tokens = tokenizeregex("((1+2)*(3-4))")
-        print(tokens)
+        print("\n".join(map(str,tokens)))
         self.assertRPN(tokens, [1, 2, '+', 3, 4, '-', '*'])
 
     def test_deeply_nested(self):

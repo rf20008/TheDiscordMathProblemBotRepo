@@ -298,7 +298,7 @@ def shunting_yard(tokens: list[Token]) -> list[Token]:
         raise TypeError("`tokens` must be a sequence of Tokens")
     output_queue = collections.deque()
     operator_stack = []
-    for token in tokens:
+    for i, token in enumerate(tokens):
         if token.token_type == TokenType.NUMBER:
             output_queue.append(token)
             continue
@@ -323,17 +323,14 @@ def shunting_yard(tokens: list[Token]) -> list[Token]:
             operator_stack.append(token)
             continue
         elif token.token_type == TokenType.RIGHT_PARENTHESIS:
-
             while len(operator_stack)>0 and operator_stack[-1].token_type != TokenType.LEFT_PARENTHESIS:
                 if len(operator_stack) == 0:
                     raise ArithmeticSyntaxError("Mismatched parenthesis")
-                #print('hehe', operator_stack)
                 output_queue.append(operator_stack.pop())
-            #print('haha', operator_stack)
             if not (len(operator_stack)>0 and operator_stack[-1].token_type == TokenType.LEFT_PARENTHESIS):
-                raise ArithmeticSyntaxError(f"Mismatched parenthesis. Top token is {operator_stack[-1] if len(operator_stack)>0 else '(operator stack empty)'}")
+                raise ArithmeticSyntaxError(f"Mismatched parenthesis. On token#{i}, operator stack is: {operator_stack} and output queue is: {output_queue}")
             operator_stack.pop()
-            if len(operator_stack) > 0 and operator_stack[-1].token_type != TokenType.UNARY_OPERATOR:
+            if len(operator_stack) > 0 and operator_stack[-1].token_type == TokenType.UNARY_OPERATOR:
                 output_queue.append(operator_stack.pop())
     while len(operator_stack) > 0:
         if operator_stack[-1].is_parenthesis():

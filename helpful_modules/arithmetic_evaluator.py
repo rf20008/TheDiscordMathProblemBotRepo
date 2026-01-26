@@ -23,21 +23,23 @@ import collections
 import math
 import cmath
 import sys
-from unittest import case
 
+
+from .errors import CalculatorError, ArithmeticTypeError, ArithmeticSyntaxError, ArithmeticOverflowError, DomainError, CalculatorZeroDivisionError
 MAX_FLOAT = sys.float_info.max
 MAX_LN = math.log(MAX_FLOAT)
 def as_int(x: float | complex | int) -> int:
     if not isinstance(x, (float, complex, int)):
-        raise TypeError("x is not a float, complex, or int")
+        raise ArithmeticTypeError("x is not a float, complex, or int")
     if isinstance(x, complex):
         if x.imag != 0:
-            raise TypeError("x is not an integer as it is nonreal")
+            raise ArithmeticTypeError("x is not an integer as it is nonreal")
         x = x.real
     if isinstance(x, float):
         if not x.is_integer():
-            raise TypeError("x is not an integer")
+            raise ArithmeticTypeError("x is not an integer")
     return int(x)
+
 
 class TokenType(enum.StrEnum):
     NUMBER = "NUMBER"
@@ -109,7 +111,7 @@ class UnaryOperator(enum.StrEnum):
                 return 1/cmath.cos(thing)
             case "exp":
                 if abs(thing.real) > MAX_LN:
-                    raise ValueError(f"Exponent of {thing} is too large")
+                    raise ArithmeticOverflowError(f"Exponent of {thing} is too large")
                 return cmath.exp(thing)
             case "sqrt":
                 return cmath.sqrt(thing)
@@ -125,23 +127,22 @@ class UnaryOperator(enum.StrEnum):
                 return pow(thing, 1/3)
             case "floor":
                 if thing.imag != 0:
-                    raise ValueError(f"Floor of {thing} does not exist as it is complex")
+                    raise DomainError("Floor of {thing} does not exist as it is complex")
                 return complex(math.floor(thing.real))
             case "ceil":
                 if thing.imag != 0:
-                    raise ValueError(f"Ceil of {thing} does not exist as it is complex")
+                    raise DomainError(f"Ceil of {thing} does not exist as it is complex")
                 return complex(math.ceil(thing.real))
             case "ln":
                 if thing==0:
-                    raise ValueError(f"Line of {thing} does not exist as it is complex")
+                    raise DomainError(f"The natural logarithm of {thing} does not exist as it is complex")
                 return cmath.log(thing)
             case "neg":
                 return -thing
             case "not":
-
                 return ~as_int(thing)
             case _:
-                raise ValueError(f"Unknown operator: {self.value}")
+                raise ArithmeticSyntaxError(f"Unknown operator: {self.value}")
 
 
 for operator_name in UnaryOperator:
@@ -162,7 +163,7 @@ class BinaryOperator(enum.StrEnum):
         match self.value:
             case "^":
                 if (cmath.log(arg1) * arg2).real >= 64 * math.log(2, math.e):
-                    raise OverflowError(f"{arg1} raised to the {arg2} is too large")
+                    raise ArithmeticOverflowError(f"{arg1} raised to the {arg2} is too large")
                 return arg1 ** arg2
             case "&":
                 return as_int(arg1) & as_int(arg2)
@@ -170,7 +171,7 @@ class BinaryOperator(enum.StrEnum):
                 return as_int(arg1) | as_int(arg2)
             case "%":
                 if arg2 == 0:
-                    raise ZeroDivisionError("Modulo by 0")
+                    raise CalculatorZeroDivisionError("Modulo by 0")
                 return arg1 % arg2
             case "+":
                 return arg1 + arg2
@@ -180,10 +181,10 @@ class BinaryOperator(enum.StrEnum):
                 return arg1 * arg2
             case "/":
                 if arg2 == 0:
-                    raise ZeroDivisionError("Division by 0")
+                    raise CalculatorZeroDivisionError("Division by 0")
                 return arg1 / arg2
             case _:
-                raise ValueError(f"Unknown binary operator: {self.value}")
+                raise ArithmeticSyntaxError(f"Unknown binary operator: {self.value}")
 
 
 associativity = {
@@ -216,7 +217,7 @@ class Token:
         return self.token_type == TokenType.NUMBER
     def evaluate(self):
         if not self.is_number():
-            raise ValueError("Cannot evaluate operand")
+            raise ArithmeticTypeError("Cannot evaluate operand by itself")
         return self.token_value
     def is_parenthesis(self):
         return self.token_type in [TokenType.LEFT_PARENTHESIS, TokenType.RIGHT_PARENTHESIS]
@@ -235,26 +236,32 @@ def tokenizeregex(expression: str) -> list[Token]:
         raise TypeError("expression must be a string")
     tokens: list[Token] = []
     nesting_level = 0
+    end_token = 0
     for potential_match in re.finditer(token_pattern, expression):
+        if potential_match.start() > end_token and expression[end_token:potential_match.start()].strip():
+            PMS = potential_match.start()
+            skipped_part = expression[end_token:PMS]
+            raise ArithmeticSyntaxError(f"Token ({skipped_part}) skipped between position {end_token} and {PMS}")
+        end_token = potential_match.end()
         token_str = potential_match.group()
-        token_type: TokenType = TokenType.INVALID
+        #token_type: TokenType = TokenType.INVALID
         if potential_match.group("NUM"):
             token_type = TokenType.NUMBER
             if token_str.isdigit():
                 if len(token_str) > 20:
-                    raise ValueError("Tokens must be less than 20 characters long")
+                    raise ArithmeticSyntaxError("Tokens must be less than 20 characters long")
                 token_value = int(token_str)
                 if abs(token_value) > 2**64:
-                    raise ValueError("Tokens must be less in absolute value than 2**64")
-
+                    raise ArithmeticOverflowError(f"The token {token_str} is too big. Integer tokens must be less in absolute value than 2**64")
             else:
                 try:
                     if len(token_str) > 40:
-                        raise ValueError("Tokens must be less than 40 characters long")
+                        raise ArithmeticSyntaxError(f"The token {token_str} is too long. Tokens must be less than 40 characters long")
                     token_value = float(token_str)
+                    tokens.append(Token(token_type, token_value))
+                    continue
                 except ValueError:
-                    raise ValueError(f"Invalid token: {token_str}")
-
+                    raise ValueError(f"Invalid token at position {potential_match.start()}: {token_str}")
         elif token_str == "(":
             token_type = TokenType.LEFT_PARENTHESIS
             token_value = "("
@@ -264,31 +271,31 @@ def tokenizeregex(expression: str) -> list[Token]:
             token_value = ")"
             nesting_level -= 1
             if nesting_level < 0:
-                raise ValueError("Invalid expression: too many right parentheses")
+                raise ArithmeticSyntaxError(f"Invalid expression: too many right parentheses at position {potential_match.start()}")
         elif token_str in ALL_BINARY_OPERATORS:
             token_type = TokenType.BINARY_OPERATOR
             token_value = BinaryOperator(token_str)
         elif token_str in ALL_UNARY_OPERATORS:
             token_type = TokenType.UNARY_OPERATOR
             token_value = UnaryOperator(token_str)
-        elif token_str.isalpha():
-            raise ValueError("Variables are not allowed!")
         else:
-            raise ValueError("Unknown token: {token_str}")
+            raise ArithmeticSyntaxError(f"Unknown token at position {potential_match.start()}: {token_str}")
         tokens.append(Token(token_type, token_value))
         if len(tokens)>=2 and tokens[-1].is_operand() and tokens[-2].is_operand():
-            raise ValueError("Invalid expression: two consecutive operands")
+            raise ArithmeticSyntaxError("Invalid expression: two consecutive operands")
     if nesting_level > 0:
-        raise ValueError("Invalid expression: too many left parentheses")
+        raise ArithmeticSyntaxError("Invalid expression: too many left parentheses")
     if nesting_level < 0:
-        raise ValueError("Invalid expression: too many right parentheses")
+        raise ArithmeticSyntaxError("Invalid expression: too many right parentheses")
     if len(tokens)>=1 and tokens[-1].is_operand():
-        raise ValueError("Invalid expression: ending with an operand")
+        raise ArithmeticSyntaxError("Invalid expression: ending with an operator")
     if len(tokens)>=1 and tokens[0].token_type == TokenType.BINARY_OPERATOR:
-        raise ValueError(f"Invalid expression: starting with an operand")
+        raise ArithmeticSyntaxError(f"Invalid expression: starting with an binary operator")
     return tokens
 
 def shunting_yard(tokens: list[Token]) -> list[Token]:
+    if not all(isinstance(token, Token) for token in tokens):
+        raise TypeError("`tokens` must be a sequence of Tokens")
     output_queue = collections.deque()
     operator_stack = []
     for token in tokens:
@@ -311,28 +318,32 @@ def shunting_yard(tokens: list[Token]) -> list[Token]:
             ):
                 output_queue.append(operator_stack.pop())
             operator_stack.append(token)
-            print(operator_stack)
             continue
         elif token.token_type == TokenType.LEFT_PARENTHESIS:
             operator_stack.append(token)
             continue
         elif token.token_type == TokenType.RIGHT_PARENTHESIS:
+
             while len(operator_stack)>0 and operator_stack[-1].token_type != TokenType.LEFT_PARENTHESIS:
                 if len(operator_stack) == 0:
-                    raise ValueError("Mismatched parenthesis")
+                    raise ArithmeticSyntaxError("Mismatched parenthesis")
+                print('hehe', operator_stack)
                 output_queue.append(operator_stack.pop())
-            if len(operator_stack) == 0 or operator_stack[-1].token_type != TokenType.LEFT_PARENTHESIS:
-                raise ValueError("Mismatched parenthesis")
+            print('haha', operator_stack)
+            if not (len(operator_stack)>0 and operator_stack[-1].token_type == TokenType.LEFT_PARENTHESIS):
+                raise ArithmeticSyntaxError(f"Mismatched parenthesis. Top token is {operator_stack[-1]}")
             operator_stack.pop()
             if len(operator_stack) > 0 and operator_stack[-1].token_type != TokenType.UNARY_OPERATOR:
                 output_queue.append(operator_stack.pop())
     while len(operator_stack) > 0:
-
         if operator_stack[-1].is_parenthesis():
-            raise ValueError("Mismatched parenthesis")
+            raise ArithmeticSyntaxError("Mismatched parenthesis")
         output_queue.append(operator_stack.pop())
-    return output_queue
-def evaluate_RPN(tokens):
+    return list(output_queue)
+
+def evaluate_RPN(tokens) -> complex | int | float:
+    if not all(isinstance(token, Token) for token in tokens):
+        raise TypeError("`tokens` must be a sequence of Tokens")
     #print(f"Entered EVALUATION! {tokens}")
     stack = []
     for token in tokens:
@@ -342,33 +353,32 @@ def evaluate_RPN(tokens):
             continue
         elif token.token_type == TokenType.UNARY_OPERATOR:
             if len(stack) < 1:
-                raise ValueError("Not enough operands")
+                raise ArithmeticSyntaxError("Not enough operands")
             if not stack[-1].is_number():
-                raise ValueError("The operand is not a number")
+                raise ArithmeticSyntaxError("The operand is not a number")
             assert isinstance(token.token_value, UnaryOperator)
             operand = stack.pop().token_value
             result = token.token_value(operand)
             if abs(result)>=2**64:
-                raise OverflowError(f"All results must be less in absolute value than 2**64, but your result={result}>{2**64}")
+                raise ArithmeticOverflowError(f"All results must be less in absolute value than 2**64, but your result={result}>{2**64}")
             stack.append(Token(TokenType.NUMBER, result))
         elif token.token_type == TokenType.BINARY_OPERATOR:
             if len(stack) < 2:
-                raise ValueError("Not enough operands")
+                raise ArithmeticSyntaxError("Not enough operands")
             if stack[-1].is_operand() or stack[-2].is_operand():
-                raise ValueError("One operand is itself an operator")
-            result = None
+                raise ArithmeticSyntaxError("One operand is itself an operator")
             if not stack[-1].is_number() or not stack[-2].is_number():
-                raise ValueError("One operand is itself an operator")
+                raise ArithmeticSyntaxError("One operand is itself an operator")
             #print(stack)
             op_2 = stack.pop().token_value
             op_1 = stack.pop().token_value
             assert isinstance(token.token_value, BinaryOperator)
             result = token.token_value(op_1, op_2) # type: ignore
             if abs(result)>=2**64:
-                raise OverflowError(f"All results must be less in absolute value than 2**64, but your result={result}>{2**64}")
+                raise ArithmeticOverflowError(f"All results must be less in absolute value than 2**64, but your result={result}>{2**64}")
             stack.append(Token(TokenType.NUMBER, result))
     if len(stack) != 1:
-        raise ValueError(f"Invalid expression: {stack}")
+        raise ArithmeticSyntaxError(f"Invalid expression. There must be exactly one final result when finished evaluating.")
     return stack[0].token_value
 
 def evaluate_expr(expression):

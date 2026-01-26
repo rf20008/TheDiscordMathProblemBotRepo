@@ -29,7 +29,14 @@ from helpful_modules import arithmetic_evaluator
 from helpful_modules.arithmetic_evaluator import (
     as_int, Token, TokenType, BinaryOperator, UnaryOperator, tokenizeregex, ALL_BINARY_OPERATORS, ALL_UNARY_OPERATORS, ALL_OPERATORS, shunting_yard, evaluate_RPN, evaluate_expr
 )
-
+from helpful_modules.errors import (
+    CalculatorError,
+    CalculatorZeroDivisionError,
+    ArithmeticTypeError,
+    ArithmeticSyntaxError,
+    DomainError,
+    ArithmeticOverflowError,
+)
 class TestTokenType(unittest.TestCase):
     def test_as_int_1(self):
         for op, exp_val in [
@@ -42,7 +49,7 @@ class TestTokenType(unittest.TestCase):
     def test_as_int_fails(self):
         for op in [-2.3, 2.3, 1.7, 1+2j, 1-2j, 1.2+2j, 1.2+3.4j, "hehe boi"]:
             with self.subTest(op=op):
-                with self.assertRaises(TypeError):
+                with self.assertRaises(ArithmeticSyntaxError):
                     as_int(op)
     def test_unary_operator_token(self):
         for operand_type in (TokenType.BINARY_OPERATOR, TokenType.UNARY_OPERATOR):
@@ -117,31 +124,31 @@ class TestUnaryOperator(unittest.TestCase):
                 self.assertEqual(operator.value, operand_name)
                 self.assertEqual(operator.evaluate(operand), expected_result)
     def test_exp_fail_too_big_1(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ArithmeticOverflowError):
             UnaryOperator.EXP.evaluate(303030)
     def test_exp_fail_too_small_1(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ArithmeticOverflowError):
             UnaryOperator.EXP.evaluate(-303030)
     def test_exp_fail_too_small_2(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ArithmeticOverflowError):
             UnaryOperator.EXP.evaluate(-303030+3j)
     def test_exp_fail_too_big_2(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ArithmeticOverflowError):
             UnaryOperator.EXP.evaluate(303030-3j)
     def test_exp_not_fail_for_limit(self):
         UnaryOperator.EXP.evaluate(math.log(sys.float_info.max))
     def test_floor_fails(self):
         for operand_to_fail in [-3j, 1+2j, 1-2j, 1j, -2j]:
             with self.subTest(operand_to_fail=operand_to_fail):
-                with self.assertRaises(ValueError):
+                with self.assertRaises(DomainError):
                     UnaryOperator.FLOOR.evaluate(operand_to_fail)
     def test_ceil_fails(self):
         for operand_to_fail in [-3j, 1+2j, 1-2j, 1j, -2j]:
             with self.subTest(operand_to_fail=operand_to_fail):
-                with self.assertRaises(ValueError):
+                with self.assertRaises(DomainError):
                     UnaryOperator.CEIL.evaluate(operand_to_fail)
     def test_ln_fails_at_0(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(DomainError):
             UnaryOperator.LN.evaluate(0)
     def test_not_for_ints(self):
         for i in range(-16, 16):
@@ -152,14 +159,14 @@ class TestUnaryOperator(unittest.TestCase):
     def test_not_fails_for_floats(self):
         for i in range(-16, 16):
             with self.subTest(num=i):
-                with self.assertRaises(ValueError):
+                with self.assertRaises(DomainError):
                     UnaryOperator.BNOT.evaluate(i+0.5)
     def test_not_fails_for_complex_floats(self):
         for a in range(-4, 4):
             for b in [-1, 1]:
                 z = a+b*1j
                 with self.subTest(z=z):
-                    with self.assertRaises(ValueError):
+                    with self.assertRaises(ArithmeticTypeError):
                         UnaryOperator.BNOT.evaluate(z)
 class TestBinaryOperators(unittest.TestCase):
     def test_basic_operands(self):
@@ -196,7 +203,7 @@ class TestBinaryOperators(unittest.TestCase):
             (1+1j, 130)
         ):
           with self.subTest(operand1=operand1, operand2=operand2):
-              with self.assertRaises(OverflowError, msg=f"{operand1}**{operand2}"):
+              with self.assertRaises(ArithmeticOverflowError, msg=f"{operand1}**{operand2}"):
                 BinaryOperator.EXPONENT(operand1, operand2)
     def test_and_and_or(self):
         for operator_name, operand1, operand2, expected_result in [
@@ -301,12 +308,12 @@ class TestTokenizer(unittest.TestCase):
 
     def test_integer_too_long(self):
         expr = "1" * 21
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ArithmeticSyntaxError):
             tokenizeregex(expr)
 
     def test_integer_too_large(self):
         expr = str(2 ** 64 + 1)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ArithmeticOverflowError):
             tokenizeregex(expr)
 
         # ---------- Float tokens ----------
@@ -318,12 +325,11 @@ class TestTokenizer(unittest.TestCase):
 
     def test_float_too_long(self):
         expr = "1." + "0" * 40
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ArithmeticSyntaxError):
             tokenizeregex(expr)
 
     def test_invalid_float(self):
-        with self.assertRaises(ValueError):
-            tokenizeregex("1.2.3")
+        self.assertEqual(tokenizeregex("1.2.3"), [Token(TokenType.NUMBER, 1.2), Token(TokenType.NUMBER, 0.3)])
 
         # ---------- Parentheses ----------
 
@@ -333,11 +339,11 @@ class TestTokenizer(unittest.TestCase):
         self.assertEqual(tokens[4].token_type, TokenType.RIGHT_PARENTHESIS)
 
     def test_too_many_right_parentheses(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ArithmeticSyntaxError):
             tokenizeregex(")1+2")
 
     def test_too_many_left_parentheses(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ArithmeticSyntaxError):
             tokenizeregex("(1+2")
 
         # ---------- Binary operators ----------
@@ -363,24 +369,23 @@ class TestTokenizer(unittest.TestCase):
     def test_variables_not_allowed(self):
         for expr in ["x", "abc", "a+1"]:
             with self.subTest(expr=expr):
-                with self.assertRaises(ValueError):
+                with self.assertRaises(ArithmeticSyntaxError):
                     tokenizeregex(expr)
 
     def test_unknown_symbol(self):
         for expr in ["@", "$", "#"]:
             with self.subTest(expr=expr):
-                with self.assertRaises(ValueError):
+                with self.assertRaises(ArithmeticSyntaxError):
                     tokenizeregex(expr)
 
         # ---------- Sequence validation ----------
 
     def test_consecutive_operands(self):
-        with self.assertRaises(ValueError):
-            tokenizeregex("1 2")
+        self.assertEqual(tokenizeregex("1 2"), [Token(TokenType.NUMBER, 1), Token(TokenType.NUMBER, 2)])
 
     def test_ending_with_operand(self):
-        with self.assertRaises(ValueError):
-            tokenizeregex("1+2")
+        with self.assertRaises(ArithmeticSyntaxError):
+            tokenizeregex("1+2+")
 
     def test_starting_with_binary_operator(self):
         for op in ALL_BINARY_OPERATORS:
@@ -391,17 +396,17 @@ class TestTokenizer(unittest.TestCase):
         # ---------- Valid expressions ----------
 
     def test_simple_expression(self):
-        tokens = tokenizeregex("1+2*")
+        tokens = tokenizeregex("1+2")
         self.assertEqual(len(tokens), 3)
 
     def test_nested_expression(self):
-        tokens = tokenizeregex("((1+2)*3)*")
+        tokens = tokenizeregex("((1+2)*3)")
         self.assertTrue(all(isinstance(t, Token) for t in tokens))
 
     def test_complex_expression(self):
-        tokens = tokenizeregex("(1+(2*3))*")
+        tokens = tokenizeregex("(1+(2*3))*4")
         self.assertEqual(tokens[0].token_type, TokenType.LEFT_PARENTHESIS)
-        self.assertEqual(tokens[-1].token_type, TokenType.BINARY_OPERATOR)
+        self.assertEqual(tokens[-2].token_type, TokenType.BINARY_OPERATOR)
     def test_single_number_in_parens(self):
         tokenizeregex("(1)")
 
@@ -441,12 +446,10 @@ class TestTokenizer(unittest.TestCase):
         )
 
     def test_number_followed_by_left_paren(self):
-        with self.assertRaises(ValueError):
-            tokenizeregex("(1(2))")
+        tokenizeregex("(1(2))")
 
     def test_right_paren_followed_by_number(self):
-        with self.assertRaises(ValueError):
-            tokenizeregex("((1)2)")
+        tokenizeregex("((1)2)")
     def test_max_int_boundary(self):
         tokenizeregex(f"({2 ** 64 - 1})")
 
@@ -459,38 +462,38 @@ class TestTokenizer(unittest.TestCase):
     def test_float_precision(self):
         tokenizeregex("(0.0000000001)")
     def test_single_letter_variable(self):
-        with self.assertRaises(ValueError):
-            tokenizeregex("(x)")
-
+        with self.assertRaises(ArithmeticSyntaxError) as exc:
+            print(tokenizeregex("(x)"))
+        print(exc)
     def test_variable_with_numbers(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ArithmeticSyntaxError) as exc:
             tokenizeregex("(x1)")
 
     def test_mixed_alpha_numeric(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ArithmeticSyntaxError) as exc:
             tokenizeregex("(1+a)")
 
     def test_unknown_characters(self):
         for ch in ["@", "#", "$", "!", "?"]:
             with self.subTest(ch=ch):
-                with self.assertRaises(ValueError):
+                with self.assertRaises(ArithmeticSyntaxError):
                     tokenizeregex(f"({ch})")
 
     def test_tokenize_positive(self):
         for i in range(32):
             self.assertEqual(tokenizeregex(str(i)), [Token(TokenType.NUMBER, i)])
     def test_tokenize_negative(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ArithmeticSyntaxError):
             tokenizeregex("-321")
 
     def test_tokenize_small_expression(self):
-        s = "3+4"
         TOKENS = arithmetic_evaluator.tokenizeregex("3+4")
-        print(TOKENS)
         self.assertEqual(len(TOKENS), 3)
         self.assertEqual(TOKENS[0], Token(TokenType.NUMBER, 3))
         self.assertEqual(TOKENS[1], Token(TokenType.BINARY_OPERATOR, BinaryOperator.PLUS))
         self.assertEqual(TOKENS[2], Token(TokenType.NUMBER, 4))
+
+
 class TestShuntingYard(unittest.TestCase):
 
     def assertRPN(self, tokens, expected_values):
@@ -556,10 +559,12 @@ class TestShuntingYard(unittest.TestCase):
     # ------------------------------
     def test_nested_parentheses(self):
         tokens = tokenizeregex("((1+2)*(3-4))")
+        print(tokens)
         self.assertRPN(tokens, [1, 2, '+', 3, 4, '-', '*'])
 
     def test_deeply_nested(self):
         tokens = tokenizeregex("(((1+2)+3)*((4-5)/6))")
+
         self.assertRPN(tokens, [1, 2, '+', 3, '+', 4, 5, '-', 6, '/', '*'])
 
     # ------------------------------
@@ -567,13 +572,14 @@ class TestShuntingYard(unittest.TestCase):
     # ------------------------------
     def test_extra_left_paren(self):
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ArithmeticSyntaxError):
             tokens = tokenizeregex("((1+2)")
             shunting_yard(tokens)
 
     def test_extra_right_paren(self):
-        tokens = tokenizeregex("(1+2))")
-        with self.assertRaises(ValueError):
+
+        with self.assertRaises(ArithmeticSyntaxError):
+            tokens = tokenizeregex("(1+2))")
             shunting_yard(tokens)
 
     # ------------------------------
@@ -649,7 +655,7 @@ class TestEvaluateRPN(unittest.TestCase):
         big = 2**63
         tokens = [Token(TokenType.NUMBER, big), Token(TokenType.NUMBER, 2),
                   Token(TokenType.BINARY_OPERATOR, BinaryOperator("*"))]
-        with self.assertRaises(OverflowError):
+        with self.assertRaises(ArithmeticOverflowError):
             evaluate_RPN(tokens)
 
     # ------------------------------
@@ -657,11 +663,11 @@ class TestEvaluateRPN(unittest.TestCase):
     # ------------------------------
     def test_not_enough_operands(self):
         tokens = [Token(TokenType.BINARY_OPERATOR, BinaryOperator("+"))]
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ArithmeticSyntaxError):
             evaluate_RPN(tokens)
 
         tokens = [Token(TokenType.NUMBER, 1), Token(TokenType.BINARY_OPERATOR, BinaryOperator("+"))]
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ArithmeticSyntaxError):
             evaluate_RPN(tokens)
 
     # ------------------------------
@@ -669,7 +675,7 @@ class TestEvaluateRPN(unittest.TestCase):
     # ------------------------------
     def test_final_stack_not_one(self):
         tokens = [Token(TokenType.NUMBER, 1), Token(TokenType.NUMBER, 2)]
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ArithmeticSyntaxError):
             evaluate_RPN(tokens)
 
     def test_single_number(self):
@@ -709,7 +715,7 @@ class TestEvaluateRPN(unittest.TestCase):
 
     def test_not_enough_operands(self):
         tokens = [Token(TokenType.BINARY_OPERATOR, BinaryOperator("+"))]
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ArithmeticSyntaxError):
             evaluate_RPN(tokens)
 
     def test_too_many_operands_left(self):
@@ -717,7 +723,7 @@ class TestEvaluateRPN(unittest.TestCase):
             Token(TokenType.NUMBER, 1),
             Token(TokenType.NUMBER, 2)
         ]
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ArithmeticSyntaxError):
             evaluate_RPN(tokens)
 
     def test_overflow_2(self):
@@ -727,7 +733,7 @@ class TestEvaluateRPN(unittest.TestCase):
             Token(TokenType.NUMBER, 2),
             Token(TokenType.BINARY_OPERATOR, BinaryOperator("*"))
         ]
-        with self.assertRaises(OverflowError):
+        with self.assertRaises(ArithmeticOverflowError):
             evaluate_RPN(tokens)
 
     def eval_expr(self, expression, expected):

@@ -2,7 +2,7 @@ python-dotenv>=0.19.1
 redis[hiredis]>=5.0.1
 mysql-connector-python>=8.0.27
 aiohttp>=3.12.13
-disnake>=2.9.1
+disnake>=2.11.0
 bcrypt >= 4.2.0
 pre-commit
 orjson >= 3.9.15
@@ -11,19 +11,18 @@ mpmath >= 1.3.0
 more-itertools >= 8.14.0
 psutil>=5.9.5
 fakeredis>=2.20.0
-git+git://github.com/omnilib/aiosqlite.git@main
-git+git://github.com/DisnakeDev/disnake.git@main
-git+git://github.com/ijl/orjson.git
+#git+git://github.com/omnilib/aiosqlite.git@main
+#git+git://github.com/DisnakeDev/disnake.git@main
+#git+git://github.com/ijl/orjson.git
 pyfakefs>=5.3.2
-pytest>=7.4.3
+pytest>=9.0.2
 pytest-aiofiles>=0.2.0
 func-timeout>=4.3.5
 numexpr>=2.9.0
-func_timeout>=4.3.5
 aiomysql>=0.2.0
 numpy>=1.26.4
 cryptography >= 42.0.8a1
-aiobcrypt >= 3.2.0post1
+#aiobcrypt >= 3.2.0post1
 cityhash >= 0.4.8
 pyfarmhash >= 0.4.0
 func_timeout>=4.3.5

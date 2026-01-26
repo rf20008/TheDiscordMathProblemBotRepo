@@ -41,7 +41,6 @@ class ConfirmView(disnake.ui.View):
     bot: TheDiscordMathProblemBot | None
     suggestions_channel: disnake.abc.Messageable | None = None
 
-
     def __init__(
         self,
         *,
@@ -59,7 +58,10 @@ class ConfirmView(disnake.ui.View):
     async def getch_suggestions_channel(cls):
         if not isinstance(cls.bot, TheDiscordMathProblemBot):
             raise RuntimeError("bot is not an instance of TheDiscordMathProblemBot")
-        if cls.suggestions_channel is not None and cls.suggestions_channel.id == SUGGESTIONS_AND_FEEDBACK_CHANNEL_ID:
+        if (
+            cls.suggestions_channel is not None
+            and cls.suggestions_channel.id == SUGGESTIONS_AND_FEEDBACK_CHANNEL_ID
+        ):
             return cls.suggestions_channel
         else:
             server = cls.bot.support_server
@@ -76,9 +78,10 @@ class ConfirmView(disnake.ui.View):
 
     async def interaction_check(self, inter: disnake.Interaction):
 
-
-        if (self.user_id == inter.author.id
-            and not await self.bot.is_denylisted_by_user_id(inter.author.id)):
+        if (
+            self.user_id == inter.author.id
+            and not await self.bot.is_denylisted_by_user_id(inter.author.id)
+        ):
             return True
         else:
             await inter.send("This isn't your view!", ephemeral=True, delete_after=15.0)

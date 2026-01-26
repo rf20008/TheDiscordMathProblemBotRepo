@@ -2,6 +2,7 @@ import unittest
 from hashlib import sha3_256
 from helpful_modules.Merkler import FixedLengthMerkler, MerklerInvalidError
 
+
 class TestFixedLengthMerkler(unittest.TestCase):
 
     def setUp(self):
@@ -13,7 +14,7 @@ class TestFixedLengthMerkler(unittest.TestCase):
             "Log entry 4",
             "Log entry 5",
             "Log entry 6",
-            "Log entry 7"
+            "Log entry 7",
         ]
         self.merkler = FixedLengthMerkler(size=7, contents=self.data)
 
@@ -21,9 +22,11 @@ class TestFixedLengthMerkler(unittest.TestCase):
 
     def test_root(self):
         """Test that the root hash of the tree is correct."""
-        expecteds = ['_', '_', '_', '_', '_', '_', '_']
+        expecteds = ["_", "_", "_", "_", "_", "_", "_"]
         for i in range(6, 0, -1):
-            expecteds[i] = sha3_256(self.merkler.tree[2*i] + b'\x00' + self.merkler.tree[2*i+1]).digest()
+            expecteds[i] = sha3_256(
+                self.merkler.tree[2 * i] + b"\x00" + self.merkler.tree[2 * i + 1]
+            ).digest()
             self.assertEqual(expecteds[i], self.merkler.tree[i])
 
         self.assertEqual(self.merkler.root, expecteds[1])
@@ -45,29 +48,50 @@ class TestFixedLengthMerkler(unittest.TestCase):
 
     def test_verify_index_valid(self):
         """Test verifying a single index with correct data."""
-        X = [(i, sha3_256(self.data[i].encode('utf-8')).hexdigest(), self.merkler.tree[self.merkler.get_idx_logn(i)].hex()) for i in range(7)]
-        y = list(map(lambda entry: (entry[1][:7], entry[2][:7], entry[1]==entry[2], entry[0]), X))
+        X = [
+            (
+                i,
+                sha3_256(self.data[i].encode("utf-8")).hexdigest(),
+                self.merkler.tree[self.merkler.get_idx_logn(i)].hex(),
+            )
+            for i in range(7)
+        ]
+        y = list(
+            map(
+                lambda entry: (
+                    entry[1][:7],
+                    entry[2][:7],
+                    entry[1] == entry[2],
+                    entry[0],
+                ),
+                X,
+            )
+        )
         print(y)
         for i in range(7):
             try:
                 A = self.data[i]
-                print(self.merkler.sha3_hash(A.encode('utf-8')).hex())
-                self.assertTrue(self.merkler.verify_index(i, A ))
+                print(self.merkler.sha3_hash(A.encode("utf-8")).hex())
+                self.assertTrue(self.merkler.verify_index(i, A))
             except MerklerInvalidError as me:
                 self.fail(f"Merkle index verification failed unexpectedly: {me}.")
 
     def test_verify_index_invalid(self):
         """Test verifying a single index with incorrect data."""
         with self.assertRaises(MerklerInvalidError):
-            self.merkler.verify_index(2, sha3_256("Corrupted entry".encode('utf-8')).digest())
+            self.merkler.verify_index(
+                2, sha3_256("Corrupted entry".encode("utf-8")).digest()
+            )
 
     def test_setitem(self):
         """Test setting an item in the tree and verifying its effect on the root."""
         self.merkler[4] = "Updated entry"
         self.data[4] = "Updated entry"
-        expecteds = ['_', '_', '_', '_', '_', '_', '_']
+        expecteds = ["_", "_", "_", "_", "_", "_", "_"]
         for i in range(6, 0, -1):
-            expecteds[i] = sha3_256(self.merkler.tree[2 * i] + b'\x00' + self.merkler.tree[2 * i + 1]).digest()
+            expecteds[i] = sha3_256(
+                self.merkler.tree[2 * i] + b"\x00" + self.merkler.tree[2 * i + 1]
+            ).digest()
             self.assertEqual(expecteds[i], self.merkler.tree[i])
 
         self.assertEqual(self.merkler.root, expecteds[1])
@@ -75,9 +99,11 @@ class TestFixedLengthMerkler(unittest.TestCase):
         self.assertTrue(self.merkler.verify_index(index=4, should_be="Updated entry"))
         self.merkler[4] = "Log entry 5"
         self.data[4] = "Log entry 5"
-        expecteds = ['_', '_', '_', '_', '_', '_', '_']
+        expecteds = ["_", "_", "_", "_", "_", "_", "_"]
         for i in range(6, 0, -1):
-            expecteds[i] = sha3_256(self.merkler.tree[2 * i] + b'\x00' + self.merkler.tree[2 * i + 1]).digest()
+            expecteds[i] = sha3_256(
+                self.merkler.tree[2 * i] + b"\x00" + self.merkler.tree[2 * i + 1]
+            ).digest()
             self.assertEqual(expecteds[i], self.merkler.tree[i])
 
         self.assertEqual(self.merkler.root, expecteds[1])
@@ -87,7 +113,7 @@ class TestFixedLengthMerkler(unittest.TestCase):
     def test_getitem(self):
         """Test getting an item from the tree."""
         for i in range(7):
-            encodr = sha3_256(self.data[i].encode('utf-8')).digest()
+            encodr = sha3_256(self.data[i].encode("utf-8")).digest()
             if self.merkler[i] != encodr:
                 print(i, self.merkler[i].hex(), encodr.hex())
             self.assertEqual(self.merkler[i], encodr)
@@ -98,7 +124,6 @@ class TestFixedLengthMerkler(unittest.TestCase):
         with self.assertRaises(IndexError):
             self.merkler[7] = b"Out of range entry"
         self.assertEqual(self.merkler.tree, tree_before)
-
 
     def test_out_of_range_getitem(self):
         """Test getting an item out of range."""
@@ -130,6 +155,7 @@ class TestFixedLengthMerkler(unittest.TestCase):
             self.assertTrue(True)
         except MerklerInvalidError:
             self.fail("Merkle tree verification failed unexpectedly after build.")
+
 
 if __name__ == "__main__":
     unittest.main()

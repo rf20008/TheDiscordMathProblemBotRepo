@@ -73,5 +73,6 @@ class DictConvertible(Protocol):
             raise OwnershipNotDeterminableException(
                 f"I could not determine whether this object belongs to the user with user id {user_id}"
             )
+
     def __repr__(self):
         return repr(self.to_dict())

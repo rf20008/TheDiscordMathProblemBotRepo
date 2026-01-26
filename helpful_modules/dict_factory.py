@@ -16,6 +16,7 @@ You should have received a copy of the GNU Affero General Public License along w
 If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)"""
+
 # Attribution to https://web.archive.org/web/20201112013549/https://stackoverflow.com/questions/3300464/how-can-i-get-dict-from-sqlite-query
 
 # I did not have any part in writing the code!

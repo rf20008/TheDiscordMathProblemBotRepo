@@ -16,6 +16,7 @@ You should have received a copy of the GNU Affero General Public License along w
 If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)"""
+
 import time
 
 import traceback
@@ -87,8 +88,10 @@ def trusted_users_only():
             if await inter.bot.is_trusted(inter.author):
                 return True
         except Exception as e:
-            print("An error occurred while trying to find whether someone was trusted:",
-                  "".join(traceback.format_exception(e)))
+            print(
+                "An error occurred while trying to find whether someone was trusted:",
+                "".join(traceback.format_exception(e)),
+            )
             inter.bot.log.exception(e)
 
             raise
@@ -142,22 +145,26 @@ def is_not_denylisted():
         )
         if user_data.is_denylisted():
             until_str = ""
-            if user_data.denylist_reason == float('inf'):
-                until_str='never'
+            if user_data.denylist_reason == float("inf"):
+                until_str = "never"
             else:
                 if user_data.denylist_expiry < time.time():
-                    until_str = f"{disnake.utils.format_dt(user_data.denylist_expiry, 'R')} ago"
+                    until_str = (
+                        f"{disnake.utils.format_dt(user_data.denylist_expiry, 'R')} ago"
+                    )
                 else:
-                    until_str = f'in {disnake.utils.format_dt(user_data.denylist_expiry, "R")}'
+                    until_str = (
+                        f'in {disnake.utils.format_dt(user_data.denylist_expiry, "R")}'
+                    )
             msg = f"""You are denylisted from the bot! To appeal, you must use /appeal. Note that appeals are seen very rarely..., The reason you've been denylisted is {user_data.denylist_reason}. This ban expires {until_str}"""
-            raise DenylistedException(
-                msg
-            )
+            raise DenylistedException(msg)
         return True
 
     return commands.check(predicate)
 
+
 user_not_denylisted = is_not_denylisted
+
 
 def guild_not_denylisted():
     """Check to make sure a command isn't being executed in a denylisted guild -- instead, we will say the guild has been denylisted & leave the guild"""
@@ -295,25 +302,29 @@ def cmds_cnt():
 
     return commands.check(predicate)
 
+
 def audit_command_usage_check():
     async def predicate(inter: disnake.ApplicationCommandInteraction):
         print("HEHE!")
         try:
             if not isinstance(inter.bot, TheDiscordMathProblemBot):
                 raise TypeError
-            if not hasattr(inter.bot, 'audit_log'):
+            if not hasattr(inter.bot, "audit_log"):
                 raise AttributeError
             if not isinstance(inter.bot.audit_log, AuditLog):
                 raise TypeError
             inter.bot.audit_log.add_to_log(
-                log_entry = f"Command {inter.application_command.qualified_name} has been run in a guild with ID {inter.guild_id} by a user with ID {inter.author.id}",
+                log_entry=f"Command {inter.application_command.qualified_name} has been run in a guild with ID {inter.guild_id} by a user with ID {inter.author.id}",
                 priority=0,
-                extra_info={}
+                extra_info={},
             )
             return True
         except:
             exit()
+
     return commands.check(predicate)
+
+
 async def always_succeeding_check_unwrapped(inter, *args, **kwargs):
     if callable(inter):
         raise ValueError(

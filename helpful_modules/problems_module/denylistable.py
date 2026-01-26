@@ -21,11 +21,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 import time
 from typing import Dict
 
 from .dict_convertible import DictConvertible, T
 from enum import Enum
+
 
 class DenylistType(Enum):
     GENERAL_USER_DENYLIST = "General User Denylist"
@@ -33,14 +35,23 @@ class DenylistType(Enum):
     VERIFICATION_CODE_DENYLIST = "Verification code denylist"
     GENERAL_GUILD_DENYLIST = "General Guild Denylist"
 
+
 class Denylistable(DictConvertible):
     """Objects of this class can be denylisted, removed from the denylist, and have 3 attributes"""
+
     denylisted: bool
     denylist_reason: str
     denylist_expiry: float
     denylisting_moderator: str
     denylist_type: DenylistType
-    def denylist(self, reason: str = "", duration: float = float('inf'), denylisting_moderator: str = "Unknown", denylist_type: DenylistType = DenylistType.UNKNOWN):
+
+    def denylist(
+        self,
+        reason: str = "",
+        duration: float = float("inf"),
+        denylisting_moderator: str = "Unknown",
+        denylist_type: DenylistType = DenylistType.UNKNOWN,
+    ):
         """Denylist this object for a specific duration with a reason"""
         if not isinstance(reason, str):
             raise TypeError("reason is not a str")
@@ -48,7 +59,9 @@ class Denylistable(DictConvertible):
             raise TypeError("duration is not a float")
         if not isinstance(denylisting_moderator, str):
             raise TypeError("Denylisting_moderator is not a str!")
-        if not isinstance(denylist_type, DenylistType) and not isinstance(denylist_type, str):
+        if not isinstance(denylist_type, DenylistType) and not isinstance(
+            denylist_type, str
+        ):
             raise TypeError("Denylist type is not a DenylistType")
         if isinstance(denylist_type, str):
             if denylist_type not in tuple(DenylistType):
@@ -69,53 +82,68 @@ class Denylistable(DictConvertible):
         self.denylisted = False
         self.denylist_expiry = 0.0
         self.denylist_reason = ""
+
     def is_denylisted(self) -> bool:
         """Check if this object is currently denylisted"""
         if not self.denylisted:
             return False
         return time.time() < self.denylist_expiry
 
+
 class DenylistMetadata(Denylistable):
-    def __init__(self, denylisted: bool, denylist_reason: str, denylist_expiry: float, denylisting_moderator: str, denylist_type: DenylistType | str):
+    def __init__(
+        self,
+        denylisted: bool,
+        denylist_reason: str,
+        denylist_expiry: float,
+        denylisting_moderator: str,
+        denylist_type: DenylistType | str,
+    ):
         if not isinstance(denylisted, bool):
             raise TypeError("denylisted is not a bool")
-        self.denylisted=denylisted
+        self.denylisted = denylisted
         if not isinstance(denylist_reason, str):
             raise TypeError("reason is not a str")
-        self.denylist_reason=denylist_reason
+        self.denylist_reason = denylist_reason
         if denylist_expiry is None:
-            denylist_expiry=0.0
+            denylist_expiry = 0.0
         if not isinstance(denylist_expiry, float):
-            raise TypeError(f"denylist expiry is not a float, but is {denylist_expiry} and is of type {denylist_expiry.__class__.__name__}")
-        self.denylist_expiry=denylist_expiry
+            raise TypeError(
+                f"denylist expiry is not a float, but is {denylist_expiry} and is of type {denylist_expiry.__class__.__name__}"
+            )
+        self.denylist_expiry = denylist_expiry
         if not isinstance(denylisting_moderator, str):
             raise TypeError("Denylisting_moderator is not a str!")
-        self.denylisting_moderator=denylisting_moderator
-        if not isinstance(denylist_type, DenylistType) and not isinstance(denylist_type, str):
+        self.denylisting_moderator = denylisting_moderator
+        if not isinstance(denylist_type, DenylistType) and not isinstance(
+            denylist_type, str
+        ):
             raise TypeError("Denylist type is not a DenylistType")
         if isinstance(denylist_type, str):
             try:
                 denylist_type = DenylistType[denylist_type]
             except KeyError as err:
-                raise ValueError(f"Unknown denylist type! THe denylist type was {denylist_type}") from err
+                raise ValueError(
+                    f"Unknown denylist type! THe denylist type was {denylist_type}"
+                ) from err
             denylist_type = DenylistType(denylist_type)
-        self.denylist_type=denylist_type
+        self.denylist_type = denylist_type
 
     def to_dict(self) -> Dict:
         return {
-            'denylisted': self.denylisted,
-            'denylist_reason': self.denylist_reason,
-            'denylist_expiry': self.denylist_expiry,
-            'denylist_type': self.denylist_type.name,
-            'denylisting_moderator': self.denylisting_moderator
+            "denylisted": self.denylisted,
+            "denylist_reason": self.denylist_reason,
+            "denylist_expiry": self.denylist_expiry,
+            "denylist_type": self.denylist_type.name,
+            "denylisting_moderator": self.denylisting_moderator,
         }
 
     @classmethod
     def from_dict(cls, data: Dict) -> T:
         return cls(
-            denylisted=data['denylisted'],
-            denylist_reason=data['denylist_reason'],
-            denylist_expiry=data['denylist_expiry'],
-            denylist_type=data['denylist_type'],
-            denylisting_moderator=data['denylisting_moderator']
+            denylisted=data["denylisted"],
+            denylist_reason=data["denylist_reason"],
+            denylist_expiry=data["denylist_expiry"],
+            denylist_type=data["denylist_type"],
+            denylisting_moderator=data["denylisting_moderator"],
         )

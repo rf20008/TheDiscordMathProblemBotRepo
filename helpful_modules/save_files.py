@@ -21,11 +21,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 import json
 import warnings
 
 from . import problems_module
 from .problems_module import AppealQuestion
+
 numFileSavers = 0
 
 
@@ -87,14 +89,15 @@ class FileSaver:
             lines = file3.readlines()
             for line in lines:
                 # Make sure that an empty string does not become the new vote threshold
-                if line.strip().isnumeric(): # .strip() is needed to make sure that we remove the trailing newline
+                if (
+                    line.strip().isnumeric()
+                ):  # .strip() is needed to make sure that we remove the trailing newline
                     vote_threshold = int(line)
         if vote_threshold is False:
             raise RuntimeError("vote_threshold not given!!")
 
         with open("guild_math_problems.json", "r") as file4:
             guildMathProblems = json.load(fp=file4)
-
 
         questions = self.load_appeal_questions()
         if (
@@ -109,7 +112,7 @@ class FileSaver:
             "trusted_users": trusted_users,
             "mathProblems": mathProblems,
             "vote_threshold": vote_threshold,
-            "appeal_questions": questions
+            "appeal_questions": questions,
         }
 
     def save_files(
@@ -121,7 +124,7 @@ class FileSaver:
         vote_threshold=3,
         math_problems_dict={},
         trusted_users_list={},
-        questionnaire: dict[str, list[AppealQuestion]] | None = None
+        questionnaire: dict[str, list[AppealQuestion]] | None = None,
     ):
         """Saves files to file names specified in __init__.
         It does NOT SAVE the math_problems_dict"""
@@ -143,7 +146,10 @@ class FileSaver:
         # main_cache.update_file_cache() #Removed method
 
         with open("trusted_users.txt", "w") as file2:
-            warnings.warn(category=DeprecationWarning, message="storing trusted users in a dict is deprecated and should be removed")
+            warnings.warn(
+                category=DeprecationWarning,
+                message="storing trusted users in a dict is deprecated and should be removed",
+            )
 
             for user in trusted_users_list:
                 file2.write(str(user))
@@ -153,19 +159,31 @@ class FileSaver:
         with open("vote_threshold.txt", "w") as file3:
             file3.write(str(vote_threshold))
         with open("guild_math_problems.json", "w") as file4:
-            warnings.warn(category=DeprecationWarning,
-                          message="storing GuildMathProblems in a dict is deprecated and should be removed")
+            warnings.warn(
+                category=DeprecationWarning,
+                message="storing GuildMathProblems in a dict is deprecated and should be removed",
+            )
             e = json.dumps(obj=guild_math_problems_dict)
             file4.write(e)
         with open("math_problems.json", "w") as file5:
-            warnings.warn(category=DeprecationWarning,
-                          message="storing MathProblems in a dict is deprecated and should be removed")
+            warnings.warn(
+                category=DeprecationWarning,
+                message="storing MathProblems in a dict is deprecated and should be removed",
+            )
             json.dump(fp=file5, obj=math_problems_dict)
         try:
             with open("appeal_questions.json", "w") as file6:
-                json.dump(fp=file6, obj={key: [question.to_dict for question in questionset] for key, questionset in questionnaire.items()})
+                json.dump(
+                    fp=file6,
+                    obj={
+                        key: [question.to_dict for question in questionset]
+                        for key, questionset in questionnaire.items()
+                    },
+                )
         except PermissionError as pe:
-            if printSuccessMessages or (printSuccessMessages is None and self.printSuccessMessagesByDefault):
+            if printSuccessMessages or (
+                printSuccessMessages is None and self.printSuccessMessagesByDefault
+            ):
                 print(f"Failure to update appeal questions! Error: {pe}")
 
         if (
@@ -184,6 +202,7 @@ class FileSaver:
     def goodbye(self):
         print(str(self) + ": Goodbye.... :(")
         del self
+
     def load_appeal_questions(self):
         with open("appeal_questions.json", "r") as file5:
             questions = json.load(fp=file5)
@@ -195,5 +214,7 @@ class FileSaver:
                 print(question)
                 l.append(AppealQuestion.from_dict(question))
             # Convert each dictionary in the questionset to an AppealQuestion object
-            questions[key] = [AppealQuestion.from_dict(question) for question in questionset]
+            questions[key] = [
+                AppealQuestion.from_dict(question) for question in questionset
+            ]
         return questions

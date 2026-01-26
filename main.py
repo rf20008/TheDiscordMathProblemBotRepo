@@ -21,7 +21,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 import logging
+
 # Written by @rf20008
 # Licensed under GPLv3 (or later)
 # Feel free to contribute! :-)
@@ -37,6 +39,7 @@ from copy import copy
 from sys import argv, exc_info, exit, stderr, stdout
 from time import sleep
 import subprocess
+
 # Imports - 3rd party
 from disnake.ext import commands
 from cogs import *
@@ -101,7 +104,7 @@ else:
 disnake_log = logging.getLogger("disnake")
 log.addHandler(TRFHB)
 disnake_log.addHandler(TRFHD)
-#del disnake_log.handlers[0]
+# del disnake_log.handlers[0]
 handlers_to_remove = []
 for handler in log.handlers:
     if isinstance(handler, logging.StreamHandler) and handler.stream == stderr:
@@ -127,7 +130,7 @@ def the_daemon_file_saver():
         FileSaverDict["guildMathProblems"],
         FileSaverDict["trusted_users"],
         int(FileSaverDict["vote_threshold"]),
-        FileSaverDict["appeal_questions"]
+        FileSaverDict["appeal_questions"],
     )
     while True:
         sleep(45)
@@ -201,7 +204,6 @@ def get_git_revision_hash() -> str:
 # @bot.event
 
 
-
 # Bot creation
 
 asyncio.set_event_loop(asyncio.new_event_loop())  # Otherwise, weird errors will happen
@@ -239,9 +241,20 @@ bot.add_app_command_check(
         embed_links=True,
     )
 )
-bot.add_app_command_check(rate_limit_check(), slash_commands=True, call_once=True, message_commands=True, user_commands=True)
+bot.add_app_command_check(
+    rate_limit_check(),
+    slash_commands=True,
+    call_once=True,
+    message_commands=True,
+    user_commands=True,
+)
 bot.add_check(rate_limit_check())
-bot.add_app_command_check(checks.audit_command_usage_check(), slash_commands=True, call_once=True,message_commands=True)
+bot.add_app_command_check(
+    checks.audit_command_usage_check(),
+    slash_commands=True,
+    call_once=True,
+    message_commands=True,
+)
 _the_daemon_file_saver = threading.Thread(
     target=the_daemon_file_saver,
     name="The File Saver",
@@ -268,26 +281,29 @@ bot.add_cog(MiscCommandsCog(bot))
 bot.add_cog(HelpCog(bot))
 bot.load_extension("cogs.quiz_ext")
 bot.CONSTANTS = bot_constants
-bot.add_app_command_check(checks.is_not_denylisted(), slash_commands=True, call_once=True, message_commands=True, user_commands=True)
+bot.add_app_command_check(
+    checks.is_not_denylisted(),
+    slash_commands=True,
+    call_once=True,
+    message_commands=True,
+    user_commands=True,
+)
 bot.add_cog(InterestingComputationCog(bot))
 bot.add_cog(DataModificationCog(bot))
 bot.add_cog(ProblemGenerationCog(bot))
 bot.add_cog(VerificationCog(bot))
-bot.add_app_command_check(checks.not_is_closing(), slash_commands=True, call_once=True, message_commands=True)
+bot.add_app_command_check(
+    checks.not_is_closing(), slash_commands=True, call_once=True, message_commands=True
+)
 # Events
+
 
 @bot.event
 async def on_application_command(inter):
     await bot.process_application_commands(inter)
 
+
 # TODO: (general) add changelog.json
-
-
-
-
-
-
-
 
 
 # @bot.command(help = """Adds a trusted user!
@@ -295,12 +311,6 @@ async def on_application_command(inter):
 # adds the user's id to the trusted users list
 # (can only be used by trusted users)""",
 # brief = "Adds a trusted user")
-
-
-
-
-
-
 
 
 def handle_signal(signum):

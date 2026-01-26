@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 import json
 import typing
 from asyncio import sleep as asyncio_sleep
@@ -156,9 +157,13 @@ class MiscCommandsCog(HelperCog):
 
         # We don't need a try/except
         try:
-            result = await self.cache.run_sql("SELECT * FROM user_data") # TODO: support redis + other caches
+            result = await self.cache.run_sql(
+                "SELECT * FROM user_data"
+            )  # TODO: support redis + other caches
         except problems_module.SQLNotSupportedInRedisException as err:
-            raise NotImplementedError("Redis cache implementation is not yet implemented") from err
+            raise NotImplementedError(
+                "Redis cache implementation is not yet implemented"
+            ) from err
 
         trusted_users = []
         for item in result:
@@ -453,15 +458,15 @@ class MiscCommandsCog(HelperCog):
                 name="reason",
                 description="Why you're denylisting this user",
                 type=OptionType.string,
-                required=True
+                required=True,
             ),
             Option(
                 name="duration",
                 description="The length of the denylist",
                 type=OptionType.number,
                 required=False,
-                min_value=0.0
-            )
+                min_value=0.0,
+            ),
         ],
     )
     @checks.trusted_users_only()
@@ -472,7 +477,7 @@ class MiscCommandsCog(HelperCog):
         inter: disnake.ApplicationCommandInteraction,
         user: typing.Union[disnake.User, disnake.Member],
         reason: str,
-        duration: float = float('inf')
+        duration: float = float("inf"),
     ):
         """/denylist [user: user]
         denylist someone from the bot. You must be a trusted user to do this!
@@ -482,9 +487,16 @@ class MiscCommandsCog(HelperCog):
         )
         if user_data.is_denylisted():
             self.bot.log.debug("Can't denylist user; user already denylisted")
-            return await inter.send(embed=ErrorEmbed("Can't denylist user; user already denylisted"))
+            return await inter.send(
+                embed=ErrorEmbed("Can't denylist user; user already denylisted")
+            )
         else:
-            user_data.denylist(reason=reason, duration=duration, denylist_type=DenylistType.GENERAL_USER_DENYLIST, denylisting_moderator=str(inter.author.id))
+            user_data.denylist(
+                reason=reason,
+                duration=duration,
+                denylist_type=DenylistType.GENERAL_USER_DENYLIST,
+                denylisting_moderator=str(inter.author.id),
+            )
             await self.cache.set_user_data(user_id=user.id, new=user_data)
 
             self.bot.log.info(f"Successfully denylisted the user with id {user.id}")
@@ -511,7 +523,6 @@ class MiscCommandsCog(HelperCog):
         self: "MiscCommandsCog",
         inter: disnake.ApplicationCommandInteraction,
         user: typing.Union[disnake.User, disnake.Member],
-
     ):
         """/undenylist [user: user]
         Remove a user's bot denylist. You must be a trusted user to do this!
@@ -547,21 +558,25 @@ class MiscCommandsCog(HelperCog):
                 name="reason",
                 description="Why you're denylisting this user",
                 type=OptionType.string,
-                required=True
+                required=True,
             ),
             Option(
                 name="duration",
                 description="The length of the denylist",
                 type=OptionType.number,
                 required=False,
-                min_value=0.0
-            )
+                min_value=0.0,
+            ),
         ],
     )
     @checks.trusted_users_only()
     @checks.is_not_denylisted()
     async def guild_denylist(
-        self, inter: disnake.ApplicationCommandInteraction, guild_id: str, reason: str, duration: float = float('inf')
+        self,
+        inter: disnake.ApplicationCommandInteraction,
+        guild_id: str,
+        reason: str,
+        duration: float = float("inf"),
     ):
         """
         /guild_denylist [guild_id: int]

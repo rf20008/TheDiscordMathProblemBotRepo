@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 import asyncio
 from os import urandom
 
@@ -51,6 +52,7 @@ class AppealsCog(HelperCog):
         Appeal your punishments! It uses a modal.
         There are subcommands!"""
         pass
+
     def load_questions(self):
         if not self.bot.appeal_questions:
             self.bot.appeal_questions = self.bot.file_saver.load_appeal_questions()
@@ -88,9 +90,12 @@ class AppealsCog(HelperCog):
         reason: str = ""
 
         modal = UserDenylistAppealModal(
-            #callback=callback,
+            # callback=callback,
             title="Why should I un-denylist you? (14m limit)",
-            components=[question.to_textinput() for question in self.bot.appeal_questions["user_denylist"]],
+            components=[
+                question.to_textinput()
+                for question in self.bot.appeal_questions["user_denylist"]
+            ],
             timeout=870,
             custom_id=modal_custom_id,
         )
@@ -106,14 +111,14 @@ class AppealsCog(HelperCog):
             return False
 
         try:
-            _ = await self.bot.wait_for("modal_submit", check=check, timeout = 870.0)
+            _ = await self.bot.wait_for("modal_submit", check=check, timeout=870.0)
         except asyncio.TimeoutError:
             await inter.send(embed=ErrorEmbed("You did not submit the modal in time"))
             return
-    @commands.cooldown(2,15,commands.BucketType.user)
+
+    @commands.cooldown(2, 15, commands.BucketType.user)
     @appeal.sub_command(
-        name="guild_denylist",
-        description="Appeal your guild denylists"
+        name="guild_denylist", description="Appeal your guild denylists"
     )
     async def guild_denylist(self, inter: disnake.ApplicationCommandInteraction):
         """/appeal guild_denylist
@@ -136,14 +141,19 @@ class AppealsCog(HelperCog):
         """
         self.load_questions()
         modal_custom_id = str(inter.id) + urandom(10).hex()
-        questions = self.bot.appeal_questions[APPEAL_QUESTION_TYPE_NAMES[AppealType.GUILD_DENYLIST_APPEAL]]
+        questions = self.bot.appeal_questions[
+            APPEAL_QUESTION_TYPE_NAMES[AppealType.GUILD_DENYLIST_APPEAL]
+        ]
         textinputs = [q.to_textinput() for q in questions]
-        question_custom_ids = {question: textinput.custom_id for question, textinput in zip(questions, textinputs)}
+        question_custom_ids = {
+            question: textinput.custom_id
+            for question, textinput in zip(questions, textinputs)
+        }
         modal = GuildDenylistAppealModal(
             timeout=870.0,
             title="Guild Denylist Appeal Questionnaire (14m max)",
             components=textinputs,
-            custom_id=modal_custom_id
+            custom_id=modal_custom_id,
         )
         modal.guild_id_custom_id = textinputs[0].custom_id
         modal.reason_custom_id = textinputs[-1].custom_id
@@ -151,15 +161,18 @@ class AppealsCog(HelperCog):
         print("question custom ids: ", question_custom_ids)
         await inter.response.send_modal(modal)
         try:
-            _ = await self.bot.wait_for("modal_submit", check=lambda minter: minter.author.id == inter.author.id, timeout=870.0)
+            _ = await self.bot.wait_for(
+                "modal_submit",
+                check=lambda minter: minter.author.id == inter.author.id,
+                timeout=870.0,
+            )
             return
         except asyncio.TimeoutError:
             await inter.send(embed=ErrorEmbed("You did not fill out the form in time"))
             return
 
-
-
     # TODO: more appeals
+
 
 def setup(bot):
     bot.add_cog(AppealsCog(bot))

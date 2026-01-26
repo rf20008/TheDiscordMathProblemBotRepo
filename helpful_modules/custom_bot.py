@@ -56,6 +56,7 @@ from .FileDictionaryReader import AsyncFileDict
 from .message_queue import MessageQueue
 from .StatsTrack import CommandStats, CommandUsage, StreamWrapperStorer
 from .threads_or_useful_funcs import modified_async_wrap
+
 print(os.getpid())
 WAIT = True
 TIME_TO_WAIT = 25
@@ -69,7 +70,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
     is_closing: bool
     file_saver: FileSaver | None
     appeal_questions: dict[str, list[AppealQuestion]]
-    tasks: list[str: disnake.ext.tasks.Loop]
+    tasks: list[str : disnake.ext.tasks.Loop]
     config_json: AsyncFileDict
     trusted_users: list[int] | None
     cache: MathProblemCache | RedisCache
@@ -131,7 +132,11 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
     def support_server(self):
         guild = self.get_guild(SUPPORT_SERVER_GUILD_ID)
         if not guild:
-            warnings.warn("The bot is not in the support server", stacklevel=-1, category=NotInSupportServerWarning)
+            warnings.warn(
+                "The bot is not in the support server",
+                stacklevel=-1,
+                category=NotInSupportServerWarning,
+            )
         return guild
 
     def get_task(self, task_name):
@@ -180,7 +185,8 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
             await log_error(begroup)
         except Exception as e:
             self.log.exception(
-                "The following exception happened while trying to register appeal views:", e
+                "The following exception happened while trying to register appeal views:",
+                e,
             )
             await log_error(e)
 
@@ -254,14 +260,22 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         self, user: typing.Union[disnake.User, disnake.Member]
     ) -> bool:
         return await self.is_trusted_by_user_id(user.id)
-    async def is_denylisted_from_verification_code_system_by_user_id(self, user_id: int) -> bool:
+
+    async def is_denylisted_from_verification_code_system_by_user_id(
+        self, user_id: int
+    ) -> bool:
         data = await self.cache.get_user_data(
-            user=user_id,
-            default=problems_module.UserData.default(user_id)
+            user=user_id, default=problems_module.UserData.default(user_id)
         )
         return data.verification_code_denylist.is_denylisted()
-    async def is_denylisted_from_verification_code_system(self, user: typing.Union[disnake.User, disnake.Member]):
-        return await self.is_denylisted_from_verification_code_system_by_user_id(user.id)
+
+    async def is_denylisted_from_verification_code_system(
+        self, user: typing.Union[disnake.User, disnake.Member]
+    ):
+        return await self.is_denylisted_from_verification_code_system_by_user_id(
+            user.id
+        )
+
     async def is_trusted_by_user_id(self, user_id: int) -> bool:
         try:
             data = await self.cache.get_user_data(
@@ -271,7 +285,10 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
                 ),
             )
         except Exception as e:
-            print("An error occured while trying to find whether someone was trusted:", "".join(traceback.format_exception(e)))
+            print(
+                "An error occured while trying to find whether someone was trusted:",
+                "".join(traceback.format_exception(e)),
+            )
             self.log.exception(e)
             raise
         return data.trusted
@@ -324,7 +341,9 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         Raises:
             RuntimeError: If the guild is not actually denylisted.
         """
-        guild_data = await self.cache.get_guild_data(guild_id=guild.id, default=GuildData.default(guild_id=guild.id))
+        guild_data = await self.cache.get_guild_data(
+            guild_id=guild.id, default=GuildData.default(guild_id=guild.id)
+        )
         if not guild_data.is_denylisted():
             raise RuntimeError("The guild isn't denylisted!")
 
@@ -372,14 +391,14 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
             else:
                 # If no suitable channels found, choose randomly from all channels
                 channel_to_send_to = random.choice(channels_that_we_could_send_to)
-        if guild_data.denylist_reason == float('inf'):
-            until_str = 'indefinitely'
+        if guild_data.denylist_reason == float("inf"):
+            until_str = "indefinitely"
         else:
-            denylist_dt = disnake.utils.format_dt(guild_data, 'R')
+            denylist_dt = disnake.utils.format_dt(guild_data, "R")
             if guild.denylist_expiry < time.time():
                 until_str = f"in the past (since it expired {denylist_dt})"
             else:
-                until_str = f'until {denylist_dt}'
+                until_str = f"until {denylist_dt}"
         await channel_to_send_to.send(
             f"""I have left the guild because the guild is denylisted, under my terms and conditions.
             However, I'm available under the GPL. My source code is at {self.constants.SOURCE_CODE_LINK}, so you could self-host the bot if you wish.
@@ -432,9 +451,9 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
 
     async def is_owner(self, user: disnake.User) -> bool:
         """Helper function to determine whether user qualifies as an owner"""
-        #print("Is owner: ", await self.is_owner(user))
-        #print(await self.fetch_user(1259194910465331274))
-        #print(self.owner_id)
+        # print("Is owner: ", await self.is_owner(user))
+        # print(await self.fetch_user(1259194910465331274))
+        # print(self.owner_id)
         if self.owner_ids:
             return user.id in self.owner_ids
         elif self.owner_id:
@@ -453,12 +472,18 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
 
             except disnake.HTTPException as he:
                 await log_error(he)
-                self.log.exception("An HTTP error happened while trying to know whether {user} owns this bot: ", he)
+                self.log.exception(
+                    "An HTTP error happened while trying to know whether {user} owns this bot: ",
+                    he,
+                )
                 raise
             except Exception as e:
 
                 await log_error(e)
-                self.log.exception("An error happened while trying to know whether {user} owns this bot: ", e)
+                self.log.exception(
+                    "An error happened while trying to know whether {user} owns this bot: ",
+                    e,
+                )
                 raise e
 
     async def register_appeal_views(self):
@@ -482,7 +507,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         try:
             all_infos = self.cache.get_all_appeal_view_infos()
         except problems_module.AppealViewInfoNotFound:
-            return # there aren't any appeal view infos
+            return  # there aren't any appeal view infos
         # Fetch recent message history and store in a dictionary for quick lookup
         history = {
             msg.id: msg for msg in await appeals_channel.history(limit=200).flatten()
@@ -502,7 +527,9 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
 
                     # If the message is not found in history, fetch it
                     if msg is None:
-                        msg = await appeals_channel.fetch_message(appeal_view.message_id)
+                        msg = await appeals_channel.fetch_message(
+                            appeal_view.message_id
+                        )
 
                 # Handle exceptions if message is not found or access is forbidden
                 except disnake.NotFound as nf:
@@ -536,9 +563,8 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
                 view.pages = appeal_view.pages
                 self.add_view(view, msg.id)
         except problems_module.AppealViewInfoNotFound as avinf:
-            return # there are no appeal view infos
+            return  # there are no appeal view infos
             # Add the view from the message to the UI
-
 
         # Raise an exception if any errors occurred during the process
         if errors:
@@ -562,8 +588,11 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
             # raise RuntimeError(
             #     "Oh no..... there is a guild with id None... this will mess up the bot!")
             #  # Make sure that a guild with id _global doesn't mess up stuff
-    async def on_guild_remove(self,guild):
-        await self.cache.remove_all_by_guild_id(guild.id)  # Remove all guild-related stuff
+
+    async def on_guild_remove(self, guild):
+        await self.cache.remove_all_by_guild_id(
+            guild.id
+        )  # Remove all guild-related stuff
 
     async def on_slash_command_error(self, inter, error):
         """Function called when a slash command errors, which will inevitably happen. All the functionality was moved to base_on_error :-)"""

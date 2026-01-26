@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 import logging
 import pickle
 import typing
@@ -40,8 +41,10 @@ from .problems_related_cache import ProblemsRelatedCache
 
 log = logging.getLogger(__name__)
 
+
 class QuizRelatedCache(ProblemsRelatedCache):
     """An extension of ProblemsRelatedCache that contains quiz stuff"""
+
     # MARK: Quiz Sessions
     async def get_quiz_sessions(self, quiz_id: int) -> List[QuizSolvingSession]:
         """Get the quiz sessions for a quiz"""
@@ -51,7 +54,10 @@ class QuizRelatedCache(ProblemsRelatedCache):
             async with aiosqlite.connect(self.db) as conn:
                 conn.row_factory = dict_factory
                 cursor = await conn.cursor()
-                await cursor.execute("SELECT * FROM quiz_submissions_sessions WHERE quiz_id = ?", (quiz_id,))
+                await cursor.execute(
+                    "SELECT * FROM quiz_submissions_sessions WHERE quiz_id = ?",
+                    (quiz_id,),
+                )
                 # For each row retrieved: use from_sqlite_dict to turn into a QuizSolvingSession and return it
                 return [
                     QuizSolvingSession.from_sqlite_dict(item)
@@ -254,9 +260,7 @@ class QuizRelatedCache(ProblemsRelatedCache):
                 "There aren't any quiz sessions found with this special id"
             )
         elif len(potential_sessions) > 1:
-            raise SQLException(
-                "There are too many quiz sessions with this special id"
-            )
+            raise SQLException("There are too many quiz sessions with this special id")
         else:
             return QuizSolvingSession.from_sqlite_dict(potential_sessions[0])
 
@@ -265,7 +269,11 @@ class QuizRelatedCache(ProblemsRelatedCache):
     async def add_quiz(self, quiz: Quiz, insert_sessions: bool = True) -> Quiz:
         """Add a quiz"""
         assert isinstance(quiz, Quiz)
-        warnings.warn("add_quiz will not automatically save its sessions in the future", category=FutureWarning, stacklevel=2)
+        warnings.warn(
+            "add_quiz will not automatically save its sessions in the future",
+            category=FutureWarning,
+            stacklevel=2,
+        )
         if not quiz.empty:
             num_already_existing_quizzes = await self.get_quizzes_by_func(
                 func=lambda _quiz: not _quiz.empty and _quiz.guild_id == quiz.guild_id  # type: ignore
@@ -326,7 +334,10 @@ class QuizRelatedCache(ProblemsRelatedCache):
                             ),
                         )
                 else:
-                    warnings.warn("The QuizSessions are not being saved", category=UnsavedContentWarning)
+                    warnings.warn(
+                        "The QuizSessions are not being saved",
+                        category=UnsavedContentWarning,
+                    )
                 await conn.commit()
         else:
             with mysql_connection(
@@ -364,15 +375,23 @@ class QuizRelatedCache(ProblemsRelatedCache):
                             ),
                         )
                 else:
-                    warnings.warn("The QuizSessions are not being saved", category=UnsavedContentWarning)
+                    warnings.warn(
+                        "The QuizSessions are not being saved",
+                        category=UnsavedContentWarning,
+                    )
         return quiz
 
     def __str__(self):
         raise NotImplementedError
 
-    async def get_quiz(self, quiz_id: int, retrieve_submissions: bool = True) -> Optional[Quiz]:
+    async def get_quiz(
+        self, quiz_id: int, retrieve_submissions: bool = True
+    ) -> Optional[Quiz]:
         """Get the quiz with the id specified. Returns None if not found"""
-        warnings.warn("In the future, quizzes will not retrieve their submissions", category=FutureWarning)
+        warnings.warn(
+            "In the future, quizzes will not retrieve their submissions",
+            category=FutureWarning,
+        )
         assert isinstance(quiz_id, int)
         if self.use_sqlite:
             async with aiosqlite.connect(self.db_name) as conn:
@@ -403,7 +422,9 @@ class QuizRelatedCache(ProblemsRelatedCache):
                     )
                     submissions = await cursor.fetchall()
                     submissions = [
-                        QuizSubmission.from_dict(pickle.loads(item[0]), cache=copy(self))
+                        QuizSubmission.from_dict(
+                            pickle.loads(item[0]), cache=copy(self)
+                        )
                         for item in submissions
                     ]
                 problems = [
@@ -490,6 +511,7 @@ class QuizRelatedCache(ProblemsRelatedCache):
                     "DELETE FROM quiz_submission_sessions WHERE quiz_id = ?", (quiz_id,)
                 )  # Delete the sessions associated with it
                 connection.commit()
+
     # MARK: Quiz Descriptions
 
     async def get_quiz_description(self, quiz_id: int) -> QuizDescription:
@@ -670,6 +692,7 @@ class QuizRelatedCache(ProblemsRelatedCache):
                     "DELETE * FROM quiz_description WHERE quiz_id = ?", (quiz_id,)
                 )  # Delete it
                 connection.commit()
+
     # MARK: misc
     async def get_quizzes_by_func(
         self: "QuizRelatedCache",

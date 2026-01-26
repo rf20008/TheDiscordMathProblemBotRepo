@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 import logging
 import sqlite3
 import typing
@@ -123,7 +124,16 @@ class UserDataRelatedCache(QuizRelatedCache):
                 cursor = await conn.cursor()
                 await cursor.execute(
                     "INSERT OR REPLACE INTO user_data (user_id, denylisted, trusted, denylist_reason, denylist_expiry, verification_code_denylist) VALUES (?, ?, ?, ?, ?, ?)",
-                    (user_id, denylisted_int, trusted_int, new.denylist_reason, new.denylist_expiry, orjson.dumps(new.verification_code_denylist.to_dict()).decode('utf-8')),
+                    (
+                        user_id,
+                        denylisted_int,
+                        trusted_int,
+                        new.denylist_reason,
+                        new.denylist_expiry,
+                        orjson.dumps(new.verification_code_denylist.to_dict()).decode(
+                            "utf-8"
+                        ),
+                    ),
                 )
                 await conn.commit()
                 log.debug("Finished!")
@@ -138,7 +148,16 @@ class UserDataRelatedCache(QuizRelatedCache):
                 cursor = connection.cursor(dictionaries=True)
                 cursor.execute(
                     """INSERT OR REPLACE INTO user_data (user_id, denylisted, trusted, denylist_reason, denylist_expiry, verification_code_denylist) VALUES (%s, %s, %s, %s, %s, %s)""",
-                    (user_id, new.trusted, new.denylisted, new.denylist_reason, new.denylist_expiry, orjson.dumps(new.verification_code_denylist.to_dict()).decode('utf-8')),
+                    (
+                        user_id,
+                        new.trusted,
+                        new.denylisted,
+                        new.denylist_reason,
+                        new.denylist_expiry,
+                        orjson.dumps(new.verification_code_denylist.to_dict()).decode(
+                            "utf-8"
+                        ),
+                    ),
                 )
                 connection.commit()
                 log.debug("Finished!")

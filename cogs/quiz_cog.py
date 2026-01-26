@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 import json
 import typing
 
@@ -46,8 +47,6 @@ log = get_log(__name__)
 # TODO: use mongo db to store the database (as part of the bot, it would query the mongodb and the answer to the question (some could have 1 answer, 100 answrs)
 #  because sql works only for structured data that all have the same format (these almost have the same format, but there are differences because there are
 #  different types of problems like the Computational problem, THe LinearAlgebraProblem, and I'm thinking of adding a Sudoku Problem, a Diophantine Equation Problem
-
-
 
 
 class QuizCog(HelperCog):

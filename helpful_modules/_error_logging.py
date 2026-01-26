@@ -16,6 +16,7 @@ You should have received a copy of the GNU Affero General Public License along w
 If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)"""
+
 import datetime
 import time
 import traceback
@@ -50,9 +51,7 @@ def log_error_to_file(error, file_path=""):
         raise TypeError("error is not an error")
     if file_path == "":
         now = datetime.datetime.now()
-        file_path = (
-            f"error_logs/{now.year} {MONTH_NAMES[now.month]} {now.day}.txt"
-        )
+        file_path = f"error_logs/{now.year} {MONTH_NAMES[now.month]} {now.day}.txt"
     err_msg = traceback.format_exception(type(error), error, tb=error.__traceback__)
     msg = time.asctime() + "\n\n" + "".join([str(item) for item in err_msg]) + "\n\n"
 

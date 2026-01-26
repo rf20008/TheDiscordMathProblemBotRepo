@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 from . import *
 from .quiz import Quiz
 from .quiz_description import QuizDescription, QuizIntensity, QuizTimeLimit

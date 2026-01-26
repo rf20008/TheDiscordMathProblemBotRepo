@@ -35,7 +35,6 @@ Of course, this is licensed under the AGPLv3.
 
 """
 
-
 import typing
 
 from ...FileDictionaryReader import AsyncFileDict
@@ -78,7 +77,9 @@ class PermissionsRequiredRelatedCache(UserDataRelatedCache):
         for key, val in permissions_required.items():
             try:
 
-                if key != 'denylisted' and UDTD[key] != val: # we have to treat 'denylisted` specially
+                if (
+                    key != "denylisted" and UDTD[key] != val
+                ):  # we have to treat 'denylisted` specially
                     return False
             except KeyError:
                 pass

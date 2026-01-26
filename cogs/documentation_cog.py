@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 import traceback
 import typing
 
@@ -53,7 +54,7 @@ class HelpCog(HelperCog):
         self.cache = bot.cache
         self.cached_command_dict = {}
         self.precomputed_command_list_msg = ""
-        self.cached_command_dict_by_cog={}
+        self.cached_command_dict_by_cog = {}
 
     @tasks.loop(seconds=86400)
     async def task_update_cached_command_dict(self):
@@ -98,11 +99,13 @@ class HelpCog(HelperCog):
                     command.cog_name
                 ] = [command]
         self.cached_command_dict = new_cached_command_dict
-        self.cached_command_dict_by_cog=new_cached_command_dict_by_cog
+        self.cached_command_dict_by_cog = new_cached_command_dict_by_cog
         msg = "`Your command was not found. Here is a list of my commands!\n```"
         for cmd_type in ["slash", "user", "message"]:
             msg += f"{cmd_type.title()} commands:\n"
-            for cogName, cogCommands in self.cached_command_dict_by_cog[cmd_type].items():
+            for cogName, cogCommands in self.cached_command_dict_by_cog[
+                cmd_type
+            ].items():
                 msg += f"    Cog {cogName}\n"
                 for command in cogCommands:
                     msg += (

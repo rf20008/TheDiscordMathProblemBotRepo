@@ -31,8 +31,10 @@ class CircularDequeIterator:
         deque (CircularDeque): The CircularDeque instance being iterated.
         index (int): The current index in the deque.
     """
+
     index: int
     deque: "CircularDeque"
+
     def __init__(self, deque: "CircularDeque"):
         """
         Initializes the iterator with the deque to iterate over.
@@ -42,6 +44,7 @@ class CircularDequeIterator:
         """
         self.deque = deque
         self.index = 0
+
     def __iter__(self):
         """
         Returns the iterator object.
@@ -50,6 +53,7 @@ class CircularDequeIterator:
             CircularDequeIterator: The iterator object for the deque.
         """
         return self
+
     def advance(self, steps: int = 1):
         """
         Advances the iterator by a specified number of steps.
@@ -58,6 +62,7 @@ class CircularDequeIterator:
             steps (int, optional): The number of steps to advance. Defaults to 1.
         """
         self.index += steps
+
     def __next__(self) -> typing.Any:
         """
         Returns the next element in the deque.
@@ -85,10 +90,12 @@ class CircularDeque:
         back (int): The index of the back of the deque.
         data (list): The underlying list storing the deque elements.
     """
+
     size: int
     front: int
     back: int
     data: list
+
     @property
     def capacity(self) -> int:
         """
@@ -112,6 +119,7 @@ class CircularDeque:
         self.front = 0
         self.back = self.capacity - 1
         self.size = self.capacity
+
     def __getitem__(self, item) -> typing.Any:
         """
         Retrieves an element by index or slice.
@@ -126,33 +134,40 @@ class CircularDeque:
             TypeError: If the index is not an integer or slice.
             IndexError: If the index is out of range.
         """
-        if not isinstance(item, int) and not isinstance(item, slice): # make sure it's a index
-            raise TypeError(f"CircularDeque indices must be integers or slices, not {item.__class__.__name__}")
-        if isinstance(item, slice): # slcie logic
+        if not isinstance(item, int) and not isinstance(
+            item, slice
+        ):  # make sure it's a index
+            raise TypeError(
+                f"CircularDeque indices must be integers or slices, not {item.__class__.__name__}"
+            )
+        if isinstance(item, slice):  # slcie logic
             data = []
-            for i in range(item.start, item.stop, item.step): # append manually
+            for i in range(item.start, item.stop, item.step):  # append manually
                 data.append(self[i])
             return data
-        if item >= self.size or item < - self.size: # make sure index in range
+        if item >= self.size or item < -self.size:  # make sure index in range
             raise IndexError("CircularDeque index out of range")
-        if item>=0:
-            return self.data[(self.front + item)%self.capacity]
-        return self.data[(self.back - item)%self.capacity]
+        if item >= 0:
+            return self.data[(self.front + item) % self.capacity]
+        return self.data[(self.back - item) % self.capacity]
+
     def __setitem__(self, index, value):
         """
-         Sets an element at a specific index or slice.
+        Sets an element at a specific index or slice.
 
-         Args:
-             index (int or slice): The index or slice to set.
-             value (Any or list): The value to set at the specified index or slice.
+        Args:
+            index (int or slice): The index or slice to set.
+            value (Any or list): The value to set at the specified index or slice.
 
-         Raises:
-             TypeError: If the index is not an integer or slice.
-             IndexError: If the index is out of range.
-             ValueError: If the length of the slice doesn't match the value.
-         """
+        Raises:
+            TypeError: If the index is not an integer or slice.
+            IndexError: If the index is out of range.
+            ValueError: If the length of the slice doesn't match the value.
+        """
         if not isinstance(index, int) and not isinstance(index, slice):
-            raise TypeError(f"CircularDeque indices must be integers or slices, not {index.__class__.__name__}")
+            raise TypeError(
+                f"CircularDeque indices must be integers or slices, not {index.__class__.__name__}"
+            )
         if isinstance(index, slice):
             start = index.start or 0
             stop = index.stop or self.size
@@ -161,13 +176,16 @@ class CircularDeque:
                 raise IndexError("Slice indices are out of range")
             R = range(start, stop, step)
             if len(R) != len(value):
-                raise ValueError("The length of the slice must be equal to the length of the value")
+                raise ValueError(
+                    "The length of the slice must be equal to the length of the value"
+                )
             for v, i in zip(R, value):
-                if i >= self.size or i < - self.size:
+                if i >= self.size or i < -self.size:
                     raise IndexError("CircularDeque index out of range")
-                self.data[(self.front + i)%self.capacity] = v
+                self.data[(self.front + i) % self.capacity] = v
         else:
-            self.data[(self.front + index)%self.capacity] = value
+            self.data[(self.front + index) % self.capacity] = value
+
     @property
     def left(self) -> typing.Any:
         """
@@ -182,6 +200,7 @@ class CircularDeque:
         if self.size == 0:
             raise IndexError("Empty CircularDeque has no left()")
         return self.data[self.front]
+
     @property
     def right(self):
         """
@@ -195,7 +214,7 @@ class CircularDeque:
         """
         if self.size == 0:
             raise IndexError("Empty CircularDeque has no right()")
-        return self.data[(self.back-1)%self.capacity]
+        return self.data[(self.back - 1) % self.capacity]
 
     def __len__(self):
         """
@@ -206,7 +225,7 @@ class CircularDeque:
         """
         return self.size
 
-    def resize(self, new_size, allow_data_loss = False):
+    def resize(self, new_size, allow_data_loss=False):
         """
         Resizes the deque to a new size.
 
@@ -218,11 +237,13 @@ class CircularDeque:
             ValueError: If resizing would result in data loss and allow_data_loss is False.
         """
         if len(self) > new_size and not allow_data_loss:
-            raise ValueError(f"Data would be lost by this resize! The old size is {self.size} and the new size is {new_size}")
+            raise ValueError(
+                f"Data would be lost by this resize! The old size is {self.size} and the new size is {new_size}"
+            )
         old_size = min(self.size, new_size)
         new_data = [None for _ in range(new_size)]
         for i in range(old_size):
-            new_data[i] = self.data[(self.front + i)%self.capacity]
+            new_data[i] = self.data[(self.front + i) % self.capacity]
         self.data = new_data
         self.front = 0
         self.back = old_size
@@ -253,16 +274,25 @@ class CircularDeque:
         if isinstance(other, int):
             # Case 1: Multiplying deque by an integer (repeating the deque)
             if other < 0:
-                raise ValueError("Multiplication by a negative number is not supported.")
+                raise ValueError(
+                    "Multiplication by a negative number is not supported."
+                )
 
             new_deque = CircularDeque()  # Create a new deque to store the result
             for _ in range(other):
                 # Add the current deque to the new deque `other` times
-                new_deque.extend_right(self)  # Assuming extend_right appends the entire deque
+                new_deque.extend_right(
+                    self
+                )  # Assuming extend_right appends the entire deque
 
             return new_deque
         else:
-            raise TypeError("Unsupported operand type(s) for *: 'CircularDeque' and '{}'".format(type(other).__name__))
+            raise TypeError(
+                "Unsupported operand type(s) for *: 'CircularDeque' and '{}'".format(
+                    type(other).__name__
+                )
+            )
+
     def __rmul__(self, other):
         """
         Reverse multiplication operation for the deque.
@@ -274,6 +304,7 @@ class CircularDeque:
             CircularDeque: A new deque containing the repeated elements.
         """
         return self.__mul__(self, other)
+
     def __lt__(self, other):
         """
         Compares the deque with another deque for less-than relation.
@@ -289,8 +320,9 @@ class CircularDeque:
         """
         for a, b in zip(self, other):
             if a != b:
-                return a<b
+                return a < b
         return len(self) < len(other)
+
     def __eq__(self, other):
         """
         Checks whether this deque is equal to another deque.
@@ -306,7 +338,7 @@ class CircularDeque:
             return False
         if len(self) != len(other):
             return False
-        for a,b in zip(self, other):
+        for a, b in zip(self, other):
             if a != b:
                 return False
         return True
@@ -328,6 +360,7 @@ class CircularDeque:
             if a != b:
                 return a < b
         return len(self) <= len(other)
+
     def __gt__(self, other):
         """
         Compares the deque with another deque for greater-than relation.
@@ -343,8 +376,9 @@ class CircularDeque:
         """
         for a, b in zip(self, other):
             if a != b:
-                return a>b
+                return a > b
         return len(self) > len(other)
+
     def __ge__(self, other):
         """
         Compares the deque with another deque for greater-than or equal to relation.
@@ -362,6 +396,7 @@ class CircularDeque:
             if a != b:
                 return a > b
         return len(self) >= len(other)
+
     def append_left(self, item):
         """
         Adds an item to the front (left) of the deque.
@@ -371,10 +406,10 @@ class CircularDeque:
 
         If the deque is full, the capacity is doubled before adding the item.
         """
-        if len(self)==self.capacity:
-            self.resize(self.size*2 + 1)
+        if len(self) == self.capacity:
+            self.resize(self.size * 2 + 1)
         self.size += 1
-        self.front = (self.front - 1)%self.capacity
+        self.front = (self.front - 1) % self.capacity
         self.data[self.front] = item
 
     def append_right(self, item):
@@ -390,8 +425,9 @@ class CircularDeque:
             self.resize(self.size * 2 + 1)
 
         self.size += 1
-        self.back = (self.back+1)%self.capacity
+        self.back = (self.back + 1) % self.capacity
         self.data[self.back - 1] = item
+
     def extend_right(self, items):
         """
         Adds multiple items to the back (right) of the deque.
@@ -402,11 +438,16 @@ class CircularDeque:
         If the deque does not have enough capacity, the size is adjusted before adding the items.
         """
         if len(self) + len(items) >= self.capacity:
-            self.resize((self.size + len(items))*2 + 1)
+            self.resize((self.size + len(items)) * 2 + 1)
         for val in items:
-            self.data[self.back] = val  # Store at back (which is exclusive, i.e., the next free slot)
-            self.back = (self.back + 1) % self.capacity  # Move back pointer to the next free slot
+            self.data[self.back] = (
+                val  # Store at back (which is exclusive, i.e., the next free slot)
+            )
+            self.back = (
+                self.back + 1
+            ) % self.capacity  # Move back pointer to the next free slot
             self.size += 1
+
     def extend_left(self, items, reverse=True):
         """
         Adds multiple items to the front (left) of the deque.
@@ -418,12 +459,17 @@ class CircularDeque:
         If the deque does not have enough capacity, the size is adjusted before adding the items.
         """
         if len(self) + len(items) >= self.capacity:
-            self.resize((self.size + len(items))*2 + 1)
+            self.resize((self.size + len(items)) * 2 + 1)
         vitems = reversed(items) if reverse else items
         for val in vitems:
-            self.data[(self.front - 1) % self.capacity] = val  # Store at back (which is exclusive, i.e., the next free slot)
-            self.front = (self.front - 1) % self.capacity  # Move front pointer to the next free slot
+            self.data[(self.front - 1) % self.capacity] = (
+                val  # Store at back (which is exclusive, i.e., the next free slot)
+            )
+            self.front = (
+                self.front - 1
+            ) % self.capacity  # Move front pointer to the next free slot
             self.size += 1
+
     def append(self, item):
         """
         Adds an item to the back (right) of the deque.
@@ -432,6 +478,7 @@ class CircularDeque:
             item: The item to add to the deque.
         """
         self.append_right(item)
+
     def pop_left(self):
         """
         Removes and returns the item from the front (left) of the deque.
@@ -444,14 +491,14 @@ class CircularDeque:
 
         If the deque's size falls below a threshold, the capacity is reduced.
         """
-        if len(self)==0:
+        if len(self) == 0:
             raise ValueError("Cannot pop from an empty CircularDeque")
-        if len(self) < self.capacity//5:
-            self.resize(self.size//2 + 1)
+        if len(self) < self.capacity // 5:
+            self.resize(self.size // 2 + 1)
 
         val = self.data[self.front]
         self.data[self.front] = None
-        self.front = (self.front+1)%self.capacity
+        self.front = (self.front + 1) % self.capacity
         self.size -= 1
         return val
 
@@ -472,31 +519,35 @@ class CircularDeque:
         if len(self) < self.capacity // 5:
             self.resize(self.size // 2 + 1)
 
-        val = self.data[(self.back-1)%self.capacity]
-        self.data[(self.back-1)%self.capacity] = None
-        self.back = (self.back -1) % self.capacity
+        val = self.data[(self.back - 1) % self.capacity]
+        self.data[(self.back - 1) % self.capacity] = None
+        self.back = (self.back - 1) % self.capacity
         self.size -= 1
         return val
-    def index(self, x, start=0, end = -1):
+
+    def index(self, x, start=0, end=-1):
         if end == -1:
             end = self.size
         for i in range(start, end):
             if self[i] == x:
                 return i
         return -1
+
     def count(self, x):
         occurrences = 0
         for item in self:
-            if item==x:
+            if item == x:
                 occurrences += 1
         return occurrences
+
     def __max__(self):
-        if len(self)==0:
+        if len(self) == 0:
             raise ValueError("Empty CircularDeque has no max()")
         cur_max = self[0]
         for i in range(1, self.size):
             cur_max = max(cur_max, self[i])
         return cur_max
+
     def __min__(self):
         if len(self) == 0:
             raise ValueError("Empty CircularDeque has no min()")
@@ -504,7 +555,8 @@ class CircularDeque:
         for i in range(1, self.size):
             cur_min = min(cur_min, self[i])
         return cur_min
-    def __sum__(self, start = 0):
+
+    def __sum__(self, start=0):
         ssum = start
         for item in self:
             ssum += item
@@ -521,13 +573,15 @@ class CircularDeque:
 
     def insert(self, index, item):
         if index < 0 or index > self.size:
-            raise IndexError('Index out of range')
+            raise IndexError("Index out of range")
         if self.size == self.capacity:
             self.resize(self.capacity * 2)
 
         # Shift elements to the right from the index
         for i in range(self.size, index, -1):
-            self.data[(self.front + i) % self.capacity] = self.data[(self.front + i - 1) % self.capacity]
+            self.data[(self.front + i) % self.capacity] = self.data[
+                (self.front + i - 1) % self.capacity
+            ]
 
         # Insert the item at the given index
         insert_index = (self.front + index) % self.capacity
@@ -540,22 +594,32 @@ class CircularDeque:
             if self.data[actual_index] == value:
                 # Shift elements to the left from the index
                 for j in range(i, self.size - 1):
-                    self.data[(self.front + j) % self.capacity] = self.data[(self.front + j + 1) % self.capacity]
+                    self.data[(self.front + j) % self.capacity] = self.data[
+                        (self.front + j + 1) % self.capacity
+                    ]
                 self.size -= 1
-                self.data[(self.front + self.size) % self.capacity] = None  # Clear the last element
+                self.data[(self.front + self.size) % self.capacity] = (
+                    None  # Clear the last element
+                )
                 return value
-        raise ValueError(f'{value} not found in deque')
+        raise ValueError(f"{value} not found in deque")
 
     def __delitem__(self, index):
         if index < 0 or index >= self.size:
-            raise IndexError('Index out of range')
+            raise IndexError("Index out of range")
 
         # Shift elements to the left from the index
         for i in range(index, self.size - 1):
-            self.data[(self.front + i) % self.capacity] = self.data[(self.front + i + 1) % self.capacity]
+            self.data[(self.front + i) % self.capacity] = self.data[
+                (self.front + i + 1) % self.capacity
+            ]
         self.size -= 1
-        self.data[(self.front + self.size) % self.capacity] = None  # Clear the last element
+        self.data[(self.front + self.size) % self.capacity] = (
+            None  # Clear the last element
+        )
+
     def empty(self):
         return self.size == 0
+
     def __str__(self):
         return str([item for item in self])

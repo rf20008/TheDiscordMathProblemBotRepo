@@ -35,23 +35,34 @@ class AppealViewChannelCantSeeException(Exception):
 
 class CalculatorError(ArithmeticError):
     """Raised when the Calculator errors"""
+
     pass
+
+
 class ArithmeticOverflowError(CalculatorError):
     """Raised when the arithmetic operation overflows"""
+
     pass
+
 
 class ArithmeticSyntaxError(CalculatorError):
     "Raised when an expression given to the calculator has bad syntax"
     pass
 
+
 class ArithmeticTypeError(CalculatorError):
     """Raised when, while evaluating an expression, an expression is evaluated that requires an operand to have a type it does not"""
+
     pass
+
 
 class DomainError(CalculatorError):
     """Raised when someone attempts to evaluate a function outside its domain"""
+
     pass
+
 
 class CalculatorZeroDivisionError(CalculatorError, ZeroDivisionError):
     """Raised when the calculator tries to divide by zero, but cannot"""
+
     pass

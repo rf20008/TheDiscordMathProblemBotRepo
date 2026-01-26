@@ -1,4 +1,5 @@
 """Admin-related commands. Licensed under GPLv3"""
+
 """
 You can distribute any version of the Software created and distributed *before* 23:17:55.00 July 28, 2024 GMT-4
 under the GNU General Public License version 3 or at your option, any  later option.

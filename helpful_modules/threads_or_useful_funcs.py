@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 import asyncio
 import concurrent.futures
 import datetime
@@ -257,10 +258,16 @@ def file_version_of_item(item: str, file_name: str) -> disnake.File:
         raise TypeError("file_name is not a string")
     return disnake.File(io.BytesIO(bytes(item, "utf-8")), filename=file_name)
 
+
 def generate_custom_id(bytelen: int = 20):
     return os.urandom(bytelen).hex()
 
-async def async_wait_for_future(future: asyncio.Future | concurrent.futures.Future, timeout: float | None = None, interval: float = 0.3):
+
+async def async_wait_for_future(
+    future: asyncio.Future | concurrent.futures.Future,
+    timeout: float | None = None,
+    interval: float = 0.3,
+):
     if isinstance(future, asyncio.Future):
         if timeout is not None:
             return await asyncio.wait_for(future, timeout)
@@ -274,6 +281,7 @@ async def async_wait_for_future(future: asyncio.Future | concurrent.futures.Futu
             return future.result()
     raise TimeoutError(f"Future didn't complete within {timeout} seconds")
 
+
 def first_true(lo: int, hi: int, f: Callable[[int], bool]):
 
     # bin search [lo, hi), where f(lo)=false, f(hi)=true
@@ -283,32 +291,35 @@ def first_true(lo: int, hi: int, f: Callable[[int], bool]):
     # if f(mid) is true, then mid...hi is all true so hi=mid else it's false so lo..mid is all false, so lo=mid
     hi += 1
     while hi > lo:
-        mid = (lo + hi)//2
+        mid = (lo + hi) // 2
         if f(mid):
             hi = mid
         else:
-            lo = mid+1
+            lo = mid + 1
     return lo
+
+
 def last_true(lo: int, hi: int, f: Callable[[int], bool]):
 
     # bin search [lo, hi), where f(lo)=true, f(hi)=false
     # We want the last R such that f(x)=true, and there exists no r>R s.t. f(r)=true
     # assume f is monotonically decreasing (f(x) = false implies f(y)=false for all y>x, and f(x)=true implies f(y)=true for all y<x)
-    lo-=1
+    lo -= 1
     while hi > lo:
-        mid = (lo + hi+1)//2
+        mid = (lo + hi + 1) // 2
         if f(mid):
             lo = mid
         else:
-            hi = mid-1
+            hi = mid - 1
     return lo
+
 
 async def read_last_n_lines(filename, n):
     if n < 0:
         async with aiofiles.open(filename, "rb") as f:
             lines = await f.readlines()
         return lines
-    async with aiofiles.open(filename, 'rb') as f:
+    async with aiofiles.open(filename, "rb") as f:
         # Move to the end of the file
         await f.seek(0, 2)
         position = await f.tell()
@@ -321,7 +332,7 @@ async def read_last_n_lines(filename, n):
             char = await f.read(1)
 
             # Check for newline character
-            if char == b'\n' and current_line:
+            if char == b"\n" and current_line:
                 # Store the completed line
                 lines.append(current_line[::-1].decode())
                 current_line = []

@@ -52,5 +52,6 @@ class TestCog(HelperCog):
     @disnake.ext.commands.command(name="test")
     async def test(self, ctx):
         """/test
-        Makes the bot say "test" & takes no arguments. Useful only for debugging purposes"""
+        Makes the bot say "test" & takes no arguments. Useful only for debugging purposes
+        """
         return await ctx.send("test")

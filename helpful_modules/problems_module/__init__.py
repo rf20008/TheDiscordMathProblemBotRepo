@@ -40,6 +40,10 @@ from .linear_algebra_problem import LinearAlgebraProblem
 from .parse_problem import convert_dict_to_problem, convert_row_to_problem
 from .quizzes import *
 from .user_data import UserData
-from .verification_code_info import VerificationCodeInfo, VerificationCodeThreadHashingManager, ScryptParameters
+from .verification_code_info import (
+    VerificationCodeInfo,
+    VerificationCodeThreadHashingManager,
+    ScryptParameters,
+)
 
 __version__ = "0.1.0"

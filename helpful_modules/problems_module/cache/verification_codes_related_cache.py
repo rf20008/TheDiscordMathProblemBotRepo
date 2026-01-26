@@ -32,6 +32,7 @@ from ..verification_code_info import VerificationCodeInfo
 from .appeals_related_cache import AppealsRelatedCache
 from ...dict_factory import dict_factory
 
+
 class VerificationCodesRelatedCache(AppealsRelatedCache):
 
     async def initialize_sql_table(self) -> None:
@@ -44,7 +45,8 @@ class VerificationCodesRelatedCache(AppealsRelatedCache):
             expiry DOUBLE,
             created_at DOUBLE,
             scrypt_parameters TEXT
-        )""")
+        )"""
+        )
 
     async def set_verification_code_info(self, code_info: VerificationCodeInfo):
         if not isinstance(code_info, VerificationCodeInfo):
@@ -63,7 +65,7 @@ class VerificationCodesRelatedCache(AppealsRelatedCache):
                         code_info.salt,
                         code_info.expiry,
                         code_info.created_at,
-                        orjson.dumps(code_info.scrypt_parameters.to_dict())
+                        orjson.dumps(code_info.scrypt_parameters.to_dict()),
                     ),
                 )
                 await conn.commit()
@@ -90,8 +92,7 @@ class VerificationCodesRelatedCache(AppealsRelatedCache):
                         code_info.salt,
                         code_info.expiry,
                         code_info.created_at,
-                        orjson.dumps(code_info.scrypt_parameters.to_dict())
-
+                        orjson.dumps(code_info.scrypt_parameters.to_dict()),
                     ),
                 )
                 await conn.commit()
@@ -134,12 +135,13 @@ class VerificationCodesRelatedCache(AppealsRelatedCache):
                 salt=results[0]["salt"],
                 expiry=results[0]["expiry"],
                 created_at=results[0]["created_at"],
-                scrypt_parameters=orjson.loads(results[0]["scrypt_parameters"])
+                scrypt_parameters=orjson.loads(results[0]["scrypt_parameters"]),
             )
         else:
             raise SQLException(
                 f"The user with id {user_id} has {len(results)} verification code infos; only 1 is expected"
             )
+
     async def delete_verification_code_info(self, user_id: int):
         if not isinstance(user_id, int):
             raise TypeError(
@@ -148,15 +150,19 @@ class VerificationCodesRelatedCache(AppealsRelatedCache):
         if self.use_sqlite:
             async with aiosqlite.connect(self.db) as conn:
                 cursor = await conn.cursor()
-                await cursor.execute("DELETE FROM verification_code_infos WHERE user_id = ?", (user_id,))
+                await cursor.execute(
+                    "DELETE FROM verification_code_infos WHERE user_id = ?", (user_id,)
+                )
                 await conn.commit()
         else:
             async with mysql_connection(
-                    host=self.mysql_db_ip,
-                    password=self.mysql_password,
-                    user=self.mysql_username,
-                    database=self.mysql_db_name,
+                host=self.mysql_db_ip,
+                password=self.mysql_password,
+                user=self.mysql_username,
+                database=self.mysql_db_name,
             ) as conn:
                 cursor = await conn.cursor()
-                await cursor.execute("DELETE FROM verification_code_infos WHERE user_id = %s", (user_id,))
+                await cursor.execute(
+                    "DELETE FROM verification_code_infos WHERE user_id = %s", (user_id,)
+                )
                 await conn.commit()

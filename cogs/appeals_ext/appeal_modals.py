@@ -22,6 +22,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 import time
 
 import disnake
@@ -30,7 +31,13 @@ from helpful_modules import problems_module
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules.custom_embeds import SuccessEmbed, ErrorEmbed
 from helpful_modules.my_modals import MyModal
-from helpful_modules.problems_module import Appeal, AppealViewInfo, AppealType, AppealQuestion, APPEAL_QUESTION_TYPE_NAMES
+from helpful_modules.problems_module import (
+    Appeal,
+    AppealViewInfo,
+    AppealType,
+    AppealQuestion,
+    APPEAL_QUESTION_TYPE_NAMES,
+)
 from .appeal_views import AppealView
 from helpful_modules.threads_or_useful_funcs import generate_new_id
 
@@ -41,9 +48,13 @@ APPEAL_TYPE_REASONS = {
     AppealType.SUPPORT_SERVER_BAN: "Support Server Ban Appeal",
     AppealType.OTHER: "Appeal",
     AppealType.NOT_SET: "NOT SET Appeal",
-    AppealType.UNKNOWN: "Unknown Appeal"
+    AppealType.UNKNOWN: "Unknown Appeal",
 }
-async def get_highest_appeal_num_for(cache: problems_module.MathProblemCache | problems_module.RedisCache, author: int):
+
+
+async def get_highest_appeal_num_for(
+    cache: problems_module.MathProblemCache | problems_module.RedisCache, author: int
+):
     highest_appeal_num = 0
     all_appeals = await cache.get_all_appeals()
     for appeal in all_appeals:
@@ -53,15 +64,17 @@ async def get_highest_appeal_num_for(cache: problems_module.MathProblemCache | p
             highest_appeal_num = appeal.appeal_num
     highest_appeal_num += 1
     return highest_appeal_num
+
+
 async def handle_appeal(
-        *,
-        bot: TheDiscordMathProblemBot,
-        modal_inter: disnake.ModalInteraction,
-        reason: str,
-        cache: problems_module.MathProblemCache | problems_module.RedisCache,
-        custom_ids: dict[AppealQuestion, str],
-        guild_id: int | None = None,
-        appeal_type: AppealType = AppealType.NOT_SET
+    *,
+    bot: TheDiscordMathProblemBot,
+    modal_inter: disnake.ModalInteraction,
+    reason: str,
+    cache: problems_module.MathProblemCache | problems_module.RedisCache,
+    custom_ids: dict[AppealQuestion, str],
+    guild_id: int | None = None,
+    appeal_type: AppealType = AppealType.NOT_SET,
 ):
     try:
         await cache.update_cache()
@@ -75,24 +88,29 @@ async def handle_appeal(
         special_id=generate_new_id(),
         appeal_num=highest_appeal_num,
         user_id=modal_inter.author.id,
-        #guild_id=guild_id,
+        # guild_id=guild_id,
         type=appeal_type.value,
     )
     await cache.set_appeal_data(appeal)
     await modal_inter.send(embed=SuccessEmbed("Appeal should be sent?"))
 
-
-
     appeals_channel = bot.appeals_channel
     # reason = f"This appeal is from {modal_inter.author.mention} and appeals. The reason they appealed is below:. \n\n **Their reason:**\n" + reason
 
-    our_view = AppealView(cache=bot.cache, user_id=modal_inter.author.id, pages=[], special_color=disnake.Color.red(),
-                          guild_id=guild_id, appeal_type=AppealType.GUILD_DENYLIST_APPEAL)
-    our_view.add_pages(AppealView.break_into_pages(
-        f"This {APPEAL_TYPE_REASONS[appeal_type]} is from {modal_inter.author.mention} and appeals for the guild with guild id {guild_id}." +
-        f"This is appeal#{highest_appeal_num}"
-
-    ))
+    our_view = AppealView(
+        cache=bot.cache,
+        user_id=modal_inter.author.id,
+        pages=[],
+        special_color=disnake.Color.red(),
+        guild_id=guild_id,
+        appeal_type=AppealType.GUILD_DENYLIST_APPEAL,
+    )
+    our_view.add_pages(
+        AppealView.break_into_pages(
+            f"This {APPEAL_TYPE_REASONS[appeal_type]} is from {modal_inter.author.mention} and appeals for the guild with guild id {guild_id}."
+            + f"This is appeal#{highest_appeal_num}"
+        )
+    )
     for question in bot.appeal_questions[APPEAL_QUESTION_TYPE_NAMES[appeal_type]]:
         try:
             # Attempt to add pages
@@ -105,7 +123,9 @@ async def handle_appeal(
             # Determine what went wrong
             if question not in custom_ids:
                 # Handle missing question key
-                raise KeyError(f"{question} doesn't have a key in `custom_ids`, which is {custom_ids}") from kerr
+                raise KeyError(
+                    f"{question} doesn't have a key in `custom_ids`, which is {custom_ids}"
+                ) from kerr
             elif custom_ids[question] not in modal_inter.text_values:
                 # Handle missing text value key
                 raise KeyError(
@@ -117,31 +137,38 @@ async def handle_appeal(
 
     msg = await appeals_channel.send(view=our_view, embed=our_view.create_embed())
     our_view.message_id = msg.id
-    await cache.set_appeal_view_info(AppealViewInfo(
-        message_id=msg.id,
-        user_id=modal_inter.author.id,
-        guild_id=None,
-        done=False,
-        pages=our_view.pages,
-        appeal_type=AppealType.DENYLIST_APPEAL
-    ))
+    await cache.set_appeal_view_info(
+        AppealViewInfo(
+            message_id=msg.id,
+            user_id=modal_inter.author.id,
+            guild_id=None,
+            done=False,
+            pages=our_view.pages,
+            appeal_type=AppealType.DENYLIST_APPEAL,
+        )
+    )
 
 
 class AppealModal(MyModal):
     bot: TheDiscordMathProblemBot
     custom_ids: dict[AppealQuestion, str]
+
     def __init__(self, *args, **kwargs):
         self.custom_ids = kwargs.pop("custom_ids", {})
 
         super().__init__(*args, **kwargs)
+
     async def callback(self, modal_inter: disnake.ModalInteraction):
         if not isinstance(modal_inter.bot, TheDiscordMathProblemBot):
             raise TypeError("The bot is of the wrong type")
-        self.bot = modal_inter.bot # type: ignore # (we did a type check earlier)
+        self.bot = modal_inter.bot  # type: ignore # (we did a type check earlier)
         assert isinstance(self.bot, TheDiscordMathProblemBot)
-        assert hasattr(self.bot, 'cache')
+        assert hasattr(self.bot, "cache")
+
+
 class UserDenylistAppealModal(AppealModal):
     undenylist_custom_id: str
+
     def __init__(self, *args, **kwargs):
         self.undenylist_custom_id = kwargs.pop("undenylist_custom_id", None)
         super().__init__(*args, **kwargs)
@@ -151,7 +178,9 @@ class UserDenylistAppealModal(AppealModal):
         cache = self.bot.cache
         # nonlocal reason
         reason = modal_inter.text_values[self.undenylist_custom_id]
-        await modal_inter.send(embed=SuccessEmbed("Thanks! I'm now going to add this to the database :)"))
+        await modal_inter.send(
+            embed=SuccessEmbed("Thanks! I'm now going to add this to the database :)")
+        )
 
         # Create an appeal
         # find the appeal
@@ -167,19 +196,22 @@ class UserDenylistAppealModal(AppealModal):
             cache=self.bot.cache,
             guild_id=None,
             appeal_type=AppealType.DENYLIST_APPEAL,
-            custom_ids=self.custom_ids
+            custom_ids=self.custom_ids,
         )
+
+
 class GuildDenylistAppealModal(AppealModal):
     guild_id_custom_id: str
     custom_ids: dict[AppealQuestion, str]
     represent_custom_id: str
     reason_custom_id: str
+
     async def callback(self, modal_inter: disnake.ModalInteraction):
         await super().callback(modal_inter)
         bot = modal_inter.bot
         if not isinstance(bot, TheDiscordMathProblemBot):
             raise TypeError
-        assert hasattr(bot, 'cache')
+        assert hasattr(bot, "cache")
         cache = bot.cache
         # nonlocal reason
 
@@ -192,10 +224,14 @@ class GuildDenylistAppealModal(AppealModal):
         data = await self.bot.cache.get_guild_data(guild_id=guild_id, default=None)
 
         if not self.bot.is_denylisted_by_guild_id(guild_id):
-            await modal_inter.send(embed=ErrorEmbed("Your Guild is not actually denylisted"))
+            await modal_inter.send(
+                embed=ErrorEmbed("Your Guild is not actually denylisted")
+            )
             return
         reason = modal_inter.text_values[self.reason_custom_id]
-        await modal_inter.send(embed=SuccessEmbed("Thanks! I'm now going to add this to the database :)"))
+        await modal_inter.send(
+            embed=SuccessEmbed("Thanks! I'm now going to add this to the database :)")
+        )
 
         # Create an appeal
         # find the appeal
@@ -203,11 +239,9 @@ class GuildDenylistAppealModal(AppealModal):
         await handle_appeal(
             bot=bot,
             modal_inter=modal_inter,
-            reason = reason,
-            cache= bot.cache,
+            reason=reason,
+            cache=bot.cache,
             guild_id=guild_id,
             appeal_type=AppealType.GUILD_DENYLIST_APPEAL,
-            custom_ids=self.custom_ids
+            custom_ids=self.custom_ids,
         )
-
-

@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 import typing
 
 import aiosqlite
@@ -112,23 +113,20 @@ class AppealsRelatedCache(GuildDataRelatedCache):
             raise SQLException(
                 "There were too many rows with the same special id in the appeals table!"
             )
+
     async def get_all_appeals(self):
         if self.use_sqlite:
             async with aiosqlite.connect(self.db) as conn:
                 conn.row_factory = dict_factory
                 cursor = await conn.cursor()
-                await cursor.execute(
-                    "SELECT * FROM appeals"
-                )
+                await cursor.execute("SELECT * FROM appeals")
                 results = list(await cursor.fetchall())
 
         else:
             async with self.get_a_connection() as connection:
                 cursor = await connection.cursor(DictCursor)
 
-                await cursor.execute(
-                    "SELECT * FROM appeals"
-                )
+                await cursor.execute("SELECT * FROM appeals")
                 results = list(await cursor.fetchall())
 
         return [Appeal.from_dict(appeal) for appeal in results]
@@ -232,23 +230,28 @@ class AppealsRelatedCache(GuildDataRelatedCache):
             raise SQLException(
                 f"Too many ({len(results)} of them) appeal view infos exist with message id {message_id}"
             )
+
     async def del_appeal_view_info(self, message_id: int):
         if not isinstance(message_id, int):
             raise TypeError("Message ID is not an integer")
         if self.use_sqlite:
             async with aiosqlite.connect(self.db) as conn:
                 cursor = await conn.cursor()
-                await cursor.execute("DELETE FROM appeal_view_info WHERE message_id=?", (message_id,))
+                await cursor.execute(
+                    "DELETE FROM appeal_view_info WHERE message_id=?", (message_id,)
+                )
                 await conn.commit()
         else:
             async with mysql_connection(
-                    host=self.mysql_db_ip,
-                    password=self.mysql_password,
-                    user=self.mysql_username,
-                    database=self.mysql_db_name,
+                host=self.mysql_db_ip,
+                password=self.mysql_password,
+                user=self.mysql_username,
+                database=self.mysql_db_name,
             ) as conn:
                 cursor = await conn.cursor()
-                await cursor.execute("DELETE FROM appeal_view_info WHERE message_id=%s", (message_id,))
+                await cursor.execute(
+                    "DELETE FROM appeal_view_info WHERE message_id=%s", (message_id,)
+                )
                 await conn.commit()
 
     async def set_appeal_view_info(self, view_info: AppealViewInfo):
@@ -274,7 +277,7 @@ class AppealsRelatedCache(GuildDataRelatedCache):
                         view_info.guild_id,
                         view_info.done,
                         orjson.dumps(view_info.pages),
-                        int(view_info.appeal_type)
+                        int(view_info.appeal_type),
                     ),
                 )
                 await conn.commit()

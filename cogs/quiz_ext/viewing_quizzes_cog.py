@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 import asyncio
 from io import BytesIO
 import typing
@@ -83,7 +84,8 @@ class ViewingQuizzesCog(HelperCog):
             return True
         else:
             data = await self.cache.get_guild_data(
-                inter.guild.id, default=problems_module.GuildData.default(guild_id=inter.guild_id)
+                inter.guild.id,
+                default=problems_module.GuildData.default(guild_id=inter.guild_id),
             )
             if data.mod_check.check_for_user_passage(inter.author):
                 # Mods can view quizzes
@@ -202,11 +204,12 @@ class ViewingQuizzesCog(HelperCog):
                 solved_quiz: bool = (
                     len(
                         filter(
-                            lambda submission: submission.user_id == inter.author.id, # filter over all submissions they own
+                            lambda submission: submission.user_id
+                            == inter.author.id,  # filter over all submissions they own
                             quiz.submissions,
                         )
                     )
-                    != 0 # do they have one?
+                    != 0  # do they have one?
                 ) or (
                     len(
                         filter(
@@ -217,7 +220,7 @@ class ViewingQuizzesCog(HelperCog):
                             quiz.existing_sessions,
                         )
                     )
-                    != 0 # overtime session?
+                    != 0  # overtime session?
                 )
                 if quiz.description.solvers_can_view_quiz and solved_quiz:
                     allowed = True
@@ -391,7 +394,10 @@ class ViewingQuizzesCog(HelperCog):
             else:
                 if inter.guild is not None:
                     data: GuildData = await self.cache.get_guild_data(
-                        inter.guild_id, default=problems_module.GuildData.default(guild_id=inter.guild_id)
+                        inter.guild_id,
+                        default=problems_module.GuildData.default(
+                            guild_id=inter.guild_id
+                        ),
                     )
                     if data.mod_check.check_for_user_passage(inter.author):
                         allowed = True

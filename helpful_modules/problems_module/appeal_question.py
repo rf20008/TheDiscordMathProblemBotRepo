@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 from typing import Dict
 
 import orjson
@@ -42,15 +43,23 @@ APPEAL_QUESTION_TYPE_NAMES = {
     AppealType.SUPPORT_SERVER_BAN: "support_server_ban",
     AppealType.SUPPORT_SERVER_MISC_PUNISHMENT: "support_server_misc_punishment",
     AppealType.NOT_SET: "not_set",
-    AppealType.UNKNOWN: "unknown"
+    AppealType.UNKNOWN: "unknown",
 }
+
 
 class AppealQuestion(DictConvertible):
     question: str
     char_limit: int
     long_prompt: str
     style: TextInputStyle
-    def __init__(self, question: str, char_limit: int = -1, long_prompt: str = "Answer the question to the best of your abilities.", style: int | TextInputStyle = TextInputStyle.long):
+
+    def __init__(
+        self,
+        question: str,
+        char_limit: int = -1,
+        long_prompt: str = "Answer the question to the best of your abilities.",
+        style: int | TextInputStyle = TextInputStyle.long,
+    ):
 
         if not isinstance(question, str):
             raise TypeError("Your question is not actually a str")
@@ -64,7 +73,9 @@ class AppealQuestion(DictConvertible):
         if not isinstance(char_limit, int):
             raise TypeError("char_limit is not actually an int")
         if char_limit > MAX_CHAR_LIMIT:
-            raise ValueError(f"The character limit you specified is {char_limit} but the maximum character limit allowed is {MAX_CHAR_LIMIT}")
+            raise ValueError(
+                f"The character limit you specified is {char_limit} but the maximum character limit allowed is {MAX_CHAR_LIMIT}"
+            )
         if char_limit < 0:
             raise ValueError("Maximum character limit must be positive")
         self.char_limit = char_limit
@@ -74,7 +85,9 @@ class AppealQuestion(DictConvertible):
         self.long_prompt = long_prompt
 
         if not isinstance(style, (int, TextInputStyle)):
-            raise TypeError(f"style is not a TextInputStyle but is {style} and is of type {style.__class__.__name__}")
+            raise TypeError(
+                f"style is not a TextInputStyle but is {style} and is of type {style.__class__.__name__}"
+            )
 
         if isinstance(style, int):
             self.style = TextInputStyle(style)
@@ -82,16 +95,18 @@ class AppealQuestion(DictConvertible):
             self.style = style
 
     def belongs_to_user(self, user_id: int):
-        raise OwnershipNotDeterminableException("Appeal questions do not belong to anyone")
+        raise OwnershipNotDeterminableException(
+            "Appeal questions do not belong to anyone"
+        )
 
     @classmethod
     def from_dict(cls, data: Dict) -> "AppealQuestion":
         try:
             return cls(
-                question=data.get('question'),
+                question=data.get("question"),
                 char_limit=data.get("char_limit"),
                 long_prompt=data.get("long_prompt"),
-                style=data.get("style")
+                style=data.get("style"),
             )
         except KeyError as err:
             raise FormatException("One or more fields are missing") from err
@@ -103,23 +118,26 @@ class AppealQuestion(DictConvertible):
             "question": self.question,
             "char_limit": self.char_limit,
             "long_prompt": self.long_prompt,
-            "style": int(self.style)
+            "style": int(self.style),
         }
+
     def to_textinput(self) -> TextInput:
         return TextInput(
             label=self.question,
             custom_id=generate_custom_id(),
             style=self.style,
-            max_length=self.char_limit
+            max_length=self.char_limit,
         )
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, AppealQuestion):
             return False
-        return (self.question == other.question and
-                self.char_limit == other.char_limit and
-                self.long_prompt == other.long_prompt and
-                self.style == other.style)
+        return (
+            self.question == other.question
+            and self.char_limit == other.char_limit
+            and self.long_prompt == other.long_prompt
+            and self.style == other.style
+        )
 
     def __hash__(self) -> int:
         return hash((self.question, self.char_limit, self.long_prompt, self.style))

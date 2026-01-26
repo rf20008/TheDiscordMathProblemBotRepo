@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 from .misc_related_cache import MiscRelatedCache
 
 "Mainly used for backwards compatibility"

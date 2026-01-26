@@ -117,9 +117,9 @@ class QuizNotFound(ThingNotFound):
     pass
 
 
-
 class SessionNotFound(ThingNotFound):
     """Raised when a Session isn't found"""
+
     pass
 
 
@@ -234,9 +234,12 @@ class VerificationCodeExpiredException(MathProblemsModuleException):
 
     pass
 
+
 class UnsavedContentWarning(Warning):
     """Raised when content is not being saved"""
+
     pass
+
 
 class PastWarning(Warning):
     """A warning about things that were supported in the past but no longer are"""

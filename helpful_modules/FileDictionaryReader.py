@@ -16,6 +16,7 @@ You should have received a copy of the GNU Affero General Public License along w
 If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)"""
+
 import asyncio
 import json
 import warnings
@@ -42,7 +43,8 @@ class AsyncFileDict:
         if overwrite:
             warnings.warn(
                 "`overwrite` calls asyncio.run. Use with caution (since you can only run `asyncio.run` a few times)",
-                category=RuntimeWarning)
+                category=RuntimeWarning,
+            )
             asyncio.run(self.update_my_file())
 
     async def update_my_file(self):
@@ -158,7 +160,7 @@ class AsyncFileDict:
 
     async def set_underlying_dict(self, new_dict: dict) -> bool:
         """
-        Asynchronously set the internal dictionary to a new dictionary 
+        Asynchronously set the internal dictionary to a new dictionary
         and update the JSON file.
 
         Parameters:

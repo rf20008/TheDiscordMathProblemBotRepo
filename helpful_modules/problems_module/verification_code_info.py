@@ -47,6 +47,7 @@ class ScryptParameters(DictConvertible):
     scrypt_p: int
     scrypt_len: int
     __slots__ = ("scrypt_n", "scrypt_r", "scrypt_p", "scrypt_len")
+
     def belongs_to_user(self, user_id: int):
         raise NotImplementedError("ScryptParameters do not belong to users")
 
@@ -66,51 +67,55 @@ class ScryptParameters(DictConvertible):
             scrypt_n=data.get("scrypt_n", SCRYPT_N),
             scrypt_r=data.get("scrypt_r", SCRYPT_R),
             scrypt_p=data.get("scrypt_p", SCRYPT_P),
-            scrypt_len=data.get("scrypt_len", SCRYPT_LEN)
+            scrypt_len=data.get("scrypt_len", SCRYPT_LEN),
         )
 
 
 DEFAULT_SCRYPT_PARAMETERS = ScryptParameters(
-    scrypt_n=SCRYPT_N,
-    scrypt_r=SCRYPT_R,
-    scrypt_p=SCRYPT_P,
-    scrypt_len=SCRYPT_LEN
+    scrypt_n=SCRYPT_N, scrypt_r=SCRYPT_R, scrypt_p=SCRYPT_P, scrypt_len=SCRYPT_LEN
 )
 
 
 class VerificationCodeThreadHashingManager(concurrent.futures.ThreadPoolExecutor):
     async def submit_hashing_operation(
-            self,
-            *,
-            key: bytes,
-            salt: bytes,
-            scrypt_n: int = SCRYPT_N,
-            scrypt_r: int = SCRYPT_R,
-            scrypt_p: int = SCRYPT_P,
-            scrypt_length: int = SCRYPT_LEN,
-            timeout: float | None = None
+        self,
+        *,
+        key: bytes,
+        salt: bytes,
+        scrypt_n: int = SCRYPT_N,
+        scrypt_r: int = SCRYPT_R,
+        scrypt_p: int = SCRYPT_P,
+        scrypt_length: int = SCRYPT_LEN,
+        timeout: float | None = None,
     ):
-        kdf = Scrypt(salt=salt, n=scrypt_n, r=scrypt_r, p=scrypt_p, length=scrypt_length)
-        future = self.submit(kdf.derive, key_material=key+salt)  # type: ignore
+        kdf = Scrypt(
+            salt=salt, n=scrypt_n, r=scrypt_r, p=scrypt_p, length=scrypt_length
+        )
+        future = self.submit(kdf.derive, key_material=key + salt)  # type: ignore
 
         return await async_wait_for_future(future, timeout=timeout)
 
     async def check_hashing_operation(
-            self,
-            *,
-            expected_key: bytes,
-            key: bytes,
-            salt: bytes,
-            scrypt_n: int = SCRYPT_N,
-            scrypt_r: int = SCRYPT_R,
-            scrypt_p: int = SCRYPT_P,
-            scrypt_length: int = SCRYPT_LEN,
-            timeout: float | None = None):
-        kdf = Scrypt(salt=salt, n=scrypt_n, r=scrypt_r, p=scrypt_p, length=scrypt_length)
+        self,
+        *,
+        expected_key: bytes,
+        key: bytes,
+        salt: bytes,
+        scrypt_n: int = SCRYPT_N,
+        scrypt_r: int = SCRYPT_R,
+        scrypt_p: int = SCRYPT_P,
+        scrypt_length: int = SCRYPT_LEN,
+        timeout: float | None = None,
+    ):
+        kdf = Scrypt(
+            salt=salt, n=scrypt_n, r=scrypt_r, p=scrypt_p, length=scrypt_length
+        )
         future = self.submit(kdf.verify, key, expected_key)  # type: ignore
         return await async_wait_for_future(future, timeout)
 
-    async def submit_with_res(self, func, timeout: float | None = None, *args, **kwargs):
+    async def submit_with_res(
+        self, func, timeout: float | None = None, *args, **kwargs
+    ):
         future = self.submit(fn=func, args=args, kwargs=kwargs)
         return await async_wait_for_future(future, timeout=timeout)
 
@@ -127,18 +132,28 @@ class VerificationCodeInfo(DictConvertible):
         expiry (float): Unix timestamp indicating when the verification code expires.
         created_at (float): Unix timestamp indicating when the verification code was created.
     """
-    hashing_manager: VerificationCodeThreadHashingManager = VerificationCodeThreadHashingManager()
-    __slots__ = ("user_id", "hashed_verification_code", "salt", "expiry", "created_at", "scrypt_parameters")
+
+    hashing_manager: VerificationCodeThreadHashingManager = (
+        VerificationCodeThreadHashingManager()
+    )
+    __slots__ = (
+        "user_id",
+        "hashed_verification_code",
+        "salt",
+        "expiry",
+        "created_at",
+        "scrypt_parameters",
+    )
     scrypt_parameters: ScryptParameters
 
     def __init__(
-            self,
-            user_id: int,
-            hashed_verification_code: bytes,
-            salt: bytes,
-            expiry: float,
-            created_at: float,
-            scrypt_parameters: ScryptParameters | Dict | None = None,
+        self,
+        user_id: int,
+        hashed_verification_code: bytes,
+        salt: bytes,
+        expiry: float,
+        created_at: float,
+        scrypt_parameters: ScryptParameters | Dict | None = None,
     ):
         """
         Initializes a VerificationCodeInfo object.
@@ -199,7 +214,7 @@ class VerificationCodeInfo(DictConvertible):
             "salt": base64.b64encode(self.salt),
             "expiry": self.expiry,
             "created_at": self.created_at,
-            "scrypt_parameters": self.scrypt_parameters.to_dict()
+            "scrypt_parameters": self.scrypt_parameters.to_dict(),
         }
 
     @property
@@ -229,12 +244,15 @@ class VerificationCodeInfo(DictConvertible):
             salt=base64.b64decode(data["salt"]),
             expiry=data["expiry"],
             created_at=data["created_at"],
-            scrypt_parameters=ScryptParameters.from_dict(data["scrypt_parameters"])
+            scrypt_parameters=ScryptParameters.from_dict(data["scrypt_parameters"]),
         )
 
     @classmethod
     async def generate_verification_code_info(
-            cls, user_id: int, duration: float = ONE_WEEK, scrypt_params: ScryptParameters | None = None
+        cls,
+        user_id: int,
+        duration: float = ONE_WEEK,
+        scrypt_params: ScryptParameters | None = None,
     ) -> tuple["VerificationCodeInfo", str]:
         """
         Generates a new verification code and associated information.
@@ -256,13 +274,15 @@ class VerificationCodeInfo(DictConvertible):
         salt = secrets.token_bytes(32)
         created_at = time.time()
         expiry = created_at + duration
-        hashed_code = await VerificationCodeInfo.hashing_manager.submit_hashing_operation(
-            key=secret_code.encode('utf-8'),
-            salt=salt,
-            scrypt_n=scrypt_params.scrypt_n,
-            scrypt_p=scrypt_params.scrypt_p,
-            scrypt_r=scrypt_params.scrypt_r,
-            scrypt_length=scrypt_params.scrypt_len
+        hashed_code = (
+            await VerificationCodeInfo.hashing_manager.submit_hashing_operation(
+                key=secret_code.encode("utf-8"),
+                salt=salt,
+                scrypt_n=scrypt_params.scrypt_n,
+                scrypt_p=scrypt_params.scrypt_p,
+                scrypt_r=scrypt_params.scrypt_r,
+                scrypt_length=scrypt_params.scrypt_len,
+            )
         )
         return (
             cls(
@@ -271,9 +291,9 @@ class VerificationCodeInfo(DictConvertible):
                 salt=salt,
                 expiry=expiry,
                 created_at=created_at,
-                scrypt_parameters=scrypt_params
+                scrypt_parameters=scrypt_params,
             ),
-            secret_code
+            secret_code,
         )
 
     async def check_code(self, possible_code: str, timeout: float = 1.0) -> bool:
@@ -301,13 +321,13 @@ class VerificationCodeInfo(DictConvertible):
 
         return await VerificationCodeInfo.hashing_manager.check_hashing_operation(
             expected_key=self.hashed_verification_code,
-            key=possible_code.encode('utf-8'),
+            key=possible_code.encode("utf-8"),
             salt=self.salt,
             scrypt_n=self.scrypt_parameters.scrypt_n,
             scrypt_r=self.scrypt_parameters.scrypt_r,
             scrypt_p=self.scrypt_parameters.scrypt_p,
             scrypt_length=self.scrypt_parameters.scrypt_len,
-            timeout=timeout
+            timeout=timeout,
         )
 
     def belongs_to_user(self, user_id: int):

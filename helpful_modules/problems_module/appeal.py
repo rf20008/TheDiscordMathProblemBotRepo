@@ -22,6 +22,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 from enum import Enum
 from typing import *
 
@@ -39,8 +40,10 @@ class AppealType(Enum):
     OTHER = 4
     NOT_SET = 5
     UNKNOWN = 6
+
     def __int__(self):
         return self.value
+
 
 class Appeal(DictConvertible):
     __slots__ = (
@@ -72,6 +75,7 @@ class Appeal(DictConvertible):
         self.timestamp = timestamp
         self.appeal_num = appeal_num
         self.special_id = special_id
+
     @classmethod
     def from_dict(cls, data: dict):
         return cls(
@@ -108,7 +112,13 @@ class Appeal(DictConvertible):
 
 class AppealViewInfo(DictConvertible):
     def __init__(
-        self, message_id: int, user_id: int, guild_id: int, done: bool = False, pages: list[str] = None, appeal_type: AppealType | int = AppealType.NOT_SET
+        self,
+        message_id: int,
+        user_id: int,
+        guild_id: int,
+        done: bool = False,
+        pages: list[str] = None,
+        appeal_type: AppealType | int = AppealType.NOT_SET,
     ):
         self.message_id = message_id
         self.user_id = user_id
@@ -133,7 +143,7 @@ class AppealViewInfo(DictConvertible):
             "guild_id": self.guild_id,
             "done": self.done,
             "pages": self.pages,
-            "appeal_type": int(self.appeal_type)
+            "appeal_type": int(self.appeal_type),
         }
 
     @classmethod
@@ -143,8 +153,8 @@ class AppealViewInfo(DictConvertible):
             user_id=data["user_id"],
             guild_id=data["guild_id"],
             done=data.get("done", False),
-            pages = data.get("pages", []),
-            appeal_type = AppealType(data.get("appeal_type", AppealType.NOT_SET.value))
+            pages=data.get("pages", []),
+            appeal_type=AppealType(data.get("appeal_type", AppealType.NOT_SET.value)),
         )
 
     def __repr__(self):

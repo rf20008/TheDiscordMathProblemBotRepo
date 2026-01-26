@@ -327,11 +327,11 @@ def shunting_yard(tokens: list[Token]) -> list[Token]:
             while len(operator_stack)>0 and operator_stack[-1].token_type != TokenType.LEFT_PARENTHESIS:
                 if len(operator_stack) == 0:
                     raise ArithmeticSyntaxError("Mismatched parenthesis")
-                print('hehe', operator_stack)
+                #print('hehe', operator_stack)
                 output_queue.append(operator_stack.pop())
-            print('haha', operator_stack)
+            #print('haha', operator_stack)
             if not (len(operator_stack)>0 and operator_stack[-1].token_type == TokenType.LEFT_PARENTHESIS):
-                raise ArithmeticSyntaxError(f"Mismatched parenthesis. Top token is {operator_stack[-1]}")
+                raise ArithmeticSyntaxError(f"Mismatched parenthesis. Top token is {operator_stack[-1] if len(operator_stack)>0 else '(operator stack empty)'}")
             operator_stack.pop()
             if len(operator_stack) > 0 and operator_stack[-1].token_type != TokenType.UNARY_OPERATOR:
                 output_queue.append(operator_stack.pop())

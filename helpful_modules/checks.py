@@ -272,7 +272,7 @@ def no_insanely_huge_numbers_check(max_num=MAX_NUM):
                 try:
                     if int(it) >= max_num:
                         return False
-                except:
+                except ValueError:
                     pass
                 for i in it.split():
                     try:
@@ -319,9 +319,9 @@ def audit_command_usage_check():
                 extra_info={},
             )
             return True
-        except:
-            exit()
-
+        except Exception as e:
+            traceback.print_exception(e)
+            return True
     return commands.check(predicate)
 
 

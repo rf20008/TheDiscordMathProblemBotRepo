@@ -47,9 +47,9 @@ class GuildConfigCog(HelperCog):
         self.cache: problems_module.MathProblemCache = bot.cache
 
     async def sync_check(
-        self, inter: GuildCommandInteraction, cache_name: str, role: Role
+        self, inter: GuildCommandInteraction, check_name: str, role: Role
     ):
-        if cache_name not in CHECKS:
+        if check_name not in CHECKS:
             return await inter.send("This is not a valid check!")
 
         # TODO: Refactor - don't use setattr
@@ -57,7 +57,7 @@ class GuildConfigCog(HelperCog):
             guild_id=inter.guild_id, default=GuildData.default(inter.guild_id)
         )
         try:
-            check = getattr(data, cache_name)  # Get the check
+            check = getattr(data, check_name)  # Get the check
             role_permissions = role.permissions  # Cache the permissions
             check.permissions = [
                 name

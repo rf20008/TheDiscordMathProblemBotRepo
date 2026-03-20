@@ -19,6 +19,7 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)"""
 
 import datetime
 import io
+import asyncio
 import json
 import typing as t
 
@@ -27,7 +28,7 @@ class ChangeLogEntry:
     def __init__(
         self, *, patchNotes: t.List[str], old: str, new: str, date_released: str
     ):
-        self.patchNotes = "\n".join[patchNotes]
+        self.patchNotes = "\n".join(patchNotes)
         self.patch_notes = patchNotes
         self.old_version = old
         self.new_version = new
@@ -41,7 +42,7 @@ class ChangeLogEntry:
     def to_dict(self) -> dict:
         return {
             "patch_notes": "\n".split(self.patchNotes),
-            "old": self.old_verison,
+            "old": self.old_version,
             "new": self.new_version,
             "date_released": self.date_released.totimestamp(
                 tzinfo=datetime.timezone.utc
@@ -49,7 +50,7 @@ class ChangeLogEntry:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "ChangelogEntry":
+    def from_dict(cls, data: dict) -> "ChangeLogEntry":
         return cls(
             patchNotes=data["patch_notes"],
             old=data["old"],
@@ -66,7 +67,7 @@ class ChangeLogManager:
             asyncio.run(self._open_file())
         except FileNotFoundError:
             raise ValueError("File not found.")
-        self._changelogs: t.List[ChangelogEntry] = []
+        self._changelogs: t.List[ChangeLogEntry] = []
 
     async def _open_file(
         self,
@@ -88,7 +89,7 @@ class ChangeLogManager:
             entries = json.load(file)
             changelogs = []
             for entry in entries.values():
-                changelogs.append(ChangelogEntry.from_dict(entry))
+                changelogs.append(ChangeLogEntry.from_dict(entry))
             return changelogs
 
         self._changelogs = await self._open_file(func=func, mode="r")
@@ -100,7 +101,7 @@ class ChangeLogManager:
 
         return await self._open_file(func=func, mode="w", args=[new])
 
-    async def add_changelog(self, item: ChangelogEntry):
+    async def add_changelog(self, item: ChangeLogEntry):
         data = await self.load_files()
         data.append(item.to_dict())
 
@@ -113,6 +114,6 @@ class ChangeLogManager:
     async def create_changelog(self, data: dict):
         # TODO: finish
         try:
-            return ChangelogEntry(*data)
+            return ChangeLogEntry(**data)
         except BaseException as exc:
             raise RuntimeError("Could not convert it to a dictionary") from exc

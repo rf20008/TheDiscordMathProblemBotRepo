@@ -45,6 +45,7 @@ print(q.stdout)
 
 
 def start():
+    raise NotImplementedError("This function does not work as written. It should be rewritten to use os.execv()")
     print(f"Hello from my subprocess! My PID is {os.getpid()}")
     print(f"{main_script_path}")
 

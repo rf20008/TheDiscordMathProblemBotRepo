@@ -655,7 +655,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         self.log.debug(
             "Deleting data from guilds the bot was kicked from while it was offline"
         )
-        bot_guild_ids = [guild.id for guild in self.guilds]
+        bot_guild_ids = set(guild.id for guild in self.guilds) # we make it a set because checking membership in a set is O(1)
         # The guild_ids of the guilds that the bot is in
         for guild_id in await self.cache.get_guilds():
             # Obtain all guilds the cache stores data (will need to be upgraded.)

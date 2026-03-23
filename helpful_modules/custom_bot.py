@@ -45,6 +45,7 @@ from helpful_modules.problems_module import MathProblemCache, RedisCache
 from helpful_modules.restart_the_bot import RestartTheBot
 from helpful_modules.save_files import FileSaver
 from helpful_modules.file_log import AuditLog
+from .rate_limit import RateLimiter
 
 from ._error_logging import log_error
 from .errors import (
@@ -81,10 +82,13 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
     total_stats: CommandStats | None
     queue: MessageQueue
     closing_things: list[typing.Callable]
-    rate_limiters: list["RateLimiters"]
+    rate_limiters: list["RateLimiter"]
+    global_rate_limiter: RateLimiter
+    appeal_rate_limiter: RateLimiter
 
     def __init__(self, *args, **kwargs):
         self.is_closing = False
+
         self.file_saver = None
         self.appeal_questions = {}
         self.tasks = kwargs.pop("tasks")
@@ -120,6 +124,8 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         self.total_stats = None
         self.this_session = None
         self.queue = MessageQueue()
+        self.appeal_rate_limiter = RateLimiter(self)
+        self.global_rate_limiter = RateLimiter(self)
         self.initialize_stats()
         # self.trusted_users = kwargs.get("trusted_users", None)
         # if not self.trusted_users and self.trusted_users != []:
@@ -185,7 +191,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
             await log_error(begroup)
         except Exception as e:
             self.log.exception(
-                "The following exception happened while trying to register appeal views:",
+                f"The following exception happened while trying to register appeal views: {traceback.format_exc()}",
                 e,
             )
             await log_error(e)
@@ -600,32 +606,35 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         if isinstance(error, KeyboardInterrupt):
             raise error
         try:
-            dict_args = await base_on_error(inter, error)
-        except Exception as e:
-            print(traceback.format_exception(e))
-            raise e
+            try:
+                dict_args = await base_on_error(inter, error)
+            except Exception as e:
+                print(traceback.format_exception(e))
+                raise e
 
-        # print(dict_args)
-        try:
-            await inter.send(**dict_args)
-            return
-        except BaseException as be:
-            await log_error(be)
-            # os._exit(1)
-        try:
-            if inter.response.is_done():
-                await inter.followup.send(**dict_args)
-            else:
-                await inter.response.send_message(**dict_args)
-        except AttributeError as err:
-            print(error, err)
-            await log_error(error, f"error_logs/{str(datetime.datetime.now())}")
-            await inter.send(
-                "An error occurred, and the error message couldn't be sent. However, it has been saved!"
-            )
-
+            print(dict_args)
+            try:
+                await inter.send(**dict_args)
+                return
+            except BaseException as be:
+                await log_error(be)
+                # os._exit(1)
+            try:
+                if inter.response.is_done():
+                    await inter.followup.send(**dict_args)
+                else:
+                    await inter.response.send_message(**dict_args)
+            except AttributeError as err:
+                print(error, err)
+                await log_error(error, f"error_logs/{str(datetime.datetime.now())}")
+                await inter.send(
+                    "An error occurred, and the error message couldn't be sent. However, it has been saved!"
+                )
             raise ExceptionGroup(error, err)
-
+        except Exception as e:
+            await inter.send("An unexpected error occurred.")
+            await log_error(e, f"error_logs/{str(datetime.datetime.now())}")
+            print("\n".join(traceback.format_exception(e)))
     async def on_error(self, event, *args, **kwargs):
         print(f"Error in {event}... uh oh", file=stderr)
         error = sys.exc_info()

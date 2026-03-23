@@ -39,8 +39,8 @@ from .problems_module.errors import (
     LinearAlgebraUserInputErrorException,
     LockedCacheException
 )
-from error_handler.handle_known_errors import handle_known_error
-from error_handler.handle_unexpected_error import handle_unexpected_error
+from .error_handler.handle_known_errors import handle_known_error
+from .error_handler.handle_unexpected_error import handle_unexpected_error
 from .the_documentation_file_loader import DocumentationFileLoader
 
 
@@ -63,5 +63,5 @@ async def base_on_error(
     known_error_result = handle_known_error(error)
     if known_error_result is not None:
         return known_error_result
-    return handle_unexpected_error(error)
+    return await handle_unexpected_error(inter, error)
 

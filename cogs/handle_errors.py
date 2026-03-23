@@ -29,7 +29,7 @@ from time import asctime
 from disnake.ext.commands import CommandOnCooldown, NotOwner
 
 from helpful_modules._error_logging import log_error
-from helpful_modules.base_on_error import get_git_revision_hash
+from helpful_modules.threads_or_useful_funcs import get_git_revision_hash
 from helpful_modules.cooldowns import OnCooldown
 from helpful_modules.custom_embeds import ErrorEmbed
 

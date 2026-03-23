@@ -326,9 +326,10 @@ class DebugCog(HelperCog):
                 "This command is restricted to owners only, but you are not an owner"
             )
         if not isinstance(self.bot.cache, RedisCache):
-            raise RuntimeError(
-                "/redis is not supported if the cache is not a RedisCache"
-            )
+            return await inter.send(ErrorEmbed("/redis is not supported if the cache is not a RedisCache"))
+            #raise RuntimeError(
+            #
+            #)
         raise NotImplementedError("This isn't implemented yet")
 
     @commands.is_owner()

@@ -37,7 +37,7 @@ from disnake import *
 from disnake.ext import commands
 
 from helpful_modules import checks, cooldowns, problems_module
-from helpful_modules.base_on_error import get_git_revision_hash
+from helpful_modules.threads_or_useful_funcs import get_git_revision_hash
 from helpful_modules.problems_module.denylistable import DenylistType
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules.custom_buttons import *
@@ -159,7 +159,7 @@ class MiscCommandsCog(HelperCog):
         try:
             result = await self.cache.run_sql(
                 "SELECT * FROM user_data"
-            )  # TODO: support redis + other caches
+            )  # TODO: implement a method called get_all_trusted_users, that is independent of the database
         except problems_module.SQLNotSupportedInRedisException as err:
             raise NotImplementedError(
                 "Redis cache implementation is not yet implemented"
@@ -185,7 +185,7 @@ class MiscCommandsCog(HelperCog):
                 # A user with this ID does not exist
                 self.bot.trusted_users.remove(user_id)  # delete the user!
                 try:
-                    f = FileSaver(name=4, enabled=True)
+                    f = FileSaver(name=4, enabled=True) # do we even need to do this? we just need to tell the cache to not save it
                     f.save_files(
                         self.bot.cache,
                         vote_threshold=self.bot.vote_threshold,

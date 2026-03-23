@@ -44,14 +44,14 @@ class DocumentationFileLoader:
         # this is deprecated
         warnings.warn(
             category=DeprecationWarning,
-            stacklevel=-1,
+            stacklevel=2,
             message="The DocumentationFileLoader is being deprecated",
         )
 
     def _load_documentation_file(self):
         warnings.warn(
             category=DeprecationWarning,
-            stacklevel=-1,
+            stacklevel=2,
             message="The DocumentationFileLoader is being deprecated",
         )
         with open("docs/documentation.json", "r") as file:
@@ -60,7 +60,7 @@ class DocumentationFileLoader:
     def load_documentation_into_readable_files(self):
         warnings.warn(
             category=DeprecationWarning,
-            stacklevel=-1,
+            stacklevel=2,
             message="The DocumentationFileLoader is being deprecated",
         )
         dictToStoreFileContent = {}

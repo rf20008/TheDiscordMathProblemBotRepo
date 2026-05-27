@@ -82,7 +82,7 @@ def trusted_users_only():
     async def predicate(inter):
         if inter.bot is None:
             raise CustomCheckFailure("Bot is None")
-        if not isinstance(inter.bot, TheDiscordMathProblemBot):
+        if not callable(getattr(bot, "is_trusted", None)):
             raise TypeError("Uh oh; inter.bot isn't TheDiscordMathProblemBot")
         try:
             if await inter.bot.is_trusted(inter.author):
@@ -109,7 +109,7 @@ def administrator_or_trusted_users_only():
         if inter.author.guild_permissions.adminstrator:
             return True
         else:
-            if not isinstance(inter.bot, TheDiscordMathProblemBot):
+            if not callable(getattr(inter.bot, "is_trusted", None)):
                 raise TypeError("Uh oh")
             if await inter.bot.is_trusted(inter.author):
                 return True
@@ -134,12 +134,12 @@ def is_not_denylisted():
     """Check to make sure the user is not denylisted"""
 
     async def predicate(inter):
-        if not isinstance(inter.bot, TheDiscordMathProblemBot):
-            raise TypeError(
-                "Uh oh! We can't check whether people are denylisted if the bot is just an instance of disnake.ext.commands.Bot"
-            )
+        #if not isinstance(inter.bot, TheDiscordMathProblemBot):
+        #    raise TypeError(
+        #        "Uh oh! We can't check whether people are denylisted if the bot is just an instance of disnake.ext.commands.Bot"
+        #    )
 
-        user_data: UserData = await inter.bot.cache.get_user_data(
+        user_data: UserData = await inter.bot.cache.get_user_data( # type: ignore # we assume that it exits
             user_id=inter.author.id,
             default=UserData(user_id=inter.author.id, trusted=False, denylisted=False),
         )

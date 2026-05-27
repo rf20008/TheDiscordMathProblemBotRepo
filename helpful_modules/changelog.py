@@ -22,7 +22,14 @@ import io
 import asyncio
 import json
 import typing as t
+import os
 
+def create_log_entry_from_file(file):
+    entries = json.load(file)
+    changelogs = []
+    for entry in entries.values():
+        changelogs.append(ChangeLogEntry.from_dict(entry))
+    return changelogs
 
 class ChangeLogEntry:
     def __init__(
@@ -33,20 +40,18 @@ class ChangeLogEntry:
         self.old_version = old
         self.new_version = new
         try:
-            self.date_released = datetime.datetime.fromtimestamp(
-                date_released, tzinfo=datetime.timezone.utc
+            self.date_released = datetime.datetime.fromtimestamp( ## ensure that you can convert to a date time
+                date_released, tz=datetime.timezone.utc
             )
         except TypeError:
             raise TypeError("Could not convert date_released to a datetime object")
 
     def to_dict(self) -> dict:
         return {
-            "patch_notes": "\n".split(self.patchNotes),
+            "patch_notes": self.patchNotes.split("\n"),
             "old": self.old_version,
             "new": self.new_version,
-            "date_released": self.date_released.totimestamp(
-                tzinfo=datetime.timezone.utc
-            ),
+            "date_released": self.date_released.timestamp(),
         }
 
     @classmethod
@@ -63,10 +68,8 @@ class ChangeLogManager:
     def __init__(self, file_name: str):
         self.file_name = file_name
         self._lock = asyncio.Lock()
-        try:
-            asyncio.run(self._open_file())
-        except FileNotFoundError:
-            raise ValueError("File not found.")
+        if not os.path.exists(file_name): # ensure filepath exists
+            raise FileNotFoundError(f"{file_name} does not exist")
         self._changelogs: t.List[ChangeLogEntry] = []
 
     async def _open_file(
@@ -85,19 +88,14 @@ class ChangeLogManager:
                 return func(file, *args, *kwargs)  # type: ignore
 
     async def load_files(self):
-        def func(file):
-            entries = json.load(file)
-            changelogs = []
-            for entry in entries.values():
-                changelogs.append(ChangeLogEntry.from_dict(entry))
-            return changelogs
 
-        self._changelogs = await self._open_file(func=func, mode="r")
+
+        self._changelogs = await self._open_file(func=create_log_entry_from_file, mode="r") #type: ignore
         return self._changelogs
 
     async def save_files(self, new: dict):
         def func(file: io.TextIOWrapper, data: dict):
-            file.write(data)
+            json.dump(data, file)
 
         return await self._open_file(func=func, mode="w", args=[new])
 
@@ -106,12 +104,12 @@ class ChangeLogManager:
         data.append(item.to_dict())
 
         def func(file, _data):
-            file.write(_data)
+            json.dump(_data, file)
 
         await self._open_file(func=func, mode="w", args=[data])
 
     @staticmethod
-    async def create_changelog(self, data: dict):
+    async def create_changelog(data: dict):
         # TODO: finish
         try:
             return ChangeLogEntry(**data)

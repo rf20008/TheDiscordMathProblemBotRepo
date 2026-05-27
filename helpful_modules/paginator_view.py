@@ -24,9 +24,9 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 
 import asyncio
 import os
+import re
 import traceback
 from typing import List
-
 import disnake
 from disnake import ModalInteraction
 
@@ -90,9 +90,8 @@ class PaginatorPageViewModal(disnake.ui.Modal):
             )
             return
         # yay! we can now go to that page
-        self.paginator.page_num = (
-            page_num - 1
-        )  # remember, lists are 0-indexed, but they will enter 1-indexed pages
+        self.paginator.page_num = page_num - 1
+        # remember, lists are 0-indexed, but they will enter 1-indexed pages
         # await inter.send("Hello!")
         await inter.edit_original_message(
             embed=self.paginator.create_embed(), view=self.paginator
@@ -123,7 +122,14 @@ class PaginatorView(disnake.ui.View):
         self.user_id = user_id
         self.pages = pages
         self.page_num = 0
-
+    async def interaction_check(self, interaction: disnake.Interaction) -> bool:
+        if interaction.user.id == self.user_id:
+            return True
+        else:
+            await interaction.send(
+                "You can not interact with this because it is not yours", ephemeral=True
+            )
+            return False
     def add_page(self, page_content: str):
         if not isinstance(page_content, str):
             raise TypeError(
@@ -164,61 +170,40 @@ class PaginatorView(disnake.ui.View):
             ),
         )
         return cls(user_id, pages, special_color)
-
     @staticmethod
-    def break_into_pages(
+    def tokenize_string(
         text: str,
-        max_page_length: int = 1500,
-        *,
-        breaking_chars: str = DEFAULT_BREAKING_CHARS,
-    ) -> List[str]:
-        """
-        Breaks a long text into smaller pages suitable for pagination.
-
-        Args:
-            text (str): The input text to be paginated.
-            max_page_length (int, optional): The maximum length of each page. Defaults to 1500.
-            breaking_chars (str, optional): Characters used for breaking the text into tokens. Defaults to " .!?\\n".
-
-        Returns:
-            list[str]: A list of pages, each containing a portion of the input text.
-        """
+        breaking_chars: str = DEFAULT_BREAKING_CHARS
+    ):
+        pattern = rf".+?(?:[{re.escape(breaking_chars)}]|$)"
+        return re.findall(pattern, text)
+    @staticmethod
+    def validate_break_arguments(
+        text: str, max_page_length: int = 1500, breaking_chars: str = DEFAULT_BREAKING_CHARS
+    ):
         if not isinstance(text, str):
             raise TypeError("Expected 'text' to be a string.")
         if not isinstance(max_page_length, int):
             raise TypeError("Expected 'max_page_length' to be an integer.")
         if not isinstance(breaking_chars, str):
             raise TypeError("Expected 'breaking_chars' to be a string.")
-
+        if max_page_length <= 0:
+            raise ValueError("'max_page_length' must be positive.")
+    @staticmethod
+    def create_pages(tokens: list[str], max_page_length: int = 1500):
         pages = []
-        breaking_chars = set(breaking_chars)
-        tokens = []
-        cur_token = []
-
-        # Tokenize the text based on breaking characters
-        for char in text:
-            cur_token.append(char)
-            if char in breaking_chars:
-                tokens.append("".join(cur_token))
-                cur_token.clear()
-        if cur_token:
-            tokens.append("".join(cur_token))
-        del cur_token
-
-        cur_page = []
-        cur_length = 0
-
-        # Iterate through tokens to create pages
-        for token_idx in range(len(tokens)):
-            cur_token = tokens[token_idx]
+        cur_page = [] # a list of all characters in the page
+        cur_length = 0 # The total number of characters in the page
+        for token_idx, cur_token in enumerate(tokens):
             # If the current token exceeds the max page length, split it into smaller chunks
             if len(cur_token) > max_page_length:
+                # Is there a new page
                 if cur_page:
                     # Add the old page we were working on first
                     pages.append("".join(cur_page))
                     cur_page.clear()
                     cur_length = 0
-
+                # Split the current token into segments of length max_page_length
                 for i in range(0, len(cur_token), max_page_length):
                     pages.append(
                         cur_token[i : i + max_page_length]
@@ -239,6 +224,27 @@ class PaginatorView(disnake.ui.View):
             pages.append("".join(cur_page))
 
         return pages
+    @staticmethod
+    def break_into_pages(
+        text: str,
+        max_page_length: int = 1500,
+        *,
+        breaking_chars: str = DEFAULT_BREAKING_CHARS,
+    ) -> List[str]:
+        """
+        Breaks a long text into smaller pages suitable for pagination.
+
+        Args:
+            text (str): The input text to be paginated.
+            max_page_length (int, optional): The maximum length of each page. Defaults to 1500.
+            breaking_chars (str, optional): Characters used for breaking the text into tokens. Defaults to " .!?\\n".
+
+        Returns:
+            list[str]: A list of pages, each containing a portion of the input text.
+        """
+        PaginatorView.validate_break_arguments(text, max_page_length, breaking_chars=breaking_chars)
+        return PaginatorView.create_pages(PaginatorView.tokenize_string(text, breaking_chars=breaking_chars), max_page_length=max_page_length)
+
 
     async def interaction_check(self, interaction: disnake.Interaction) -> bool:
         return interaction.author.id == self.user_id
@@ -249,12 +255,8 @@ class PaginatorView(disnake.ui.View):
         button: disnake.ui.Button,
         inter: disnake.MessageInteraction,
     ) -> None:
-        await inter.response.defer()
-        if inter.author.id != self.user_id:
-            await inter.send(
-                "You can not interact with this because it is not yours", ephemeral=True
-            )
-            return
+        #await inter.response.defer()
+
         self.page_num -= 1
         self.page_num %= len(self.pages)
         # Of course, we need to show this to the user
@@ -264,12 +266,6 @@ class PaginatorView(disnake.ui.View):
     async def next_page_button(
         self: "PaginatorView", _: disnake.ui.Button, inter: disnake.MessageInteraction
     ) -> None:
-        await inter.response.defer()
-        if inter.author.id != self.user_id:
-            await inter.send(
-                "You can not interact with this because it is not yours", ephemeral=True
-            )
-            return
         self.page_num += 1
         self.page_num %= len(self.pages)
         await inter.edit_original_response(view=self, embed=self.create_embed())
@@ -289,11 +285,6 @@ class PaginatorView(disnake.ui.View):
     async def go_to_page_button(
         self, button: disnake.ui.Button, inter: disnake.MessageInteraction
     ) -> disnake.ui.Modal | None:
-        if inter.author.id != self.user_id:
-            await inter.send(
-                "You can not interact with this because it is not yours", ephemeral=True
-            )
-            return None
         component = disnake.ui.TextInput(
             label="What page do you want to go to?",
             value=None,
@@ -322,3 +313,4 @@ class PaginatorView(disnake.ui.View):
                     "You didn't send an answer fast enough. You only have **15 seconds**. Please try again."
                 )
             )
+            raise

@@ -116,18 +116,18 @@ async def handle_unexpected_error(inter, error, should_log_error=True, print_err
         user_id=inter.author.id,
         text=error_msg,
         breaking_chars="\n",
-        max_page_length=1900,
+        max_page_length=1800,
         special_color=disnake.Color.red(),
     )
     paginator.add_pages(
         PaginatorView.break_into_pages(
-            traceback_msg, max_page_length=1900, breaking_chars="\n"
+            traceback_msg, max_page_length=1800, breaking_chars="\n"
         )
     )
     if additional_error:
         paginator.add_pages(
             PaginatorView.break_into_pages(
-                additional_error, max_page_length=1900, breaking_chars="\n"
+                additional_error, max_page_length=1800, breaking_chars="\n"
             )
         )
     accounted_for = len(error_msg) + len(traceback_msg) + len(additional_error)
@@ -135,7 +135,7 @@ async def handle_unexpected_error(inter, error, should_log_error=True, print_err
         paginator.add_pages(
             PaginatorView.break_into_pages(
                 embed.description[accounted_for:],
-                max_page_length=1900,
+                max_page_length=1800,
                 breaking_chars="\n",
             )
         )

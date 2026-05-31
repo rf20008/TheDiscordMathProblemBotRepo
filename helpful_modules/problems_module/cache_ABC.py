@@ -22,8 +22,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
 from abc import ABC, abstractmethod
-import asyncio
-import json
 import typing
 from typing import List
 import warnings
@@ -34,23 +32,18 @@ from .appeal import Appeal, AppealViewInfo
 from .base_problem import BaseProblem
 from .dict_convertible import DictConvertible
 from .errors import (
-    AppealViewInfoNotFound,
     FormatException,
-    InvalidDictionaryInDatabaseException,
-    LockedCacheException,
-    ProblemNotFoundException,
     SQLNotSupportedInRedisException,
-    ThingNotFound,
-    VerificationCodeInfoNotFound,
 )
 from .GuildData import GuildData
-from .parse_problem import convert_dict_to_problem
 from .quizzes import Quiz
 from .user_data import UserData
 from .verification_code_info import VerificationCodeInfo
 
 MUST_IMPLEMENT_ERROR = NotImplementedError("Subclasses must implement this")
 GuildID = typing.Optional[int]
+
+
 class AbstractCache(ABC):
     def __init__(self):
         self._async_file_dict = AsyncFileDict("config.json")
@@ -91,10 +84,6 @@ class AbstractCache(ABC):
         return await self.get_all_problems(None)
     async def get_all_problems_by_func(self, func: typing.Callable[[BaseProblem], bool]) -> List[BaseProblem]:
         return filter(func, await self.get_all_problems())
-    @abstractmethod
-    async def get_all_problems(self) -> List[BaseProblem]:
-        """Return a list of all problems stored in the database."""
-        pass
     @abstractmethod
     async def add_problem(self, problem_id, problem: BaseProblem):
         """

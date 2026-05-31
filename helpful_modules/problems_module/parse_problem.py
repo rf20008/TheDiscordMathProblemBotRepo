@@ -26,56 +26,35 @@ from .computational_problem import ComputationalProblem
 from .errors import FormatException
 from .linear_algebra_problem import LinearAlgebraProblem
 
-
+class_map = {
+    "BaseProblem": BaseProblem,
+    "ComputationalProblem": ComputationalProblem,
+    "LinearAlgebraProblem": LinearAlgebraProblem,
+}
 # TODO: When there are new problem types, this must handle it
-def convert_dict_to_problem(data: dict, cache=None):
+def convert_to_problem(data: dict, load_strat: str, cache=None):
     if not isinstance(data, dict):
-        raise TypeError("data is not a dict")
-    if isinstance(data["extra_stuff"], str):
+        raise TypeError("row is not a dict")
+    extra_stuff = data.get("extra_stuff", "{}")
+    if isinstance(extra_stuff, str):
         try:
-            data["extra_stuff"] = orjson.loads(data["extra_stuff"].replace("'", '"'))
-        except BaseException as err:
+            extra_stuff = orjson.loads(extra_stuff.replace("'", '"'))
+        except orjson.JSONDecodeError as err:
             raise FormatException(
-                f"The extra stuff, which is {data['extra_stuff']}, is not valid json"
+                f"The extra stuff, which is {extra_stuff} is not valid json"
             ) from err
     data["voters"] = pickle.loads(data["voters"])
     data["solvers"] = pickle.loads(data["solvers"])
     data["answers"] = pickle.loads(data["answers"])
-    if "type" not in data["extra_stuff"].keys():
-        raise ValueError(f"data {data} doesn't have a type")
-    match data["extra_stuff"]["type"]:
-        case "BaseProblem":
-            return BaseProblem.from_dict(data, cache)
-        case "ComputationalProblem":
-            return ComputationalProblem.from_dict(data, cache)
-        case "LinearAlgebraProblem":
-            return LinearAlgebraProblem.from_dict(data, cache)
-        case _:
-            raise ValueError("Type is mal-formed")
-
-
-def convert_row_to_problem(row: dict, cache=None):
-    if not isinstance(row, dict):
-        raise TypeError("row is not a dict")
-    extra_stuff = row.get("extra_stuff", "{}")
-    if isinstance(row["extra_stuff"], str):
-        try:
-            extra_stuff = orjson.loads(extra_stuff.replace("'", '"'))
-        except BaseException as err:
-            raise FormatException(
-                f"The extra stuff, which is {extra_stuff} is not valid json"
-            ) from err
-    row["voters"] = pickle.loads(row["voters"])
-    row["solvers"] = pickle.loads(row["solvers"])
-    row["answers"] = pickle.loads(row["answers"])
     if "type" not in extra_stuff.keys():
-        raise ValueError(f"row {row} doesn't have a type")
-    match extra_stuff["type"]:
-        case "BaseProblem":
-            return BaseProblem.from_row(row, cache)
-        case "ComputationalProblem":
-            return ComputationalProblem.from_row(row, cache)
-        case "LinearAlgebraProblem":
-            return LinearAlgebraProblem.from_row(row, cache)
-        case _:
-            raise ValueError(f"The row {row} is mal-formed")
+        raise ValueError(f"row {data} doesn't have a Problem type")
+    try:
+        prob_type = class_map[extra_stuff.get("type")]
+    except KeyError:
+        raise ValueError(f"Unknown problem type: {extra_stuff.get('type')}")
+    return getattr(prob_type, load_strat)(data, cache)
+
+def convert_dict_to_problem(data: dict, cache=None):
+    return convert_to_problem(data, cache=cache, load_strat="from_dict")
+def convert_row_to_problem(row: dict, cache=None):
+    return convert_to_problem(row, cache=cache, load_strat="from_row")

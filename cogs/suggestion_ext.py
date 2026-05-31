@@ -157,7 +157,7 @@ class SuggestionCog(HelperCog):
         if len(suggestion) > 5450:
             return await inter.send("Your suggestion is too long.")
         if not self.is_ready:
-            return await inter.send("I am not ready to recieve suggestions!")
+            return await inter.send("I am not ready to receive suggestions!")
 
         await inter.send(
             embed=custom_embeds.SimpleEmbed(

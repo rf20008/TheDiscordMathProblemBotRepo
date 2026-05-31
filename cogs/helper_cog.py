@@ -71,6 +71,7 @@ class HelperCog(ext.commands.Cog):
         bypass_ctx_check=False,
         bypass_argument_checks=False,
     ):
+        raise NotImplementedError("This method is no longer supported!!!")
         """A helper method that will change the vote_threshold to the one specified"""
         if not bypass_ctx_check:
             assert isinstance(
@@ -102,6 +103,7 @@ class HelperCog(ext.commands.Cog):
     ):
         """A helper method that will change the trusted_users.
         This will replace the trusted users with the one given!"""
+        raise NotImplementedError("This method is no longer supported!!!")
         if not bypass_ctx_check:
             assert isinstance(
                 ctx,

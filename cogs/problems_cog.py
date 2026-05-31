@@ -809,6 +809,7 @@ class ProblemsCog(HelperCog):
         The data about you voting is not private; it will be given to people who created/solved/voted for problems and use /user_data get_data
         """
         # Get the problem
+
         try:
             guild_id = inter.guild_id if is_guild_problem else None
             problem = await self.bot.cache.get_problem(
@@ -821,6 +822,8 @@ class ProblemsCog(HelperCog):
             )
             return
         # Step 2: make sure they didn't vote, to make sure people can only vote once
+
+        # TODO: Check for undeletable problems
         if problem.is_voter(inter.author):
             await inter.send(
                 embed=ErrorEmbed(

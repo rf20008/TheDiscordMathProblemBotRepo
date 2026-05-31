@@ -231,15 +231,10 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
             await asyncio.sleep(5)
             self.storer.close()
             await asyncio.gather(*self.closing_things)
-        except Exception as e:
+        except (Exception, KeyboardInterrupt) as e:
             print(f"An exception of {e} happened while the bot was trying to close.")
             self.log.exception(e)
             await log_error(e)
-            await asyncio.sleep(3)
-        except KeyboardInterrupt as err:
-            print(f"An exception of {err} happened while the bot was trying to close.")
-            self.log.exception(err)
-            await log_error(err)
             await asyncio.sleep(3)
         finally:
             await super().close()
@@ -248,9 +243,12 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
     async def maybe_send_closing_message(self):
         guild = self.support_server
         channel = guild.get_channel(ANNOUNCEMENTS_CHANNEL)
-        await channel.send(
-            f"This process will stop functioning in {TIME_TO_WAIT} seconds (if waiting is enabled)"
-        )
+        if WAIT:
+            await channel.send(
+                f"This bot will stop in {TIME_TO_WAIT} seconds."
+            )
+        else:
+            await channel.send("This bot will stop functioning immediately.")
 
     def add_closing_thing(self, thing: FunctionType) -> None:
         if asyncio.iscoroutinefunction(thing):

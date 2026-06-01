@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
-from abc import ABC, abstractmethod
+from .cache_ABC import AbstractCache
 import typing
 from typing import List
 import warnings
@@ -30,11 +30,12 @@ import orjson
 from ..FileDictionaryReader import AsyncFileDict
 from .appeal import Appeal, AppealViewInfo
 from .base_problem import BaseProblem
-from .dict_convertible import DictConvertible, IdentifiableDictConvertible
+from .dict_convertible import DictConvertible
 from .errors import (
     FormatException,
     SQLNotSupportedInRedisException,
-    ThingNotFound
+    ProblemNotFound,
+    QuizNotFound
 )
 from .GuildData import GuildData
 from .quizzes import Quiz
@@ -43,93 +44,31 @@ from .verification_code_info import VerificationCodeInfo
 
 MUST_IMPLEMENT_ERROR = NotImplementedError("Subclasses must implement this")
 GuildID = typing.Optional[int]
-T = typing.TypeVar('T', bound=IdentifiableDictConvertible)
 
-class AbstractCache(ABC):
+
+class RAMCache(AbstractCache):
     def __init__(self, *args, **kwargs) -> None:
         self._async_file_dict = AsyncFileDict("config.json")
-    async def has_thing(self, thing_key: str) -> bool:
-        warnings.warn("This is a slow method. Please override it to be faster")
-        try:
-            await self.get_thing(thing_key, default=None)
-            return True
-        except ThingNotFound:
-            return False
-    @abstractmethod
-    async def add_thing(self, thing: IdentifiableDictConvertible) -> None:
-        """
-        Adds a dictionary convertible object to the cache.
-
-        :param thing: The object to add to the cache.
-        :type thing: DictConvertible
-        :param thing_id: The ID of the object. (If none, will attempt to guess it from thing.id)
-        :type thing: str | None
-        :return: Nothing.
-        """
-        pass
-    async def add_things(self, things: list[IdentifiableDictConvertible]) -> object:
-        """
-        Adds a list of dictionary convertible objects to the cache using a batch set operation.
-
-        :param things: The list of objects to add to the cache.
-        :type things: List[DictConvertible]
-        :return: Nothing.
-        """
-        warnings.warn("This method is slow. Please override it to use a batch query to make it faster", category=RuntimeWarning)
-        for thing in things:
-            await self.add_thing(thing)
-    @abstractmethod
-    async def remove_thing(self, thing_id: str) -> None:
-        """
-        Removes a dictionary convertible object from the cache.
-
-        :param thing: The object to remove from the cache.
-        :type thing: DictConvertible
-        :return: Nothing.
-        """
-        pass
-    @abstractmethod
-    def get_thing(
-            self,
-            thing_id: str,
-            cls: typing.Type[T],
-            default: T | None = None,
-    ) -> IdentifiableDictConvertible | None:
-        """:param thing_guild_id: The guild ID associated with the object.
-        :type thing_guild_id: int
-        :param thing_id: The ID of the object.
-        :type thing_id: int
-        :param cls: The type of the dictionary convertible object.
-        :type cls: typing.Type[DictConvertible]
-        :param default: The default value to return if the object is not found.
-        :type default: DictConvertible or None
-        :return: The retrieved object.
-        :rtype: DictConvertible
-        :raises ThingNotFound: If the object is not found.
-        """
-        pass
+        self.problems: dict[tuple[int, GuildID], BaseProblem] = {}
+        self.quiz_data: dict[int, dict] = {}
+        self.things: dict[object, DictConvertible] = {}
     @property
-    @abstractmethod
     def is_locked(self) -> bool:
         """Return whether the cache is locked"""
-        pass
-    @abstractmethod
+        return False
     async def get_problem(self, guild_id: GuildID, problem_id: int) -> BaseProblem:
         """Attempt to return the problem with guild_id and problem_id =problem_id
         Time complexity: O(1)"""
-        pass
+        return self.problems[(guild_id, problem_id)]
 
-    @abstractmethod
     async def get_all_problems(self) -> List[BaseProblem]:
         """Return a list of all problems!
         Time complexity: O(N)"""
-        pass
+        return list(self.problems.values())
 
-    @abstractmethod
-    async def get_all_things(self) -> list[object]:
+    async def get_all_things(self) -> list[DictConvertible]:
         """Return a list of EVERYTHING in the database"""
-        pass
-
+        raise NotImplementedError("I haven't done this yet")
     async def get_all_problems_by_guild(self, guild_id: GuildID) -> List[BaseProblem]:
         """return a list of all problems with the guild id = id
                 Time complexity: O(N)"""
@@ -143,10 +82,7 @@ class AbstractCache(ABC):
         :return: A list of global problems.
         """
         return await self.get_all_problems_by_guild(None)
-    async def get_all_problems_by_func(self, func: typing.Callable[[BaseProblem], bool]) -> List[BaseProblem]:
-        return list(filter(func, await self.get_all_problems()))
-    @abstractmethod
-    async def add_problem(self, problem_id, problem: BaseProblem):
+    async def add_problem(self, problem_id: int, problem: BaseProblem):
         """
         Add a problem to the cache.
 
@@ -155,16 +91,9 @@ class AbstractCache(ABC):
         :raises TypeError: If 'problem_id' is not an int or 'problem' is not a BaseProblem.
         :raises ValueError: If IDs do not match.
         """
-        pass
-    async def update_problem(self, problem_id: int, problem: BaseProblem):
-        """
-        Update a problem in the cache.
-
-        :param problem_id: The ID of the problem.
-        :param problem: The BaseProblem instance.
-        """
-        return await self.add_problem(problem_id, problem)
-    @abstractmethod
+        if not problem.id == problem_id:
+            raise RuntimeError(f"Problem ID {problem_id} does not match {problem.id}")
+        self.problems[(problem_id, problem.guild_id)] = problem
     async def remove_problem(self, problem_id: int, guild_id: GuildID):
         """
         Remove a problem from the cache.
@@ -173,13 +102,21 @@ class AbstractCache(ABC):
         :param guild_id: The ID of the guild.
         :raises TypeError: If 'problem_id' is not an int or 'guild_id' is not an int.
         """
-        pass
+        if not (problem_id, guild_id) in self.problems:
+            raise ProblemNotFound(f"No problem with ID {problem_id} and guild ID {guild_id} found")
+        del self.problems[(problem_id, guild_id)]
+    async def add_quiz_dict(self, quiz_id: int, quiz_data: dict)-> None:
+        """
+        Add a quiz to the cache.
 
-    @abstractmethod
-    async def add_quiz(self, quiz_id: int, quiz: Quiz) -> Quiz:
+        :param quiz_id: The ID of the quiz.
+        :param quiz_data: The data associated with the quiz.
+        """
+        self.quiz_data[quiz_id] = quiz_data
+    async def add_quiz(self, quiz_id: int, quiz: Quiz):
         """Add a quiz to the cache"""
-        pass
-    @abstractmethod
+        assert quiz_id == quiz.id
+        return await self.add_quiz_dict(quiz.id, quiz.to_dict())
     async def get_quiz(self, quiz_id: int) -> Quiz:
         """
         Get quiz data by quiz ID.
@@ -188,7 +125,9 @@ class AbstractCache(ABC):
         :return: The data associated with the quiz.
         :raises ProblemNotFoundException: If the quiz is not found.
         """
-        pass
+        if quiz_id not in self.quiz_data:
+            raise QuizNotFound("No quiz found with ID {quiz_id}")
+        return Quiz.from_dict(self.quiz_data[quiz_id])
     @abstractmethod
     async def remove_quiz(self, quiz_id: int) -> None:
         """
@@ -196,8 +135,64 @@ class AbstractCache(ABC):
 
         :param quiz_id: The ID of the quiz.
         """
-        pass
+        if quiz_id not in self.quiz_data:
+            return
+        del self.quiz_data[quiz_id]
 
+    async def add_thing(self, thing: DictConvertible, thing_id: str | None = None) -> None:
+        """
+        Adds a dictionary convertible object to the cache.
+
+        :param thing: The object to add to the cache.
+        :type thing: DictConvertible
+        :return: Nothing.
+        """
+        if hasattr(thing, "id") and thing_id is None:
+            self.things[thing.id] = thing
+        else:
+            self.things[thing_id]= thing
+    async def add_things(self, things: list[DictConvertible]) -> object:
+        """
+        Adds a list of dictionary convertible objects to the cache using a batch set operation.
+
+        :param things: The list of objects to add to the cache.
+        :type things: List[DictConvertible]
+        :return: Nothing.
+        """
+        warnings.warn("This method is slow. Please override it to use a batch query to make it faster", category=RuntimeWarning)
+        for thing in things:
+            await self.add_thing(thing)
+    @abstractmethod
+    async def remove_things(self, things: list[DictConvertible]) -> None:
+        """
+        Removes a dictionary convertible object from the cache.
+
+        :param thing: The object to remove from the cache.
+        :type thing: DictConvertible
+        :return: Nothing.
+        """
+        pass
+    @abstractmethod
+    def get_thing(
+            self,
+            thing_guild_id: GuildID,
+            thing_id: int,
+            cls: typing.Type[DictConvertible],
+            default: DictConvertible | None = None
+    ) -> DictConvertible | None:
+        """:param thing_guild_id: The guild ID associated with the object.
+        :type thing_guild_id: int
+        :param thing_id: The ID of the object.
+        :type thing_id: int
+        :param cls: The type of the dictionary convertible object.
+        :type cls: typing.Type[DictConvertible]
+        :param default: The default value to return if the object is not found.
+        :type default: DictConvertible or None
+        :return: The retrieved object.
+        :rtype: DictConvertible
+        :raises ThingNotFound: If the object is not found.
+        """
+        pass
     @abstractmethod
     async def get_user_data(self, user_id: int, default: UserData | None = None) -> UserData | None:
         """Add the data of a user to the cache"""
@@ -277,6 +272,7 @@ class AbstractCache(ABC):
     async def remove_appeal(self, appeal: Appeal) -> None:
         """Remove an appeal from the database."""
         pass
+    @abstractmethod
     async def update_cache(self):
         raise NotImplementedError("This method is being removed due to its expensiveness!!!")
     @abstractmethod
@@ -317,6 +313,7 @@ class AbstractCache(ABC):
     @abstractmethod
     async def del_all_by_user_id(self, user_id: int) -> None:
         pass
+    @abstractmethod
     async def bgsave(
         self,
         schedule: typing.Any,
@@ -345,6 +342,7 @@ class AbstractCache(ABC):
         - BGSaveNotSupportedOnSQLException: If the cache is a SQL cache and does not support background save operations.
         """
         raise MUST_IMPLEMENT_ERROR
+    @abstractmethod
     async def run_sql(
         self, sql: str, placeholders: typing.Optional[typing.List[typing.Any]] = None
     ) -> dict:

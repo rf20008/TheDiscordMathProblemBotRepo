@@ -27,7 +27,7 @@ from typing import List
 
 from helpful_modules.problems_module import BaseProblem
 
-from ..dict_convertible import DictConvertible
+from ..dict_convertible import DictConvertible, IdentifiableDictConvertible
 from ..errors import *
 from .quiz_description import QuizDescription
 from .quiz_problem import QuizProblem
@@ -38,7 +38,7 @@ from .related_enums import QuizIntensity, QuizTimeLimit
 MAX_PROBLEMS_PER_QUIZ = 100  # todo: lower it - character limits
 
 
-class Quiz(DictConvertible):
+class Quiz(IdentifiableDictConvertible):
     """Represents a quiz.
     but it has an additional attribute submissions which is a list of QuizSubmissions"""
 
@@ -96,7 +96,7 @@ class Quiz(DictConvertible):
         return self.problems
 
     @property
-    def id(self):
+    def id(self) -> int:
         return self._id
 
     @property
@@ -161,5 +161,8 @@ class Quiz(DictConvertible):
         return self.problems[item]
     def __setitem__(self, key, value):
         self.problems[key] = value
-    def key(self) -> str:
-        return f"Quiz:{self.quiz_id}"
+    @classmethod
+    def key_of(cls, id: int) -> str:
+        return f"Quiz:{id}"
+    def key(self):
+        return self.key_of(quiz_id=self.id) # type: ignore

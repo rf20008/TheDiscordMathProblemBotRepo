@@ -33,102 +33,114 @@ from .base_problem import BaseProblem
 from .dict_convertible import DictConvertible, IdentifiableDictConvertible
 from .errors import (
     FormatException,
-    SQLNotSupportedInRedisException,
-    ThingNotFound
+    SQLNotSupportedInRedisException, ThingNotFound,
+    CorruptedDataException
 )
 from .GuildData import GuildData
 from .quizzes import Quiz
 from .user_data import UserData
 from .verification_code_info import VerificationCodeInfo
-
+from .cache_ABC import AbstractCache
 MUST_IMPLEMENT_ERROR = NotImplementedError("Subclasses must implement this")
 GuildID = typing.Optional[int]
 T = typing.TypeVar('T', bound=IdentifiableDictConvertible)
 
-class AbstractCache(ABC):
+class AbstractKVBasedCache(AbstractCache, ABC):
     def __init__(self, *args, **kwargs) -> None:
         self._async_file_dict = AsyncFileDict("config.json")
-    async def has_thing(self, thing_key: str) -> bool:
-        warnings.warn("This is a slow method. Please override it to be faster")
-        try:
-            await self.get_thing(thing_key, default=None)
-            return True
-        except ThingNotFound:
-            return False
+
+    @abstractmethod
+    async def delete_all_by_guild_id(self, guild_id: int) -> None:
+        pass
+
+    @abstractmethod
+    async def get_appeal_view_infos(self):
+        """
+        Retrieve all appeal view information stored in Redis.
+
+        Yields:
+        - AppealViewInfo: Each retrieved AppealViewInfo object.
+
+        Raises:
+        - AppealViewInfoNotFound: If no appeal view information is found in Redis.
+        - BaseExceptionGroup: If there are formatting exceptions during result processing.
+        """
+        pass
+    @abstractmethod
+    async def get_all_appeals(self) -> list[Appeal]:
+        """Fetch all appeals from the database."""
+        pass
+
+    @abstractmethod
+    async def get_all_things(self) -> list[IdentifiableDictConvertible]:
+        """Return a list of EVERYTHING in the database"""
+        pass
     @abstractmethod
     async def add_thing(self, thing: IdentifiableDictConvertible) -> None:
         """
-        Adds a dictionary convertible object to the cache.
+        Adds a dictionary convertible object to the cache. If it is already in the cache, it will replace whatever is in there.
 
         :param thing: The object to add to the cache.
         :type thing: DictConvertible
-        :param thing_id: The ID of the object. (If none, will attempt to guess it from thing.id)
-        :type thing: str | None
         :return: Nothing.
         """
         pass
-    async def add_things(self, things: list[IdentifiableDictConvertible]) -> object:
-        """
-        Adds a list of dictionary convertible objects to the cache using a batch set operation.
 
-        :param things: The list of objects to add to the cache.
-        :type things: List[DictConvertible]
-        :return: Nothing.
-        """
-        warnings.warn("This method is slow. Please override it to use a batch query to make it faster", category=RuntimeWarning)
-        for thing in things:
-            await self.add_thing(thing)
     @abstractmethod
     async def remove_thing(self, thing_id: str) -> None:
         """
         Removes a dictionary convertible object from the cache.
 
-        :param thing: The object to remove from the cache.
-        :type thing: DictConvertible
+        :param thing_id: The object to remove from the cache.
+        :type thing_id: str
         :return: Nothing.
         """
         pass
+
     @abstractmethod
-    def get_thing(
+    async def get_thing(
             self,
             thing_id: str,
             cls: typing.Type[T],
             default: T | None = None,
-    ) -> IdentifiableDictConvertible | None:
-        """:param thing_guild_id: The guild ID associated with the object.
-        :type thing_guild_id: int
-        :param thing_id: The ID of the object.
+    ) -> T:
+        """:param thing_id: The ID of the object.
         :type thing_id: int
         :param cls: The type of the dictionary convertible object.
         :type cls: typing.Type[DictConvertible]
         :param default: The default value to return if the object is not found.
         :type default: DictConvertible or None
         :return: The retrieved object.
-        :rtype: DictConvertible
-        :raises ThingNotFound: If the object is not found.
+        :rtype: the same class
+        :raises ThingNotFound: If the object is not found (and default is None).
+        :raises CorruptedDataException: If the object is found in the database, but is of the wrong type
         """
-        pass
-    @property
-    @abstractmethod
-    def is_locked(self) -> bool:
-        """Return whether the cache is locked"""
-        pass
-    @abstractmethod
-    async def get_problem(self, guild_id: GuildID, problem_id: int) -> BaseProblem:
-        """Attempt to return the problem with guild_id and problem_id =problem_id
-        Time complexity: O(1)"""
         pass
 
     @abstractmethod
     async def get_all_problems(self) -> List[BaseProblem]:
         """Return a list of all problems!
         Time complexity: O(N)"""
+        warnings.warn(
+            "There is a faster method to doing this, without a FULL scan of the database. Please override this method.",
+            category=RuntimeWarning)
+        ALL_OBJECTS = await self.get_all_things()  # type: ignore
+        ALL_PROBLEMS = list(filter(lambda problem: isinstance(problem, BaseProblem), ALL_OBJECTS))  # type: ignore
+        return ALL_PROBLEMS
+
+    @property
+    @abstractmethod
+    def is_locked(self) -> bool:
+        """Return whether the cache is locked"""
         pass
 
-    @abstractmethod
-    async def get_all_things(self) -> list[object]:
-        """Return a list of EVERYTHING in the database"""
-        pass
+    async def get_problem(self, guild_id: GuildID, problem_id: int) -> BaseProblem:
+        """Attempt to return the problem with guild_id and problem_id =problem_id
+        Time complexity: O(1)"""
+        prob = await self.get_thing(BaseProblem.key_of(guild_id=guild_id, id=problem_id), cls=BaseProblem)
+        return prob
+
+
 
     async def get_all_problems_by_guild(self, guild_id: GuildID) -> List[BaseProblem]:
         """return a list of all problems with the guild id = id
@@ -145,7 +157,6 @@ class AbstractCache(ABC):
         return await self.get_all_problems_by_guild(None)
     async def get_all_problems_by_func(self, func: typing.Callable[[BaseProblem], bool]) -> List[BaseProblem]:
         return list(filter(func, await self.get_all_problems()))
-    @abstractmethod
     async def add_problem(self, problem_id, problem: BaseProblem):
         """
         Add a problem to the cache.
@@ -155,16 +166,9 @@ class AbstractCache(ABC):
         :raises TypeError: If 'problem_id' is not an int or 'problem' is not a BaseProblem.
         :raises ValueError: If IDs do not match.
         """
-        pass
-    async def update_problem(self, problem_id: int, problem: BaseProblem):
-        """
-        Update a problem in the cache.
-
-        :param problem_id: The ID of the problem.
-        :param problem: The BaseProblem instance.
-        """
-        return await self.add_problem(problem_id, problem)
-    @abstractmethod
+        if not problem_id == problem.id:
+            raise TypeError("IDs do not match")
+        await self.add_thing(problem)
     async def remove_problem(self, problem_id: int, guild_id: GuildID):
         """
         Remove a problem from the cache.
@@ -173,13 +177,13 @@ class AbstractCache(ABC):
         :param guild_id: The ID of the guild.
         :raises TypeError: If 'problem_id' is not an int or 'guild_id' is not an int.
         """
-        pass
+        await self.remove_thing(BaseProblem.key_of(guild_id=guild_id, id=problem_id))
 
-    @abstractmethod
-    async def add_quiz(self, quiz_id: int, quiz: Quiz) -> Quiz:
+
+    async def add_quiz(self, quiz_id: int, quiz: Quiz):
         """Add a quiz to the cache"""
-        pass
-    @abstractmethod
+        assert quiz_id == quiz.id
+        await self.add_thing(quiz)
     async def get_quiz(self, quiz_id: int) -> Quiz:
         """
         Get quiz data by quiz ID.
@@ -188,23 +192,19 @@ class AbstractCache(ABC):
         :return: The data associated with the quiz.
         :raises ProblemNotFoundException: If the quiz is not found.
         """
-        pass
-    @abstractmethod
+        return await self.get_thing(Quiz.key_of(id=quiz_id), cls=Quiz)
     async def remove_quiz(self, quiz_id: int) -> None:
         """
         Remove a quiz from the cache.
 
         :param quiz_id: The ID of the quiz.
         """
-        pass
-
-    @abstractmethod
+        return await self.remove_thing(Quiz.key_of(id=quiz_id))
     async def get_user_data(self, user_id: int, default: UserData | None = None) -> UserData | None:
-        """Add the data of a user to the cache"""
-        pass
-    @abstractmethod
+        return await self.get_thing(UserData.key_of(user_id=user_id), cls=UserData, default=default)
     async def add_user_data(self, user_data: UserData) -> None:
-        pass
+        """Add the data of a user to the cache"""
+        return await self.add_thing(user_data)
     async def get_permissions_required_for_command(self, command_name: str | None) -> dict[str, bool]:
         """
         Get the permissions required for a command.
@@ -217,82 +217,35 @@ class AbstractCache(ABC):
         await self._async_file_dict.read_from_file()
         return self._async_file_dict.dict["permissions_required"][command_name]
 
-    async def user_meets_permissions_required_to_use_command(
-            self,
-            user_id: int,
-            permissions_required: typing.Optional[typing.Dict[str, bool]] = None,
-            command_name: str | None = None,
-    ) -> bool:
-        """
-        Return whether the user meets permissions required to use the command.
 
-        :param user_id: The ID of the user.
-        :param permissions_required: Optional permissions required for the command.
-        :param command_name: Optional name of the command.
-        :return: True if the user meets permissions, False otherwise.
-        """
-        if permissions_required is None:
-            permissions_required = await self.get_permissions_required_for_command(
-                command_name
-            )
-
-        if "trusted" in permissions_required.keys():
-            if (
-                await self.get_user_data(
-                    user_id, default=UserData.default(user_id=user_id)
-                )
-            ).trusted != permissions_required["trusted"]:
-                return False
-
-        if "denylisted" in permissions_required.keys():
-            if (
-                (
-                    await self.get_user_data(
-                        user_id, default=UserData.default(user_id=user_id)
-                    )
-                )
-            ).denylisted != permissions_required["denylisted"]:
-                return False
-        user_data = await self.get_user_data(user_id)
-        return all(
-            getattr(user_data, key) != val for key, val in permissions_required.items()
-        )
-    @abstractmethod
     async def get_appeal(self, special_id: int, default: Appeal | None = None) -> Appeal:
         """Fetch an appeal from the database, with special id specified. If not found, return default (if not None)
         If no appeal is found, and default is None, raise ThingNotFound."""
-        pass
-    @abstractmethod
-    async def get_all_appeals(self) -> list[Appeal]:
-        """Fetch all appeals from the database."""
-        pass
-    @abstractmethod
+        return await self.get_thing(Appeal.key_of(special_id=special_id), cls=Appeal, default=default)
+
     async def add_appeal(self, appeal: Appeal) -> None:
         """Add an appeal to the database."""
-        pass
+        await self.add_thing(appeal)
     async def set_appeal(self, appeal: Appeal) -> None:
         """Change an appeal in the database."""
         return await self.add_appeal(appeal)
-    @abstractmethod
     async def remove_appeal(self, appeal: Appeal) -> None:
         """Remove an appeal from the database."""
-        pass
+        return await self.remove_thing(Appeal.key_of(special_id=appeal.special_id))
     async def update_cache(self):
         raise NotImplementedError("This method is being removed due to its expensiveness!!!")
-    @abstractmethod
     async def add_guild_data(self, guild_data: GuildData) -> None:
         """Add the data of a guild to the cache."""
-        pass
-    @abstractmethod
+        return await self.add_thing(guild_data)
     async def remove_guild_data(self, guild_id: GuildID) -> None:
         """Remove the data of a guild from the cache."""
-        pass
+        return await self.remove_thing(GuildData.key_of(guild_id=guild_id))
     async def del_guild_data(self, guild_id: GuildID) -> None:
         return await self.remove_guild_data(guild_id)
     @abstractmethod
     async def get_guild_data(self, guild_id: GuildID) -> GuildData:
         """Get the data of a guild from the cache."""
-        pass
+        return await self.get_thing(GuildData.key_of(guild_id=guild_id), cls=GuildData)
     async def get_all_by_user_id(self, user_id: int) -> list[dict]:
         things = await self.get_all_things()
         things_authored = []
@@ -359,7 +312,6 @@ class AbstractCache(ABC):
         - SQLNotSupportedInRedisException: Always raised since SQL operations are not supported in a Redis cache.
         """
         raise MUST_IMPLEMENT_ERROR
-    @abstractmethod
     async def set_appeal_view_info(self, view_info: AppealViewInfo):
         """
         Store appeal view information in Redis.
@@ -367,8 +319,7 @@ class AbstractCache(ABC):
         Parameters:
         - view_info (AppealViewInfo): The AppealViewInfo object to store.
         """
-        pass
-    @abstractmethod
+        await self.add_thing(view_info)
     async def get_appeal_view_info(self, view_info: AppealViewInfo):
         """
         Retrieve appeal view information from Redis.
@@ -383,45 +334,21 @@ class AbstractCache(ABC):
         - AppealViewInfoNotFound: If no appeal view information is found for the given message_id.
         - FormatException: If the stored data cannot be decoded into an AppealViewInfo object.
         """
-        pass
-    @abstractmethod
+        return await self.get_thing(AppealViewInfo.key_of(message_id=view_info.message_id), cls=AppealViewInfo)
     async def del_appeal_view_info(self, message_id: int):
         """Delete an appeal view information from the DB."""
-        pass
-    @abstractmethod
-    async def get_appeal_view_infos(self):
-        """
-        Retrieve all appeal view information stored in Redis.
+        return await self.del_thing(AppealViewInfo.key_of(message_id=message_id))
 
-        Yields:
-        - AppealViewInfo: Each retrieved AppealViewInfo object.
-
-        Raises:
-        - AppealViewInfoNotFound: If no appeal view information is found in Redis.
-        - BaseExceptionGroup: If there are formatting exceptions during result processing.
-        """
-        pass
-    @abstractmethod
     async def get_verification_code_info(self, user_id: int) -> VerificationCodeInfo:
-        pass
-    @abstractmethod
+        return await self.get_thing(VerificationCodeInfo.key_of(user_id=user_id), cls=VerificationCodeInfo)
     async def del_verification_code_info(self, user_id: int):
-        pass
+        await self.del_thing(VerificationCodeInfo.key_of(user_id=user_id))
     async def delete_verification_code_info(self, user_id: int):
         return await self.del_verification_code_info(user_id)
-    @abstractmethod
     async def set_verification_code_info(self, code_info: VerificationCodeInfo):
-        pass
+        return await self.add_thing(code_info)
     async def initialize_sql_table(self):
         raise SQLNotSupportedInRedisException(
             "SQL is not supported in Redis, and creating sql tables is not supported in Redis either"
         )
-    @abstractmethod
-    async def get_all_by_user_id(self, user_id: int) -> dict:
-        pass
-    @abstractmethod
-    async def del_all_by_user_id(self, user_id: int) -> dict:
-        pass
-    @abstractmethod
-    async def delete_all_by_guild_id(self, guild_id: int) -> None:
-        pass
+

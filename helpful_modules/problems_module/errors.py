@@ -141,6 +141,9 @@ class FormatException(KeyError, MathProblemsModuleException):
 
     pass
 
+class CorruptedDataException(FormatException):
+    """Raised when the database detects corruption"""
+    pass
 
 class IsRowException(FormatException):
     """Raised when expecting a dictionary but got a row instead."""

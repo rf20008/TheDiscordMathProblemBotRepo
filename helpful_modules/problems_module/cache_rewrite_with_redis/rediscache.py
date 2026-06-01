@@ -34,6 +34,7 @@ from ...FileDictionaryReader import AsyncFileDict
 from ..appeal import Appeal, AppealViewInfo
 from ..base_problem import BaseProblem
 from ..dict_convertible import DictConvertible
+from ..cache_ABC import AbstractCache
 from ..errors import (
     AppealViewInfoNotFound,
     FormatException,
@@ -51,7 +52,7 @@ from ..user_data import UserData
 from ..verification_code_info import VerificationCodeInfo
 
 
-class RedisCache:
+class RedisCache(AbstractCache):
     """A class that is supposed to handle the problems, and have the same API as problems_related_cache"""
 
     def __init__(self, redis_url: str, password: str):
@@ -211,7 +212,7 @@ class RedisCache:
         assert quiz_id == quiz.id
         return await self.add_quiz_dict(quiz.id, quiz.to_dict())
 
-    async def get_quiz(self, quiz_id: int) -> dict:
+    async def get_quiz(self, quiz_id: int) -> Quiz:
         """
         Get quiz data by quiz ID.
 
@@ -221,7 +222,7 @@ class RedisCache:
         """
         result = await self.get_key(f"Quiz:{quiz_id}")
         if result is not None:
-            return orjson.loads(result)
+            return Quiz.from_dict(orjson.loads(result))
         raise ProblemNotFoundException("That quiz is not found")
 
     async def remove_quiz(self, quiz_id: int):

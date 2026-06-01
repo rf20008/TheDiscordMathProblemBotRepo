@@ -500,4 +500,4 @@ class BaseProblem(IdentifiableDictConvertible):
     def key_of(cls, *, guild_id: int | None, id: int) -> str:
         return f"Problem:{guild_id}:{id}"
     def key(self) -> str:
-        return self.key_of(guild_id=self.guild_id, id=self.id)
+        return self.key_of(guild_id=self.guild_id, problem_id=self.id)

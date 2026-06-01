@@ -25,6 +25,7 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 from dataclasses import dataclass
 from typing import Dict, Optional, Union
 from warnings import warn
+from xml.sax.handler import property_encoding
 
 from ...threads_or_useful_funcs import assert_type_or_throw_exception
 from ..dict_convertible import DictConvertible
@@ -101,35 +102,9 @@ class QuizSubmission(DictConvertible):
             {}
         )  # todo: fix the quiz commands to make it a list of QuizSubmissionAnswer(problem_id=quiz_id, guild_id=guild_id
         # with a number
-
     @property
-    def quiz(self):
-        """
-        Return my quiz!
-        (This has been removed since version v0.0.9a!)
-        Returns
-        ----------
-        Quiz
-            This is the quiz that t"""
-        warnings.warn(
-            message="This function has been deprecated! You must use get_my_quiz (which is also deprecated for type-hinting purposes)",
-            category=DeprecationWarning,
-        )
-        raise MathProblemsModuleException("This function is not usable!")
-
-    async def get_my_quiz(self):
-        """Return my Quiz! This function is deprecated for type-hinting purposes.
-        To escape this deprecation, you normally have the associated `MathProblemCache` (we have it in so many places, probably in the bot.cache), so you can use
-        ```py
-        # c is the cache we have
-        # item is the QuizSubmission we are using
-        quiz = await c.get_quiz(item.quiz_id)
-        ```
-        Returns
-        ----------
-        Quiz
-            Returns the quiz that is associated with this!."""
-        raise NotImplementedError("This function is removed!")
+    def key(self):
+        return f"QuizSubmission:{self.user_id}:{self.quiz_id}"
 
     def set_answer(self, problem_id: int, answer: str) -> None:
         """Set the answer of a quiz submission
@@ -170,7 +145,4 @@ class QuizSubmission(DictConvertible):
         c.mutable = dict_["mutable"]
         return c
 
-    async def submit(
-        self,
-    ) -> True:  # type: ignore
-        raise NotImplementedError("This function doesn't do anything!")
+

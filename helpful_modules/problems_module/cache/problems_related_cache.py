@@ -38,6 +38,7 @@ import disnake
 from helpful_modules.dict_factory import dict_factory
 
 from ..base_problem import BaseProblem
+from ..cache_ABC import AbstractCache
 from ..errors import *
 from ..mysql_connector_with_stmt import mysql_connection
 from ..parse_problem import convert_dict_to_problem, convert_row_to_problem
@@ -47,7 +48,7 @@ log = logging.getLogger(__name__)
 
 
 # TODO: make a function that takes into account the 3 types of problems, and make a function that given a problem dictionary, converts the problem to the right type
-class ProblemsRelatedCache:
+class ProblemsRelatedCache(AbstractCache):
     def __init__(
         self,
         *,

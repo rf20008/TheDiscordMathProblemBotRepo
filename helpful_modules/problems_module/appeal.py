@@ -29,7 +29,7 @@ from typing import *
 import orjson
 from disnake.utils import format_dt
 
-from .dict_convertible import DictConvertible
+from .dict_convertible import DictConvertible, IdentifiableDictConvertible
 
 
 class AppealType(Enum):
@@ -45,7 +45,7 @@ class AppealType(Enum):
         return self.value
 
 
-class Appeal(DictConvertible):
+class Appeal(IdentifiableDictConvertible):
     __slots__ = (
         "user_id",
         "appeal_msg",
@@ -64,12 +64,15 @@ class Appeal(DictConvertible):
         timestamp: int,
         appeal_num: int,
         special_id: int,
-        type: int,
+        type: int | AppealType,
     ):
-        try:
-            self.type = AppealType(type)
-        except:
-            raise ValueError(f"{type} is not a valid AppealType")
+        if isinstance(type, int):
+            try:
+                self.type = AppealType(type)
+            except:
+                raise ValueError(f"{type} is not a valid AppealType")
+        else:
+            self.type = type
         self.user_id = user_id
         self.appeal_msg = appeal_msg
         self.timestamp = timestamp
@@ -108,9 +111,11 @@ class Appeal(DictConvertible):
         This is appeal #{self.appeal_num}
         and its special id is {self.special_id}
         """
+    @property
+    def key(self) -> str:
+        return f"Appeal:{self.special_id}"
 
-
-class AppealViewInfo(DictConvertible):
+class AppealViewInfo(IdentifiableDictConvertible):
     def __init__(
         self,
         message_id: int,
@@ -159,3 +164,5 @@ class AppealViewInfo(DictConvertible):
 
     def __repr__(self):
         return f"AppealViewInfo(message_id={self.message_id}, user_id={self.user_id}, guild_id={self.guild_id}, done={self.done} type={self.appeal_type})"
+    def key(self) -> str:
+        return f"AppealViewInfo:{self.message_id}"

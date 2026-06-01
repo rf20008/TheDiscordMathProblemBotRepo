@@ -196,3 +196,5 @@ class QuizSolvingSession(DictConvertible):
             return self.answers[index]
         except IndexError:
             raise IndexError("There is no such index")
+    def key(self):
+        return f"QuizSolvingSession:{self.special_id}"

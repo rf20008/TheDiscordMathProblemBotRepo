@@ -38,7 +38,7 @@ from .related_enums import QuizIntensity, QuizTimeLimit
 MAX_PROBLEMS_PER_QUIZ = 100  # todo: lower it - character limits
 
 
-class Quiz(list, DictConvertible):
+class Quiz(DictConvertible):
     """Represents a quiz.
     but it has an additional attribute submissions which is a list of QuizSubmissions"""
 
@@ -50,8 +50,8 @@ class Quiz(list, DictConvertible):
         category: QuizIntensity = None,
         description: QuizDescription = None,
     ) -> None:
-        super().__init__()
         """Create a new quiz. id is the quiz id and iter is an iterable of QuizMathProblems"""
+        super().__init__()
         assert isinstance(authors, list)
         assert all([isinstance(author, int) for author in authors])
         self.description = description
@@ -61,7 +61,7 @@ class Quiz(list, DictConvertible):
         self.category = category
         self.authors = authors
         self.problems = quiz_problems
-        self.sort(key=lambda problem: problem.id)
+        self.problems.sort(key=lambda problem: problem.id)
 
         self._id = id
 
@@ -89,17 +89,11 @@ class Quiz(list, DictConvertible):
         if insert_location is None:
             insert_location = len(self.problems) - 1
         assert isinstance(problem, QuizProblem)  # Type-checking
-        self.problems.insert(problem, insert_location)
+        self.problems.insert(insert_location, problem)
 
     @property
     def quiz_problems(self):
         return self.problems
-
-    @property
-    def submissions(self):
-        raise AttributeError(
-            "This property is being removed! Please use redis to get them..."
-        )
 
     @property
     def id(self):
@@ -156,12 +150,16 @@ class Quiz(list, DictConvertible):
         authors: typing.List[int],
         existing_sessions: typing.List[QuizSolvingSession],
         submissions: typing.List[QuizSubmission],
-        cache: "MathProblemCache",
     ):
         return cls(
             quiz_problems=problems,
             authors=authors,
             existing_sessions=existing_sessions,
             submissions=submissions,
-            cache=cache,
         )  # type: ignore
+    def __getitem__(self, item):
+        return self.problems[item]
+    def __setitem__(self, key, value):
+        self.problems[key] = value
+    def key(self) -> str:
+        return f"Quiz:{self.quiz_id}"

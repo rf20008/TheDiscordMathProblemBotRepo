@@ -76,3 +76,8 @@ class DictConvertible(Protocol):
 
     def __repr__(self):
         return repr(self.to_dict())
+    def __eq__(self, other):
+        return self.to_dict() == other.to_dict()
+class IdentifiableDictConvertible(DictConvertible, Protocol):
+    @property
+    def key(self)->str: pass

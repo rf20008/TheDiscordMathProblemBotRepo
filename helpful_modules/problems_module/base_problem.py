@@ -34,7 +34,7 @@ from typing import Optional
 import disnake
 import orjson
 
-from .dict_convertible import DictConvertible
+from .dict_convertible import IdentifiableDictConvertible
 from .errors import *
 
 MAX_ANSWERS_PER_PROBLEM = 30
@@ -43,7 +43,7 @@ QUESTION_CHAR_LIMIT = 2000
 
 
 # TODO: finish from_dict so that it knows to convert to a ComputationalProblem or a LinearAlgebraProblem or some other kind of problem
-class BaseProblem(DictConvertible):
+class BaseProblem(IdentifiableDictConvertible):
     """For readability purposes :) This also isn't an ABC."""
 
     def __init__(
@@ -496,3 +496,5 @@ class BaseProblem(DictConvertible):
             and self.author == other.author
             and self.get_extra_stuff() == other.get_extra_stuff()
         )
+    def key(self) -> str:
+        return f"{self.__class__.__name__}:{self.guild_id}:{self.id}"

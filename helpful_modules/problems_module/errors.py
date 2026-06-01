@@ -67,10 +67,11 @@ class TooManyProblems(MathProblemsModuleException):
     pass
 
 
+
 class ThingNotFound(KeyError, IndexError, MathProblemsModuleException):
     """Raised when a thing is not found"""
-
     pass
+
 
 
 class ProblemNotFound(ThingNotFound):

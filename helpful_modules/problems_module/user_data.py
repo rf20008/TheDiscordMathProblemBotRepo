@@ -20,9 +20,10 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)"""
 import time
 import orjson
 from .denylistable import Denylistable, DenylistMetadata, DenylistType
+from .dict_convertible import IdentifiableDictConvertible
 
 
-class UserData(Denylistable):
+class UserData(Denylistable, IdentifiableDictConvertible):
     """A dataclass to store user data for the bot!"""
 
     verification_code_denylist: DenylistMetadata
@@ -121,3 +122,5 @@ class UserData(Denylistable):
             denylist_expiry=0.0,
             verification_code_denylist=None,
         )
+    def key(self) -> str:
+        return f"UserData:{self.user_id}"

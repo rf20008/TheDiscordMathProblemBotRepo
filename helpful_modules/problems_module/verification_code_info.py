@@ -29,7 +29,7 @@ from typing import Dict
 
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
-from .dict_convertible import DictConvertible, T
+from .dict_convertible import DictConvertible, T, IdentifiableDictConvertible
 from .errors import VerificationCodeExpiredException
 from ..threads_or_useful_funcs import async_wait_for_future
 
@@ -49,7 +49,7 @@ class ScryptParameters(DictConvertible):
     __slots__ = ("scrypt_n", "scrypt_r", "scrypt_p", "scrypt_len")
 
     def belongs_to_user(self, user_id: int):
-        raise NotImplementedError("ScryptParameters do not belong to users")
+        raise RuntimeError("ScryptParameters do not belong to users")
 
     def to_dict(self) -> Dict:
         return {
@@ -69,7 +69,6 @@ class ScryptParameters(DictConvertible):
             scrypt_p=data.get("scrypt_p", SCRYPT_P),
             scrypt_len=data.get("scrypt_len", SCRYPT_LEN),
         )
-
 
 DEFAULT_SCRYPT_PARAMETERS = ScryptParameters(
     scrypt_n=SCRYPT_N, scrypt_r=SCRYPT_R, scrypt_p=SCRYPT_P, scrypt_len=SCRYPT_LEN
@@ -120,7 +119,7 @@ class VerificationCodeThreadHashingManager(concurrent.futures.ThreadPoolExecutor
         return await async_wait_for_future(future, timeout=timeout)
 
 
-class VerificationCodeInfo(DictConvertible):
+class VerificationCodeInfo(IdentifiableDictConvertible):
     """
     Represents information about a verification code, including its hashed representation,
     associated salt, expiry time, and creation time.
@@ -332,3 +331,5 @@ class VerificationCodeInfo(DictConvertible):
 
     def belongs_to_user(self, user_id: int):
         return self.user_id == user_id
+    def key(self) -> str:
+        return f"vcode:{self.user_id}"

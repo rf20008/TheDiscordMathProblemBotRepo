@@ -26,12 +26,13 @@ import json
 
 import disnake
 
+from ..dict_convertible import IdentifiableDictConvertible
 from ..errors import InvalidDictionaryInDatabaseException
 from .the_basic_check import CheckForUserPassage
 from ..denylistable import Denylistable
 
 
-class GuildData(Denylistable):
+class GuildData(Denylistable, IdentifiableDictConvertible):
     denylisted: bool
     guild_id: int | None
     can_create_problems_check: CheckForUserPassage
@@ -194,3 +195,5 @@ class GuildData(Denylistable):
         }
 
         return dict_to_return
+    def key(self) -> str:
+        return f"GuildData_{self.guild_id}"

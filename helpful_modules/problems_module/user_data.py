@@ -123,4 +123,7 @@ class UserData(Denylistable, IdentifiableDictConvertible):
             verification_code_denylist=None,
         )
     def key(self) -> str:
-        return f"UserData:{self.user_id}"
+        return self.key_of(user_id=self.user_id)
+    @classmethod
+    def key_of(cls, user_id: int) -> str:
+        return f"UserData:{user_id}"

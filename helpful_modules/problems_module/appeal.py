@@ -165,4 +165,7 @@ class AppealViewInfo(IdentifiableDictConvertible):
     def __repr__(self):
         return f"AppealViewInfo(message_id={self.message_id}, user_id={self.user_id}, guild_id={self.guild_id}, done={self.done} type={self.appeal_type})"
     def key(self) -> str:
-        return f"AppealViewInfo:{self.message_id}"
+        return self.key_of(message_id=self.message_id)
+    @classmethod
+    def key_of(cls, message_id) -> str:
+        return f"AppealViewInfo:{message_id}"

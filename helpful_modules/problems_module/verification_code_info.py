@@ -332,4 +332,7 @@ class VerificationCodeInfo(IdentifiableDictConvertible):
     def belongs_to_user(self, user_id: int):
         return self.user_id == user_id
     def key(self) -> str:
-        return f"vcode:{self.user_id}"
+        return self.key_of(user_id=self.user_id)
+    @classmethod
+    def key_of(cls, *, user_id: int):
+        return f"vcode:{user_id}"

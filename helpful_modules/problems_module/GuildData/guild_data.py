@@ -196,4 +196,7 @@ class GuildData(Denylistable, IdentifiableDictConvertible):
 
         return dict_to_return
     def key(self) -> str:
+        return self.key_of(guild_id=self.guild_id)
+    @classmethod
+    def key_of(cls, guild_id: int) -> str:
         return f"GuildData_{self.guild_id}"

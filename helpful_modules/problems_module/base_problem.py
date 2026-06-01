@@ -496,5 +496,8 @@ class BaseProblem(IdentifiableDictConvertible):
             and self.author == other.author
             and self.get_extra_stuff() == other.get_extra_stuff()
         )
+    @classmethod
+    def key_of(cls, *, guild_id: int | None, id: int) -> str:
+        return f"Problem:{guild_id}:{id}"
     def key(self) -> str:
-        return f"{self.__class__.__name__}:{self.guild_id}:{self.id}"
+        return self.key_of(guild_id=self.guild_id, id=self.id)

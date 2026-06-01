@@ -81,3 +81,5 @@ class DictConvertible(Protocol):
 class IdentifiableDictConvertible(DictConvertible, Protocol):
     @property
     def key(self)->str: pass
+    @classmethod
+    def key_of(cls, *args, **kwargs) -> str: pass

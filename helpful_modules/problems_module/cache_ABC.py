@@ -30,10 +30,11 @@ import orjson
 from ..FileDictionaryReader import AsyncFileDict
 from .appeal import Appeal, AppealViewInfo
 from .base_problem import BaseProblem
-from .dict_convertible import DictConvertible
+from .dict_convertible import DictConvertible, IdentifiableDictConvertible
 from .errors import (
     FormatException,
     SQLNotSupportedInRedisException,
+    ThingNotFound
 )
 from .GuildData import GuildData
 from .quizzes import Quiz
@@ -45,8 +46,67 @@ GuildID = typing.Optional[int]
 
 
 class AbstractCache(ABC):
-    def __init__(self):
+    def __init__(self, *args, **kwargs) -> None:
         self._async_file_dict = AsyncFileDict("config.json")
+    async def has_thing(self, thing_key: str) -> bool:
+        warnings.warn("This is a slow method. Please override it to be faster")
+        try:
+            await self.get_thing(thing_key, default=None)
+            return True
+        except ThingNotFound:
+            return False
+    @abstractmethod
+    async def add_thing(self, thing: IdentifiableDictConvertible) -> None:
+        """
+        Adds a dictionary convertible object to the cache.
+
+        :param thing: The object to add to the cache.
+        :type thing: DictConvertible
+        :param thing_id: The ID of the object. (If none, will attempt to guess it from thing.id)
+        :type thing: str | None
+        :return: Nothing.
+        """
+        pass
+    async def add_things(self, things: list[IdentifiableDictConvertible]) -> object:
+        """
+        Adds a list of dictionary convertible objects to the cache using a batch set operation.
+
+        :param things: The list of objects to add to the cache.
+        :type things: List[DictConvertible]
+        :return: Nothing.
+        """
+        warnings.warn("This method is slow. Please override it to use a batch query to make it faster", category=RuntimeWarning)
+        for thing in things:
+            await self.add_thing(thing)
+    @abstractmethod
+    async def remove_things(self, thing_id: str) -> None:
+        """
+        Removes a dictionary convertible object from the cache.
+
+        :param thing: The object to remove from the cache.
+        :type thing: DictConvertible
+        :return: Nothing.
+        """
+        pass
+    @abstractmethod
+    def get_thing(
+            self,
+            thing_id: str,
+            default: IdentifiableDictConvertible | None = None
+    ) -> IdentifiableDictConvertible | None:
+        """:param thing_guild_id: The guild ID associated with the object.
+        :type thing_guild_id: int
+        :param thing_id: The ID of the object.
+        :type thing_id: int
+        :param cls: The type of the dictionary convertible object.
+        :type cls: typing.Type[DictConvertible]
+        :param default: The default value to return if the object is not found.
+        :type default: DictConvertible or None
+        :return: The retrieved object.
+        :rtype: DictConvertible
+        :raises ThingNotFound: If the object is not found.
+        """
+        pass
     @property
     @abstractmethod
     def is_locked(self) -> bool:
@@ -81,9 +141,9 @@ class AbstractCache(ABC):
 
         :return: A list of global problems.
         """
-        return await self.get_all_problems(None)
+        return await self.get_all_problems_by_guild(None)
     async def get_all_problems_by_func(self, func: typing.Callable[[BaseProblem], bool]) -> List[BaseProblem]:
-        return filter(func, await self.get_all_problems())
+        return list(filter(func, await self.get_all_problems()))
     @abstractmethod
     async def add_problem(self, problem_id, problem: BaseProblem):
         """
@@ -144,58 +204,7 @@ class AbstractCache(ABC):
         :param quiz_id: The ID of the quiz.
         """
         pass
-    @abstractmethod
-    async def add_thing(self, thing: DictConvertible) -> None:
-        """
-        Adds a dictionary convertible object to the cache.
 
-        :param thing: The object to add to the cache.
-        :type thing: DictConvertible
-        :return: Nothing.
-        """
-        pass
-    async def add_things(self, things: list[DictConvertible]) -> object:
-        """
-        Adds a list of dictionary convertible objects to the cache using a batch set operation.
-
-        :param things: The list of objects to add to the cache.
-        :type things: List[DictConvertible]
-        :return: Nothing.
-        """
-        warnings.warn("This method is slow. Please override it to use a batch query to make it faster", category=RuntimeWarning)
-        for thing in things:
-            await self.add_thing(thing)
-    @abstractmethod
-    async def remove_things(self, things: list[DictConvertible]) -> None:
-        """
-        Removes a dictionary convertible object from the cache.
-
-        :param thing: The object to remove from the cache.
-        :type thing: DictConvertible
-        :return: Nothing.
-        """
-        pass
-    @abstractmethod
-    def get_thing(
-            self,
-            thing_guild_id: GuildID,
-            thing_id: int,
-            cls: typing.Type[DictConvertible],
-            default: DictConvertible | None = None
-    ) -> DictConvertible | None:
-        """:param thing_guild_id: The guild ID associated with the object.
-        :type thing_guild_id: int
-        :param thing_id: The ID of the object.
-        :type thing_id: int
-        :param cls: The type of the dictionary convertible object.
-        :type cls: typing.Type[DictConvertible]
-        :param default: The default value to return if the object is not found.
-        :type default: DictConvertible or None
-        :return: The retrieved object.
-        :rtype: DictConvertible
-        :raises ThingNotFound: If the object is not found.
-        """
-        pass
     @abstractmethod
     async def get_user_data(self, user_id: int, default: UserData | None = None) -> UserData | None:
         """Add the data of a user to the cache"""
@@ -417,3 +426,12 @@ class AbstractCache(ABC):
         raise SQLNotSupportedInRedisException(
             "SQL is not supported in Redis, and creating sql tables is not supported in Redis either"
         )
+    @abstractmethod
+    async def get_all_by_user_id(self, user_id: int) -> dict:
+        pass
+    @abstractmethod
+    async def del_all_by_user_id(self, user_id: int) -> dict:
+        pass
+    @abstractmethod
+    async def delete_all_by_guild_id(self, guild_id: int) -> None:
+        pass

@@ -50,6 +50,9 @@ class AbstractKVBasedCache(AbstractCache, ABC):
         self._async_file_dict = AsyncFileDict("config.json")
 
     @abstractmethod
+    async def del_all_by_user_id(self, user_id: int) -> None:
+        pass
+    @abstractmethod
     async def delete_all_by_guild_id(self, guild_id: int) -> None:
         pass
 
@@ -242,7 +245,6 @@ class AbstractKVBasedCache(AbstractCache, ABC):
         return await self.remove_thing(GuildData.key_of(guild_id=guild_id))
     async def del_guild_data(self, guild_id: GuildID) -> None:
         return await self.remove_guild_data(guild_id)
-    @abstractmethod
     async def get_guild_data(self, guild_id: GuildID) -> GuildData:
         """Get the data of a guild from the cache."""
         return await self.get_thing(GuildData.key_of(guild_id=guild_id), cls=GuildData)
@@ -267,9 +269,7 @@ class AbstractKVBasedCache(AbstractCache, ABC):
                 continue
 
         return things_authored
-    @abstractmethod
-    async def del_all_by_user_id(self, user_id: int) -> None:
-        pass
+
     async def bgsave(
         self,
         schedule: typing.Any,

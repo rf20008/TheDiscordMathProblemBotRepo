@@ -34,7 +34,10 @@ from .dict_convertible import DictConvertible, IdentifiableDictConvertible
 from .errors import (
     FormatException,
     SQLNotSupportedInRedisException,
-    ThingNotFound
+    ThingNotFound,
+ProblemNotFound,
+QuizNotFound,
+AppealViewInfoNotFound
 )
 from .GuildData import GuildData
 from .quizzes import Quiz

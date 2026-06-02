@@ -21,26 +21,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
-from abc import ABC, abstractmethod
+from abc import ABC
 import typing
-from typing import List
-import warnings
 import orjson
 import asyncio
-from ...FileDictionaryReader import AsyncFileDict
-from ..appeal import Appeal, AppealViewInfo
-from ..base_problem import BaseProblem
-from ..dict_convertible import DictConvertible, IdentifiableDictConvertible
+from helpful_modules.FileDictionaryReader import AsyncFileDict
+from helpful_modules.problems_module.dict_convertible import DictConvertible, IdentifiableDictConvertible
 from redis import asyncio as aioredis  # type: ignore
-from ..errors import (
-    FormatException,
-    SQLNotSupportedInRedisException, ThingNotFound,
-    CorruptedDataException, OwnershipNotDeterminableException
+from helpful_modules.problems_module.errors import (
+    SQLNotSupportedInRedisException,
+    ThingNotFound,
+    CorruptedDataException,
+    OwnershipNotDeterminableException
 )
-from ..GuildData import GuildData
-from ..quizzes import Quiz
-from ..user_data import UserData
-from ..verification_code_info import VerificationCodeInfo
 from ..AbstractKVCache import AbstractKVBasedCache, PREFIX_REGISTRY
 from ..cache_ABC import TYPE_ERROR_NOT_FOUND
 MUST_IMPLEMENT_ERROR = NotImplementedError("Subclasses must implement this")
@@ -87,7 +80,6 @@ class RedisCache2(AbstractKVBasedCache, ABC):
         self.lock = asyncio.Lock()
 
 
-    @abstractmethod
     async def get_all_things(self) -> list[IdentifiableDictConvertible]:
         """Return a list of EVERYTHING in the database"""
         return [value for key, value in await self.items()]
@@ -372,4 +364,4 @@ class RedisCache2(AbstractKVBasedCache, ABC):
             "SQL is not supported in Redis, and creating sql tables is not supported in Redis either"
         )
 if __name__ == "__main__":
-    r = RedisCache2()
+g    r = RedisCache2()

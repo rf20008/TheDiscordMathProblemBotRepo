@@ -26,6 +26,7 @@
 # Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 
 from . import *
+from .errors import *
 from .appeal import Appeal, AppealViewInfo, AppealType
 from .appeal_question import AppealQuestion, APPEAL_QUESTION_TYPE_NAMES
 from .base_problem import BaseProblem
@@ -34,7 +35,7 @@ from .cache_rewrite_with_redis import RedisCache
 from .computational_problem import ComputationalProblem
 from .denylistable import Denylistable, DenylistType, DenylistMetadata
 from .dict_convertible import DictConvertible
-from .errors import *
+
 from .GuildData import CheckForUserPassage, GuildData
 from .linear_algebra_problem import LinearAlgebraProblem
 from .parse_problem import convert_dict_to_problem, convert_row_to_problem

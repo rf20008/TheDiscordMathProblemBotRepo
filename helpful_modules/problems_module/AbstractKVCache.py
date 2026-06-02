@@ -127,7 +127,6 @@ class AbstractKVBasedCache(AbstractCache, ABC):
                 continue
             if belongs:
                 await self.remove_thing(key)
-    @abstractmethod
     async def delete_all_by_guild_id(self, guild_id: int) -> None:
         all_items = await self.items()
         for key, value in all_items:
@@ -137,10 +136,8 @@ class AbstractKVBasedCache(AbstractCache, ABC):
                 continue
             if belongs:
                 await self.remove_thing(key)
-    @abstractmethod
     async def get_all_items_starting_with(self, thing_start: str) -> list[tuple[str, IdentifiableDictConvertible]]:
         return list(filter(lambda tu: tu[0].startswith(thing_start), await self.items()))
-    @abstractmethod
     async def get_appeal_view_infos(self) -> list[AppealViewInfo]:
         """
         Retrieve all appeal view information stored in Redis.

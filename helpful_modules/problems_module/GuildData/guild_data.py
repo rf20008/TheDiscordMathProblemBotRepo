@@ -26,6 +26,7 @@ import json
 
 import disnake
 
+from .. import OwnershipNotDeterminableException
 from ..dict_convertible import IdentifiableDictConvertible
 from ..errors import InvalidDictionaryInDatabaseException
 from .the_basic_check import CheckForUserPassage
@@ -199,4 +200,10 @@ class GuildData(Denylistable, IdentifiableDictConvertible):
         return self.key_of(guild_id=self.guild_id)
     @classmethod
     def key_of(cls, guild_id: int) -> str:
-        return f"GuildData_{self.guild_id}"
+        return f"GuildData_{guild_id}"
+    def belongs_to_user(self, user_id: int):
+        raise OwnershipNotDeterminableException("GuildDatas belong to guilds only")
+    def belongs_to_guild(self, guild_id: int | None) -> bool:
+        if not isinstance(guild_id, int):
+            raise TypeError("guild_id is not an integer")
+        return self.guild_id == guild_id

@@ -23,3 +23,4 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
 
 from .rediscache import RedisCache
+from .NewRedisCache import RedisCache2

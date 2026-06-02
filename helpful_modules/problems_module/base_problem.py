@@ -501,3 +501,7 @@ class BaseProblem(IdentifiableDictConvertible):
         return f"Problem:{guild_id}:{id}"
     def key(self) -> str:
         return self.key_of(guild_id=self.guild_id, problem_id=self.id)
+    async def belongs_to_user(self, user_id: int) -> bool:
+        return self.author == user_id
+    async def belongs_to_guild(self, guild_id: int | None) -> bool:
+        return self.guild_id == guild_id

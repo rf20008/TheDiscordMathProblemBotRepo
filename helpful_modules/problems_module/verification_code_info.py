@@ -30,7 +30,7 @@ from typing import Dict
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
 from .dict_convertible import DictConvertible, T, IdentifiableDictConvertible
-from .errors import VerificationCodeExpiredException
+from .errors import VerificationCodeExpiredException, OwnershipNotDeterminableException
 from ..threads_or_useful_funcs import async_wait_for_future
 
 ONE_WEEK = datetime.timedelta(weeks=1).seconds
@@ -331,6 +331,8 @@ class VerificationCodeInfo(IdentifiableDictConvertible):
 
     def belongs_to_user(self, user_id: int):
         return self.user_id == user_id
+    def belongs_to_guild(self, guild_id: int | None) -> bool:
+        raise OwnershipNotDeterminableException("VerificationCodeInfos only belong to users, not guilds.")
     def key(self) -> str:
         return self.key_of(user_id=self.user_id)
     @classmethod

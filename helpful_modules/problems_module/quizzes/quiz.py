@@ -166,3 +166,7 @@ class Quiz(IdentifiableDictConvertible):
         return f"Quiz:{id}"
     def key(self):
         return self.key_of(quiz_id=self.id) # type: ignore
+    def belongs_to_user(self, user_id: int):
+        return user_id in self.authors
+    def belongs_to_guild(self, guild_id: int | None) -> bool:
+        raise OwnershipNotDeterminableException("At this moment, quizze don't belong to guilds")

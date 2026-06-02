@@ -29,6 +29,7 @@ from typing import *
 import orjson
 from disnake.utils import format_dt
 
+from . import OwnershipNotDeterminableException
 from .dict_convertible import DictConvertible, IdentifiableDictConvertible
 
 
@@ -114,7 +115,10 @@ class Appeal(IdentifiableDictConvertible):
     @property
     def key(self) -> str:
         return f"Appeal:{self.special_id}"
-
+    def belongs_to_guild(self, guild_id: int | None) -> bool:
+        raise OwnershipNotDeterminableException("Appeals only belong to users, not guilds")
+    def belongs_to_user(self, user_id: int) -> bool:
+        return self.user_id == user_id
 class AppealViewInfo(IdentifiableDictConvertible):
     def __init__(
         self,
@@ -169,3 +173,7 @@ class AppealViewInfo(IdentifiableDictConvertible):
     @classmethod
     def key_of(cls, message_id) -> str:
         return f"AppealViewInfo:{message_id}"
+    def belongs_to_user(self, user_id: int):
+        return self.user_id == user_id
+    def belongs_to_guild(self, guild_id: int):
+        raise OwnershipNotDeterminableException("Appeal View Infos do not belong to guilds")

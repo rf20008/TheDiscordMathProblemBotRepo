@@ -27,6 +27,7 @@ from typing import List
 import warnings
 import orjson
 
+from . import OwnershipNotDeterminableException
 from ..FileDictionaryReader import AsyncFileDict
 from .appeal import Appeal, AppealViewInfo
 from .base_problem import BaseProblem
@@ -40,43 +41,35 @@ from .GuildData import GuildData
 from .quizzes import Quiz
 from .user_data import UserData
 from .verification_code_info import VerificationCodeInfo
-from .cache_ABC import AbstractCache
+from .cache_ABC import AbstractCache, TYPE_ERROR_NOT_FOUND
+from .parse_problem import convert_dict_to_problem
 MUST_IMPLEMENT_ERROR = NotImplementedError("Subclasses must implement this")
 GuildID = typing.Optional[int]
 T = typing.TypeVar('T', bound=IdentifiableDictConvertible)
+
+PREFIX_REGISTRY = {
+    "Quiz": Quiz,
+    "UserData": UserData,
+    "GuildData": GuildData,
+    "VerificationCodeInfo": VerificationCodeInfo,
+    "Appeal": Appeal,
+    "AppealViewInfo": AppealViewInfo,
+    "BaseProblem": convert_dict_to_problem, # this is because there are different types of problems that have to be parsed appropriately
+}
 
 class AbstractKVBasedCache(AbstractCache, ABC):
     def __init__(self, *args, **kwargs) -> None:
         self._async_file_dict = AsyncFileDict("config.json")
 
-    @abstractmethod
-    async def del_all_by_user_id(self, user_id: int) -> None:
-        pass
-    @abstractmethod
-    async def delete_all_by_guild_id(self, guild_id: int) -> None:
-        pass
 
-    @abstractmethod
-    async def get_appeal_view_infos(self):
-        """
-        Retrieve all appeal view information stored in Redis.
-
-        Yields:
-        - AppealViewInfo: Each retrieved AppealViewInfo object.
-
-        Raises:
-        - AppealViewInfoNotFound: If no appeal view information is found in Redis.
-        - BaseExceptionGroup: If there are formatting exceptions during result processing.
-        """
-        pass
-    @abstractmethod
-    async def get_all_appeals(self) -> list[Appeal]:
-        """Fetch all appeals from the database."""
-        pass
 
     @abstractmethod
     async def get_all_things(self) -> list[IdentifiableDictConvertible]:
         """Return a list of EVERYTHING in the database"""
+        pass
+    @abstractmethod
+    async def items(self) -> list[tuple[str, IdentifiableDictConvertible]]:
+        """Return a list of EVERYTHING in the database (and their keys)"""
         pass
     @abstractmethod
     async def add_thing(self, thing: IdentifiableDictConvertible) -> None:
@@ -120,22 +113,62 @@ class AbstractKVBasedCache(AbstractCache, ABC):
         """
         pass
 
+    @property
     @abstractmethod
+    def is_locked(self) -> bool:
+        """Return whether the cache is locked"""
+        pass
+    async def del_all_by_user_id(self, user_id: int) -> None:
+        all_items = await self.items()
+        for key, value in all_items:
+            try:
+                belongs = value.belongs_to_user(user_id)
+            except OwnershipNotDeterminableException:
+                continue
+            if belongs:
+                await self.remove_thing(key)
+    @abstractmethod
+    async def delete_all_by_guild_id(self, guild_id: int) -> None:
+        all_items = await self.items()
+        for key, value in all_items:
+            try:
+                belongs = value.belongs_to_guild(guild_id)
+            except OwnershipNotDeterminableException:
+                continue
+            if belongs:
+                await self.remove_thing(key)
+    @abstractmethod
+    async def get_all_items_starting_with(self, thing_start: str) -> list[tuple[str, IdentifiableDictConvertible]]:
+        return list(filter(lambda tu: tu[0].startswith(thing_start), await self.items()))
+    @abstractmethod
+    async def get_appeal_view_infos(self) -> list[AppealViewInfo]:
+        """
+        Retrieve all appeal view information stored in Redis.
+
+        Yields:
+        - AppealViewInfo: Each retrieved AppealViewInfo object.
+
+        Raises:
+        - AppealViewInfoNotFound: If no appeal view information is found in Redis.
+        - BaseExceptionGroup: If there are formatting exceptions during result processing.
+        """
+        warnings.warn("This is a slow method. Please consider overriding it.", category=FutureWarning)
+        return [obj[1] for obj in await self.get_all_items_starting_with("AppealViewInfo") if isinstance(obj[1], AppealViewInfo)] # type: ignore
+    async def get_all_appeals(self) -> list[Appeal]:
+        """Fetch all appeals from the database."""
+        warnings.warn("This is a slow method. Please consider overriding it.", category=FutureWarning)
+        return [obj[1] for obj in await self.get_all_items_starting_with("Appeal") if isinstance(obj[1], Appeal)] # type: ignore
+    async def get_all_things_for_func(self, func: typing.Callable[[IdentifiableDictConvertible], bool]) -> List[IdentifiableDictConvertible]:
+        return list(filter(func, await self.get_all_things()))
     async def get_all_problems(self) -> List[BaseProblem]:
         """Return a list of all problems!
         Time complexity: O(N)"""
         warnings.warn(
             "There is a faster method to doing this, without a FULL scan of the database. Please override this method.",
             category=RuntimeWarning)
-        ALL_OBJECTS = await self.get_all_things()  # type: ignore
-        ALL_PROBLEMS = list(filter(lambda problem: isinstance(problem, BaseProblem), ALL_OBJECTS))  # type: ignore
-        return ALL_PROBLEMS
+        return [convert_dict_to_problem(obj) for obj in await self.get_all_items_starting_with("BaseProblem")] # type: ignore
 
-    @property
-    @abstractmethod
-    def is_locked(self) -> bool:
-        """Return whether the cache is locked"""
-        pass
+
 
     async def get_problem(self, guild_id: GuildID, problem_id: int) -> BaseProblem:
         """Attempt to return the problem with guild_id and problem_id =problem_id
@@ -251,23 +284,12 @@ class AbstractKVBasedCache(AbstractCache, ABC):
     async def get_all_by_user_id(self, user_id: int) -> list[dict]:
         things = await self.get_all_things()
         things_authored = []
-        for key, value in things.items():
+        for thing in things:
             try:
-                dictionarified = orjson.loads(value)  # type: ignore
-            except orjson.JSONDecodeError:
-                raise FormatException("Something in the redis is not a dictionary..")
-            if dictionarified is None:
-                raise FormatException("No dictionary found")
-            if dictionarified.get("author", None) == user_id:
-                things_authored.append(value)
-                continue
-            elif user_id in dictionarified.get("authors", []):
-                things_authored.append(value)
-                continue
-            elif dictionarified.get("user_id", None) == user_id:
-                things_authored.append(value)
-                continue
-
+                if thing.belongs_to_user(user_id):
+                    things_authored.append(thing)
+            except OwnershipNotDeterminableException:
+                pass
         return things_authored
 
     async def bgsave(

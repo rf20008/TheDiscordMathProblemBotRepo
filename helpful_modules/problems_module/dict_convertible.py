@@ -49,6 +49,17 @@ class DictConvertible(Protocol):
 
     def to_dict(self) -> Dict: ...
 
+
+
+    def __repr__(self):
+        return repr(self.to_dict())
+    def __eq__(self, other):
+        return self.to_dict() == other.to_dict()
+class IdentifiableDictConvertible(DictConvertible, Protocol):
+    @property
+    def key(self)->str: pass
+    @classmethod
+    def key_of(cls, *args, **kwargs) -> str: pass
     def belongs_to_user(self, user_id: int):
         """
         Check if this object belongs to a specific user identified by user_id.
@@ -60,7 +71,7 @@ class DictConvertible(Protocol):
         - bool: True if the object belongs to the specified user, False otherwise.
 
         Raises:
-        - OwnershipNotKnownError: If the ownership cannot be determined from the object's dictionary representation.
+        - OwnershipNotKnownException: If the ownership cannot be determined from the object's dictionary representation.
         """
         self_dict = self.to_dict()
         if self_dict.get("user_id") is not None:
@@ -73,13 +84,14 @@ class DictConvertible(Protocol):
             raise OwnershipNotDeterminableException(
                 f"I could not determine whether this object belongs to the user with user id {user_id}"
             )
+    def belongs_to_guild(self, guild_id: int | None) -> bool:
+        """Check whether this object belongs to a specific guild
+        Args:
+        - guild_id (int | None): The ID of the guild to check ownership against.
 
-    def __repr__(self):
-        return repr(self.to_dict())
-    def __eq__(self, other):
-        return self.to_dict() == other.to_dict()
-class IdentifiableDictConvertible(DictConvertible, Protocol):
-    @property
-    def key(self)->str: pass
-    @classmethod
-    def key_of(cls, *args, **kwargs) -> str: pass
+        Returns:
+        - bool: True if the object belongs to the specified guild, False otherwise.
+
+        Raises:
+        - OwnershipNotKnownException: If the ownership cannot be determined from the object's dictionary representation."""
+        raise OwnershipNotDeterminableException("This method doesn't have an implementation (subclasses must override this method) so I don't know how to do it.")

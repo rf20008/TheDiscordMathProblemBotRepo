@@ -19,6 +19,8 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)"""
 
 import time
 import orjson
+
+from . import OwnershipNotDeterminableException
 from .denylistable import Denylistable, DenylistMetadata, DenylistType
 from .dict_convertible import IdentifiableDictConvertible
 
@@ -127,3 +129,9 @@ class UserData(Denylistable, IdentifiableDictConvertible):
     @classmethod
     def key_of(cls, user_id: int) -> str:
         return f"UserData:{user_id}"
+    def belongs_to_guild(self, guild_id: int | None) -> bool:
+        raise OwnershipNotDeterminableException("UserData only belong to users, not guilds.")
+    def belongs_to_user(self, user_id: int):
+        if not isinstance(user_id, int):
+            raise TypeError("user_id is not an integer")
+        return self.user_id == user_id

@@ -44,7 +44,15 @@ from .verification_code_info import VerificationCodeInfo
 MUST_IMPLEMENT_ERROR = NotImplementedError("Subclasses must implement this")
 GuildID = typing.Optional[int]
 T = typing.TypeVar('T', bound=IdentifiableDictConvertible)
-
+TYPE_ERROR_NOT_FOUND = {
+    BaseProblem: ProblemNotFound,
+    GuildData: ThingNotFound,
+    Quiz: QuizNotFound,
+    VerificationCodeInfo: ThingNotFound,
+    UserData: ThingNotFound,
+    Appeal: ThingNotFound,
+    AppealViewInfo: AppealViewInfoNotFound
+}
 class AbstractCache(ABC):
     def __init__(self, *args, **kwargs) -> None:
         self._async_file_dict = AsyncFileDict("config.json")

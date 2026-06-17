@@ -123,7 +123,7 @@ class RedisCache2(AbstractKVBasedCache, ABC):
                 continue
 
             try:
-                # Step A: Extract prefix string (e.g., "BaseProblem")
+                # Step A: Extract prefix string (e.g., "FixedAnswerProblem")
                 prefix = self._parse_key(key)
 
                 # Step B: Match class registry, unpack json, and build object factory style
@@ -249,7 +249,7 @@ class RedisCache2(AbstractKVBasedCache, ABC):
         string_keys = []
 
         # 1. Use Redis's power to match only the target keys
-        # e.g., if thing_start is "BaseProblem", match pattern becomes "BaseProblem*"
+        # e.g., if thing_start is "FixedAnswerProblem", match pattern becomes "FixedAnswerProblem*"
         async for key in self.redis.scan_iter(match=f"{thing_start}*"):
             key_type = await self.redis.type(key)
             if key_type == "string":

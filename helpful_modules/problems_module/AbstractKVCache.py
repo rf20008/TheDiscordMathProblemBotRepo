@@ -30,7 +30,7 @@ import orjson
 from . import OwnershipNotDeterminableException
 from ..FileDictionaryReader import AsyncFileDict
 from .appeal import Appeal, AppealViewInfo
-from .base_problem import BaseProblem
+from .base_problem import FixedAnswerProblem
 from .dict_convertible import DictConvertible, IdentifiableDictConvertible
 from .errors import (
     FormatException,
@@ -54,7 +54,7 @@ PREFIX_REGISTRY = {
     "VerificationCodeInfo": VerificationCodeInfo,
     "Appeal": Appeal,
     "AppealViewInfo": AppealViewInfo,
-    "BaseProblem": convert_dict_to_problem, # this is because there are different types of problems that have to be parsed appropriately
+    "FixedAnswerProblem": convert_dict_to_problem, # this is because there are different types of problems that have to be parsed appropriately
 }
 
 class AbstractKVBasedCache(AbstractCache, ABC):
@@ -160,46 +160,46 @@ class AbstractKVBasedCache(AbstractCache, ABC):
         return [obj[1] for obj in await self.get_all_items_starting_with("Appeal") if isinstance(obj[1], Appeal)] # type: ignore
     async def get_all_things_for_func(self, func: typing.Callable[[IdentifiableDictConvertible], bool]) -> List[IdentifiableDictConvertible]:
         return list(filter(func, await self.get_all_things()))
-    async def get_all_problems(self) -> List[BaseProblem]:
+    async def get_all_problems(self) -> List[FixedAnswerProblem]:
         """Return a list of all problems!
         Time complexity: O(N)"""
         warnings.warn(
             "There is a faster method to doing this, without a FULL scan of the database. Please override this method.",
             category=RuntimeWarning)
-        return [convert_dict_to_problem(obj) for obj in await self.get_all_items_starting_with("BaseProblem")] # type: ignore
+        return [convert_dict_to_problem(obj) for obj in await self.get_all_items_starting_with("FixedAnswerProblem")] # type: ignore
 
 
 
-    async def get_problem(self, guild_id: GuildID, problem_id: int) -> BaseProblem:
+    async def get_problem(self, guild_id: GuildID, problem_id: int) -> FixedAnswerProblem:
         """Attempt to return the problem with guild_id and problem_id =problem_id
         Time complexity: O(1)"""
-        prob = await self.get_thing(BaseProblem.key_of(guild_id=guild_id, id=problem_id), cls=BaseProblem)
+        prob = await self.get_thing(FixedAnswerProblem.key_of(guild_id=guild_id, id=problem_id), cls=FixedAnswerProblem)
         return prob
 
 
 
-    async def get_all_problems_by_guild(self, guild_id: GuildID) -> List[BaseProblem]:
+    async def get_all_problems_by_guild(self, guild_id: GuildID) -> List[FixedAnswerProblem]:
         """return a list of all problems with the guild id = id
                 Time complexity: O(N)"""
         warnings.warn("This method is slow. Consider overriding it to do a more efficient DB scan", category=RuntimeWarning)
         return await self.get_all_problems_by_func(lambda p: p.guild_id == guild_id)
 
-    async def get_global_problems(self) -> List[BaseProblem]:
+    async def get_global_problems(self) -> List[FixedAnswerProblem]:
         """
         Return a list of all global problems.
 
         :return: A list of global problems.
         """
         return await self.get_all_problems_by_guild(None)
-    async def get_all_problems_by_func(self, func: typing.Callable[[BaseProblem], bool]) -> List[BaseProblem]:
+    async def get_all_problems_by_func(self, func: typing.Callable[[FixedAnswerProblem], bool]) -> List[FixedAnswerProblem]:
         return list(filter(func, await self.get_all_problems()))
-    async def add_problem(self, problem_id, problem: BaseProblem):
+    async def add_problem(self, problem_id, problem: FixedAnswerProblem):
         """
         Add a problem to the cache.
 
         :param problem_id: The ID of the problem.
-        :param problem: The BaseProblem instance.
-        :raises TypeError: If 'problem_id' is not an int or 'problem' is not a BaseProblem.
+        :param problem: The FixedAnswerProblem instance.
+        :raises TypeError: If 'problem_id' is not an int or 'problem' is not a FixedAnswerProblem.
         :raises ValueError: If IDs do not match.
         """
         if not problem_id == problem.id:
@@ -213,7 +213,7 @@ class AbstractKVBasedCache(AbstractCache, ABC):
         :param guild_id: The ID of the guild.
         :raises TypeError: If 'problem_id' is not an int or 'guild_id' is not an int.
         """
-        await self.remove_thing(BaseProblem.key_of(guild_id=guild_id, id=problem_id))
+        await self.remove_thing(FixedAnswerProblem.key_of(guild_id=guild_id, id=problem_id))
 
 
     async def add_quiz(self, quiz_id: int, quiz: Quiz):

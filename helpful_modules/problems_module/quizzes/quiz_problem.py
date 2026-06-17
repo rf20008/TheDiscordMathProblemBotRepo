@@ -27,12 +27,12 @@ import sys
 import traceback
 from typing import *
 
-from helpful_modules.problems_module import BaseProblem
+from helpful_modules.problems_module import FixedAnswerProblem
 
 from ..dict_convertible import DictConvertible
 
 
-class QuizProblem(BaseProblem, DictConvertible):
+class QuizProblem(FixedAnswerProblem, DictConvertible):
     """A class that represents a Quiz Math Problem"""
 
     def __init__(

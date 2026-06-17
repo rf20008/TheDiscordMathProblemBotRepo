@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 # import your interface + models
 from helpful_modules.problems_module import AbstractCache
 from helpful_modules.problems_module import (
-    BaseProblem,
+    FixedAnswerProblem,
     Quiz,
     Appeal,
     UserData,
@@ -120,11 +120,11 @@ async def test_clear_requires_force(cache):
 # -----------------------------
 @pytest.mark.asyncio
 async def test_update_problem(cache):
-    problem = BaseProblem(problem_id=1, guild_id=None)
+    problem = FixedAnswerProblem(problem_id=1, guild_id=None)
 
     await cache.add_problem(1, problem)
 
-    updated = BaseProblem(problem_id=1, guild_id=None, text="updated")
+    updated = FixedAnswerProblem(problem_id=1, guild_id=None, text="updated")
 
     await cache.update_problem(1, updated)
 
@@ -164,7 +164,7 @@ async def test_global_problems(cache):
     "factory, add_fn, get_fn, remove_fn",
     [
         ( # Base Problems
-            lambda: BaseProblem(problem_id=1, guild_id=None),
+            lambda: FixedAnswerProblem(problem_id=1, guild_id=None),
             lambda c, o: c.add_problem(1, o),
             lambda c, o: c.get_problem(None, 1),
             lambda c, o: c.remove_problem(1, None),

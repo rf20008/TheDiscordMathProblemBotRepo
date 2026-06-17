@@ -37,7 +37,7 @@ import disnake
 
 from helpful_modules.dict_factory import dict_factory
 
-from ..base_problem import BaseProblem
+from ..base_problem import FixedAnswerProblem
 from ..cache_ABC import AbstractCache
 from ..errors import *
 from ..mysql_connector_with_stmt import mysql_connection
@@ -165,7 +165,7 @@ class ProblemsRelatedCache(AbstractCache):
         guild_id = problem["guild_id"]
         if guild_id is not None:
             guild_id = int(guild_id)
-        problem2 = BaseProblem(  # Create the problem
+        problem2 = FixedAnswerProblem(  # Create the problem
             question=problem["question"],
             answer=problem["answer"],
             id=int(problem["id"]),
@@ -179,7 +179,7 @@ class ProblemsRelatedCache(AbstractCache):
 
     async def get_problem(
         self, guild_id: typing.Optional[int], problem_id: int
-    ) -> BaseProblem:
+    ) -> FixedAnswerProblem:
         """Gets the problem with this guild id and problem id. If the problem is not found, a ProblemNotFound exception will be raised."""
         # This isn't working
         # Possible causes:
@@ -340,7 +340,7 @@ class ProblemsRelatedCache(AbstractCache):
 
     async def get_guild_problems(
         self, guild: disnake.Guild, replace_cache: bool = False
-    ) -> typing.Dict[int, BaseProblem]:
+    ) -> typing.Dict[int, FixedAnswerProblem]:
         """Gets the guild problems! Guild must be a Guild object. If you are trying to get global problems, use get_global_problems."""
         assert isinstance(guild, disnake.Guild)
         if replace_cache:
@@ -352,7 +352,7 @@ class ProblemsRelatedCache(AbstractCache):
 
     async def get_problems_by_guild_id(
         self, guild_id: int, replace_cache: bool = False
-    ) -> typing.Dict[int, BaseProblem]:
+    ) -> typing.Dict[int, FixedAnswerProblem]:
         if not isinstance(guild_id, int) and guild_id is not None:
             raise AssertionError
 
@@ -371,7 +371,7 @@ class ProblemsRelatedCache(AbstractCache):
         replace_cache: bool = False,
         args: typing.Optional[typing.Union[tuple, list]] = None,
         kwargs: Optional[dict] = None,
-    ) -> typing.List[BaseProblem]:
+    ) -> typing.List[FixedAnswerProblem]:
         """Returns the list of all problems that match the given function. args and kwargs are extra parameters to give to the function"""
         if args is None:
             args = []
@@ -398,7 +398,7 @@ class ProblemsRelatedCache(AbstractCache):
 
     async def get_global_problems(
         self: "MathProblemCache", replace_cache: bool = False
-    ) -> typing.List[BaseProblem]:
+    ) -> typing.List[FixedAnswerProblem]:
         """Returns global problems"""
         if replace_cache:
             await self.cache_all_problems()
@@ -421,8 +421,8 @@ class ProblemsRelatedCache(AbstractCache):
         # self._dict[Guild.id] = {}
 
     async def add_problem(
-        self, problem_id: int, problem: BaseProblem
-    ) -> Optional[BaseProblem]:
+        self, problem_id: int, problem: FixedAnswerProblem
+    ) -> Optional[FixedAnswerProblem]:
         """Adds a problem and returns the added MathProblem"""
         # Preliminary checks -otherwise SQL bugs
         guild_id = problem.guild_id
@@ -461,7 +461,7 @@ class ProblemsRelatedCache(AbstractCache):
         except KeyError:  # New guild creating first problem
             pass
         if not isinstance(
-            problem, BaseProblem
+            problem, FixedAnswerProblem
         ):  # Make sure it's actually a Problem and not something else
             raise TypeError("Problem is not a valid Problem object.")
         # All the checks passed, hooray! Now let's add the problem.
@@ -519,7 +519,7 @@ class ProblemsRelatedCache(AbstractCache):
 
     async def remove_problem(
         self, guild_id: typing.Optional[int], problem_id: int
-    ) -> BaseProblem:
+    ) -> FixedAnswerProblem:
         """Removes a problem. Returns the deleted problem"""
         Problem = await self.get_problem(guild_id, problem_id)
         await self.remove_problem_without_returning(guild_id, problem_id)
@@ -599,7 +599,7 @@ class ProblemsRelatedCache(AbstractCache):
                 cursor = await conn.cursor()
                 await cursor.execute("SELECT * FROM problems")
                 all_problems = [
-                    BaseProblem.from_row(dict_factory(cursor, row))
+                    FixedAnswerProblem.from_row(dict_factory(cursor, row))
                     for row in deepcopy(await cursor.fetchall())
                 ]
                 await conn.commit()
@@ -613,7 +613,7 @@ class ProblemsRelatedCache(AbstractCache):
                 cursor = connection.cursor(dictionaries=True)
                 await cursor.execute("SELECT * FROM Problems")
                 all_problems = [
-                    BaseProblem.from_row(row, cache=copy(self))
+                    FixedAnswerProblem.from_row(row, cache=copy(self))
                     for row in cursor.fetchall()
                 ]
         for problemA in range(len(all_problems)):
@@ -654,10 +654,10 @@ class ProblemsRelatedCache(AbstractCache):
 
         return self.guild_ids
 
-    async def update_problem(self, problem_id: int, new: BaseProblem) -> None:
+    async def update_problem(self, problem_id: int, new: FixedAnswerProblem) -> None:
         """Update the problem stored with the given guild id and problem id. This replaces the problem with the new problem"""
         assert isinstance(problem_id, int)
-        assert isinstance(new, BaseProblem) and not isinstance(new, QuizProblem)
+        assert isinstance(new, FixedAnswerProblem) and not isinstance(new, QuizProblem)
         if self.use_sqlite:
             async with aiosqlite.connect(self.db_name) as conn:
                 try:

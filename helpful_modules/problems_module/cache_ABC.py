@@ -29,7 +29,7 @@ import orjson
 import os
 from ..FileDictionaryReader import AsyncFileDict
 from .appeal import Appeal, AppealViewInfo
-from .base_problem import BaseProblem
+from .base_problem import FixedAnswerProblem
 from .dict_convertible import DictConvertible, IdentifiableDictConvertible
 from .errors import (
     FormatException,
@@ -48,7 +48,7 @@ MUST_IMPLEMENT_ERROR = NotImplementedError("Subclasses must implement this")
 GuildID = typing.Optional[int]
 T = typing.TypeVar('T', bound=IdentifiableDictConvertible)
 TYPE_ERROR_NOT_FOUND = {
-    BaseProblem: ProblemNotFound,
+    FixedAnswerProblem: ProblemNotFound,
     GuildData: ThingNotFound,
     Quiz: QuizNotFound,
     VerificationCodeInfo: ThingNotFound,
@@ -125,13 +125,13 @@ class AbstractCache(ABC):
         """Return whether the cache is locked"""
         pass
     @abstractmethod
-    async def get_problem(self, guild_id: GuildID, problem_id: int) -> BaseProblem:
+    async def get_problem(self, guild_id: GuildID, problem_id: int) -> FixedAnswerProblem:
         """Attempt to return the problem with guild_id and problem_id =problem_id
         Time complexity: O(1)"""
         pass
 
     @abstractmethod
-    async def get_all_problems(self) -> List[BaseProblem]:
+    async def get_all_problems(self) -> List[FixedAnswerProblem]:
         """Return a list of all problems!
         Time complexity: O(N)"""
         pass
@@ -141,38 +141,38 @@ class AbstractCache(ABC):
         """Return a list of EVERYTHING in the database"""
         pass
 
-    async def get_all_problems_by_guild(self, guild_id: GuildID) -> List[BaseProblem]:
+    async def get_all_problems_by_guild(self, guild_id: GuildID) -> List[FixedAnswerProblem]:
         """return a list of all problems with the guild id = id
                 Time complexity: O(N)"""
         warnings.warn("This method is slow. Consider overriding it to do a more efficient DB scan", category=RuntimeWarning)
         return await self.get_all_problems_by_func(lambda p: p.guild_id == guild_id)
 
-    async def get_global_problems(self) -> List[BaseProblem]:
+    async def get_global_problems(self) -> List[FixedAnswerProblem]:
         """
         Return a list of all global problems.
 
         :return: A list of global problems.
         """
         return await self.get_all_problems_by_guild(None)
-    async def get_all_problems_by_func(self, func: typing.Callable[[BaseProblem], bool]) -> List[BaseProblem]:
+    async def get_all_problems_by_func(self, func: typing.Callable[[FixedAnswerProblem], bool]) -> List[FixedAnswerProblem]:
         return list(filter(func, await self.get_all_problems()))
     @abstractmethod
-    async def add_problem(self, problem_id, problem: BaseProblem):
+    async def add_problem(self, problem_id, problem: FixedAnswerProblem):
         """
         Add a problem to the cache.
 
         :param problem_id: The ID of the problem.
-        :param problem: The BaseProblem instance.
-        :raises TypeError: If 'problem_id' is not an int or 'problem' is not a BaseProblem.
+        :param problem: The FixedAnswerProblem instance.
+        :raises TypeError: If 'problem_id' is not an int or 'problem' is not a FixedAnswerProblem.
         :raises ValueError: If IDs do not match.
         """
         pass
-    async def update_problem(self, problem_id: int, problem: BaseProblem):
+    async def update_problem(self, problem_id: int, problem: FixedAnswerProblem):
         """
         Update a problem in the cache.
 
         :param problem_id: The ID of the problem.
-        :param problem: The BaseProblem instance.
+        :param problem: The FixedAnswerProblem instance.
         """
         return await self.add_problem(problem_id, problem)
     @abstractmethod

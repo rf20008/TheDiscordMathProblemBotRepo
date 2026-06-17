@@ -35,7 +35,7 @@ from nextcord import *
 
 from helpful_modules.dict_factory import dict_factory  # Attribution to stackoverflow
 
-from .base_problem import BaseProblem
+from .base_problem import FixedAnswerProblem
 from .errors import *
 
 """The core of my bot (very necessary)"""
@@ -163,7 +163,7 @@ class MathProblemCache:
     def convert_dict_to_math_problem(self, problem, use_from_dict=True):
         "Convert a dictionary into a math problem. It must be in the expected format. (Overriden by from_dict, but still used) Possibly not used due to SQL"
         if use_from_dict:
-            return BaseProblem.from_dict(problem, cache=self)
+            return FixedAnswerProblem.from_dict(problem, cache=self)
         try:
             assert isinstance(problem, dict)
         except AssertionError:
@@ -196,7 +196,7 @@ class MathProblemCache:
             cursor.execute("SELECT * FROM problems")
 
             for row in cursor:
-                Problem = BaseProblem.from_row(row, cache=copy(self))
+                Problem = FixedAnswerProblem.from_row(row, cache=copy(self))
                 if (
                     Problem.guild_id not in guild_ids
                 ):  # Similar logic: Make sure it's there!
@@ -279,7 +279,7 @@ class MathProblemCache:
                     row = dict_factory(cursor, rows[0])  #
                 else:
                     row = rows[0]
-                return BaseProblem.from_row(rows[0], cache=copy(self))
+                return FixedAnswerProblem.from_row(rows[0], cache=copy(self))
 
     async def get_guild_problems(self, Guild):
         """Gets the guild problems! Guild must be a Guild object. If you are trying to get global problems, use get_global_problems."""
@@ -310,7 +310,7 @@ class MathProblemCache:
         #
         # self._dict[Guild.id] = {}
 
-    async def add_problem(self, guild_id: int, problem_id: int, Problem: BaseProblem):
+    async def add_problem(self, guild_id: int, problem_id: int, Problem: FixedAnswerProblem):
         "Adds a problem and returns the added MathProblem"
         # Preliminary checks -otherwise SQL bugs
         if not isinstance(guild_id, int):
@@ -354,7 +354,7 @@ class MathProblemCache:
         except KeyError:
             pass
         if not isinstance(
-            Problem, (BaseProblem)
+            Problem, (FixedAnswerProblem)
         ):  # Make sure it's actually a Problem and not something else
             raise TypeError("Problem is not a valid MathProblem object.")
         # All the checks passed, hooray! Now let's add the problem.
@@ -394,7 +394,7 @@ class MathProblemCache:
             await conn.commit()
         return Problem
 
-    async def remove_problem(self, guild_id: int, problem_id: int) -> BaseProblem:
+    async def remove_problem(self, guild_id: int, problem_id: int) -> FixedAnswerProblem:
         "Removes a problem. Returns the deleted problem"
         Problem = self.get_problem(guild_id, problem_id)
         await self.remove_problem_without_returning(guild_id, problem_id)
@@ -450,7 +450,7 @@ class MathProblemCache:
             cursor = conn.cursor()
             await cursor.execute("SELECT * FROM problems")
             all_problems = [
-                BaseProblem.from_row(dict_factory(cursor, row))
+                FixedAnswerProblem.from_row(dict_factory(cursor, row))
                 for row in deepcopy(await cursor.fetchall())
             ]
             await conn.commit()
@@ -590,11 +590,11 @@ class MathProblemCache:
             quiz = Quiz(quiz_id, problems, submissions, cache=copy(self))
             return quiz
 
-    async def update_problem(self, guild_id, problem_id, new: BaseProblem) -> None:
+    async def update_problem(self, guild_id, problem_id, new: FixedAnswerProblem) -> None:
         "Update the problem stored with the given guild id and problem id"
         assert isinstance(guild_id, str)
         assert isinstance(problem_id, str)
-        assert isinstance(new, BaseProblem) and not isinstance(new, QuizProblem)
+        assert isinstance(new, FixedAnswerProblem) and not isinstance(new, QuizProblem)
         async with aiosqlite.connect(self.db_name) as conn:
             try:
                 conn.row_factory = (

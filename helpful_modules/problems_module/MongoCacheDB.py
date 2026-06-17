@@ -25,7 +25,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from typing import Optional, List, Type, TypeVar
 
 from .cache_ABC import AbstractCache, GuildID
-from .base_problem import BaseProblem
+from .base_problem import FixedAnswerProblem
 from .GuildData import GuildData
 from .quizzes import Quiz
 from .user_data import UserData
@@ -106,7 +106,7 @@ class MongoCache(AbstractCache):
     # -------------------------
     # PROBLEMS (FAST PATH)
     # -------------------------
-    async def add_problem(self, problem_id: int, problem: BaseProblem):
+    async def add_problem(self, problem_id: int, problem: FixedAnswerProblem):
         doc = problem.to_dict()
         doc["problem_id"] = problem_id
         doc["guild_id"] = problem.guild_id
@@ -122,17 +122,17 @@ class MongoCache(AbstractCache):
             {"guild_id": guild_id, "problem_id": problem_id}
         )
 
-    async def get_problem(self, guild_id: GuildID, problem_id: int) -> BaseProblem:
+    async def get_problem(self, guild_id: GuildID, problem_id: int) -> FixedAnswerProblem:
         doc = await self.problems.find_one(
             {"guild_id": guild_id, "problem_id": problem_id}
         )
         if not doc:
             raise ProblemNotFound()
-        return BaseProblem.from_dict(doc)
+        return FixedAnswerProblem.from_dict(doc)
 
-    async def get_all_problems(self) -> List[BaseProblem]:
+    async def get_all_problems(self) -> List[FixedAnswerProblem]:
         docs = await self.problems.find().to_list(None)
-        return [BaseProblem.from_dict(d) for d in docs]
+        return [FixedAnswerProblem.from_dict(d) for d in docs]
 
     # -------------------------
     # ⭐ KEY METHOD YOU ASKED FOR

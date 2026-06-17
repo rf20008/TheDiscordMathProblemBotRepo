@@ -24,10 +24,10 @@ from unittest.mock import AsyncMock
 
 import disnake
 
-from helpful_modules.problems_module import BaseProblem, PMDeprecationWarning
+from helpful_modules.problems_module import FixedAnswerProblem, PMDeprecationWarning
 
 # Define a standard sample problem for testing
-sample_problem = BaseProblem(
+sample_problem = FixedAnswerProblem(
     question="What is 2+2?",
     id=-1,
     author=-123456789,
@@ -66,7 +66,7 @@ class TestBaseProblem(unittest.TestCase):
             "solvers": pickle.dumps([]),
             "tolerance": 0.2,
         }
-        recieved_problem = BaseProblem.from_row(row)
+        recieved_problem = FixedAnswerProblem.from_row(row)
         self.assertEqual(recieved_problem.question, "What is 3+3?")
         self.assertEqual(recieved_problem.id, -2)
         self.assertEqual(recieved_problem.author, "-987654321")
@@ -85,7 +85,7 @@ class TestBaseProblem(unittest.TestCase):
             "answers": ["8"],
             "tolerance": 0.3,
         }
-        problem_gotten = BaseProblem.from_dict(problem_dict)
+        problem_gotten = FixedAnswerProblem.from_dict(problem_dict)
         self.assertEqual(problem_gotten.question, "What is 4+4?")
         self.assertEqual(problem_gotten.id, -3)
         self.assertEqual(problem_gotten.author, -123456789)
@@ -211,7 +211,7 @@ class TestBaseProblem(unittest.TestCase):
         problem = sample_problem
         self.assertEqual(
             repr(problem),
-            "problems_module.BaseProblem(question='What is 2+2?', answers = ['4'], id = -1, guild_id=None, voters=[], solvers=[], author=-123456789, cache=None )",
+            "problems_module.FixedAnswerProblem(question='What is 2+2?', answers = ['4'], id = -1, guild_id=None, voters=[], solvers=[], author=-123456789, cache=None )",
         )  # Representation matches expected value
 
     def test___str__(self):

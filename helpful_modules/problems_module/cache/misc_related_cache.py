@@ -35,7 +35,7 @@ import aiosqlite
 from helpful_modules.dict_factory import dict_factory
 
 from ..appeal import Appeal, AppealViewInfo
-from ..base_problem import FixedAnswerProblem
+from ..fixed_answer_problem import FixedAnswerProblem
 from ..errors import *
 from ..mysql_connector_with_stmt import mysql_connection
 from ..parse_problem import convert_row_to_problem

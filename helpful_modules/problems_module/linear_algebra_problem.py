@@ -27,7 +27,7 @@ from copy import deepcopy
 
 import mpmath
 
-from .base_problem import FixedAnswerProblem
+from .fixed_answer_problem import FixedAnswerProblem
 from .errors import LinearAlgebraUserInputErrorException, MathProblemsModuleException
 
 BOT_ID = 845751152901750824

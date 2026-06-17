@@ -32,7 +32,7 @@ from redis import asyncio as aioredis  # type: ignore
 
 from ...FileDictionaryReader import AsyncFileDict
 from ..appeal import Appeal, AppealViewInfo
-from ..base_problem import FixedAnswerProblem
+from ..fixed_answer_problem import FixedAnswerProblem
 from ..dict_convertible import DictConvertible
 from ..cache_ABC import AbstractCache
 from ..errors import (

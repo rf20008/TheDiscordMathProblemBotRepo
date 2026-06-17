@@ -30,7 +30,7 @@ import orjson
 from . import OwnershipNotDeterminableException
 from ..FileDictionaryReader import AsyncFileDict
 from .appeal import Appeal, AppealViewInfo
-from .base_problem import FixedAnswerProblem
+from .fixed_answer_problem import FixedAnswerProblem
 from .dict_convertible import DictConvertible, IdentifiableDictConvertible
 from .errors import (
     FormatException,

@@ -21,7 +21,7 @@ import pickle
 
 import orjson
 
-from .base_problem import FixedAnswerProblem
+from .fixed_answer_problem import FixedAnswerProblem
 from .computational_problem import ComputationalProblem
 from .errors import FormatException
 from .linear_algebra_problem import LinearAlgebraProblem

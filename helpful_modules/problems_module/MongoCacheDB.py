@@ -25,7 +25,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from typing import Optional, List, Type, TypeVar
 
 from .cache_ABC import AbstractCache, GuildID
-from .base_problem import FixedAnswerProblem
+from .fixed_answer_problem import FixedAnswerProblem
 from .GuildData import GuildData
 from .quizzes import Quiz
 from .user_data import UserData

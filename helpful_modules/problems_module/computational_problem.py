@@ -26,7 +26,7 @@ from copy import deepcopy
 
 import mpmath
 
-from .base_problem import FixedAnswerProblem
+from .fixed_answer_problem import FixedAnswerProblem
 
 
 class ComputationalProblem(FixedAnswerProblem):

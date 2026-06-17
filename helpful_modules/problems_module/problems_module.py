@@ -35,7 +35,7 @@ from nextcord import *
 
 from helpful_modules.dict_factory import dict_factory  # Attribution to stackoverflow
 
-from .base_problem import FixedAnswerProblem
+from .fixed_answer_problem import FixedAnswerProblem
 from .errors import *
 
 """The core of my bot (very necessary)"""

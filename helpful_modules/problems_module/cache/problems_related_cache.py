@@ -37,7 +37,7 @@ import disnake
 
 from helpful_modules.dict_factory import dict_factory
 
-from ..base_problem import FixedAnswerProblem
+from ..fixed_answer_problem import FixedAnswerProblem
 from ..cache_ABC import AbstractCache
 from ..errors import *
 from ..mysql_connector_with_stmt import mysql_connection

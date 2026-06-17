@@ -32,7 +32,7 @@ from helpful_modules.problems_module.errors import (
     SQLNotSupportedInRedisException,
     ThingNotFound,
     CorruptedDataException,
-    OwnershipNotDeterminableException
+    OwnershipNotDeterminableException, ClearProhibitedError
 )
 from ..AbstractKVCache import AbstractKVBasedCache, PREFIX_REGISTRY
 from ..cache_ABC import TYPE_ERROR_NOT_FOUND
@@ -363,5 +363,14 @@ class RedisCache2(AbstractKVBasedCache, ABC):
         raise SQLNotSupportedInRedisException(
             "SQL is not supported in Redis, and creating sql tables is not supported in Redis either"
         )
+    async def clear(self, force=False):
+        if self.is_production():
+            raise ClearProhibitedError("Aborting! Cannot flush Redis in a production environment.")
+
+        if not force:
+            raise ValueError("You must pass force=True to confirm clearing the Redis database.")
+
+            # flushdb() takes an asynchronous keyword argument in redis-py / aioredis
+        await self._redis.flushdb(asynchronous=True)
 if __name__ == "__main__":
-g    r = RedisCache2()
+    r = RedisCache2(redis_url="redis://localhost", password="<PASSWORD>")

@@ -61,7 +61,10 @@ class AbstractKVBasedCache(AbstractCache, ABC):
     def __init__(self, *args, **kwargs) -> None:
         self._async_file_dict = AsyncFileDict("config.json")
 
-
+    @abstractmethod
+    async def clear(self, force=False):
+        """Clear the database. """
+        pass
 
     @abstractmethod
     async def get_all_things(self) -> list[IdentifiableDictConvertible]:

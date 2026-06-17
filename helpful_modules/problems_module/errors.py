@@ -247,3 +247,9 @@ class UnsavedContentWarning(Warning):
 
 class PastWarning(Warning):
     """A warning about things that were supported in the past but no longer are"""
+    pass
+
+
+class ClearProhibitedError(MathProblemsModuleException):
+    """Raised when the database is attempted to be cleared during production"""
+    pass

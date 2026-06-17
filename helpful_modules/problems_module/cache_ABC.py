@@ -26,7 +26,7 @@ import typing
 from typing import List
 import warnings
 import orjson
-
+import os
 from ..FileDictionaryReader import AsyncFileDict
 from .appeal import Appeal, AppealViewInfo
 from .base_problem import BaseProblem
@@ -304,27 +304,12 @@ class AbstractCache(ABC):
     async def get_guild_data(self, guild_id: GuildID) -> GuildData:
         """Get the data of a guild from the cache."""
         pass
+    @abstractmethod
     async def get_all_by_user_id(self, user_id: int) -> list[dict]:
-        things = await self.get_all_things()
-        things_authored = []
-        for key, value in things.items():
-            try:
-                dictionarified = orjson.loads(value)  # type: ignore
-            except orjson.JSONDecodeError:
-                raise FormatException("Something in the redis is not a dictionary..")
-            if dictionarified is None:
-                raise FormatException("No dictionary found")
-            if dictionarified.get("author", None) == user_id:
-                things_authored.append(value)
-                continue
-            elif user_id in dictionarified.get("authors", []):
-                things_authored.append(value)
-                continue
-            elif dictionarified.get("user_id", None) == user_id:
-                things_authored.append(value)
-                continue
-
-        return things_authored
+        """Get all data from a specific user in the cache.
+        :param user_id: The ID of the user.
+        :return: A list of dictionaries."""
+        pass
     @abstractmethod
     async def del_all_by_user_id(self, user_id: int) -> None:
         pass
@@ -427,12 +412,22 @@ class AbstractCache(ABC):
         raise SQLNotSupportedInRedisException(
             "SQL is not supported in Redis, and creating sql tables is not supported in Redis either"
         )
-    @abstractmethod
-    async def get_all_by_user_id(self, user_id: int) -> dict:
-        pass
-    @abstractmethod
-    async def del_all_by_user_id(self, user_id: int) -> dict:
-        pass
+
     @abstractmethod
     async def delete_all_by_guild_id(self, guild_id: int) -> None:
+        pass
+
+    @abstractmethod
+    async def num_guild_problems(self, guild_id: GuildID) -> int:
+        """
+        Return number of problems in a guild.
+        Must be O(log N) or better in backend implementation.
+        """
+        pass
+    @staticmethod
+    def is_production() -> bool:
+        return "prod" in os.getenv("APP_ENV", "prod")
+    @abstractmethod
+    async def clear(self, force=False):
+        """Clear the database. """
         pass

@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+from . import ClearProhibitedError
 from .AbstractKVCache import AbstractKVBasedCache
 from .cache_ABC import AbstractCache
 import typing
@@ -33,7 +34,7 @@ from .appeal import Appeal, AppealViewInfo
 from .base_problem import BaseProblem
 from .dict_convertible import DictConvertible, IdentifiableDictConvertible
 from .errors import (
-    CorruptedDataException, ThingNotFound
+    CorruptedDataException, ThingNotFound, ClearProhibitedError
 )
 from .cache_ABC import TYPE_ERROR_NOT_FOUND
 
@@ -109,3 +110,10 @@ class RAMCache(AbstractKVBasedCache):
     async def items(self) -> list[tuple[str, IdentifiableDictConvertible]]:
         """Return a list of EVERYTHING in the database (and their keys)"""
         return self.things.items()
+    async def clear(self, force=False):
+        """Clear the database."""
+        if not force:
+            raise ClearProhibitedError("You did not force clearing of this database")
+        if self.is_production():
+            raise ClearProhibitedError("Cannot clear database during production")
+        self.things.clear()

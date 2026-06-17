@@ -30,7 +30,7 @@ from . import *
 from .AbstractKVCache import AbstractKVBasedCache
 from .appeal import Appeal, AppealViewInfo, AppealType
 from .appeal_question import AppealQuestion, APPEAL_QUESTION_TYPE_NAMES
-from .base_problem import BaseProblem
+from .base_problem import FixedAnswerProblem
 from .cache_ABC import AbstractCache
 from .cache import *
 from .cache_rewrite_with_redis import RedisCache, RedisCache2

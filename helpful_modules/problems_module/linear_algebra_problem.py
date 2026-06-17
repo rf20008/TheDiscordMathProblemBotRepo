@@ -27,7 +27,7 @@ from copy import deepcopy
 
 import mpmath
 
-from .base_problem import BaseProblem
+from .base_problem import FixedAnswerProblem
 from .errors import LinearAlgebraUserInputErrorException, MathProblemsModuleException
 
 BOT_ID = 845751152901750824
@@ -42,7 +42,7 @@ of the tokens!!!! The reason for this extreme formatting format is that I don't 
 formats."""
 
 
-class LinearAlgebraProblem(BaseProblem):
+class LinearAlgebraProblem(FixedAnswerProblem):
     """
     Represents a linear algebra problem.
 

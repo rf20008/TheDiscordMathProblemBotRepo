@@ -21,13 +21,13 @@ import pickle
 
 import orjson
 
-from .base_problem import BaseProblem
+from .base_problem import FixedAnswerProblem
 from .computational_problem import ComputationalProblem
 from .errors import FormatException
 from .linear_algebra_problem import LinearAlgebraProblem
 
 class_map = {
-    "BaseProblem": BaseProblem,
+    "FixedAnswerProblem": FixedAnswerProblem,
     "ComputationalProblem": ComputationalProblem,
     "LinearAlgebraProblem": LinearAlgebraProblem,
 }

@@ -26,10 +26,10 @@ from copy import deepcopy
 
 import mpmath
 
-from .base_problem import BaseProblem
+from .base_problem import FixedAnswerProblem
 
 
-class ComputationalProblem(BaseProblem):
+class ComputationalProblem(FixedAnswerProblem):
     def __init__(self, *args, **kwargs):
         tolerance = kwargs.pop("tolerance", 0.001)
         super().__init__(*args, **kwargs)

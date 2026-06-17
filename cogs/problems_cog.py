@@ -586,7 +586,7 @@ class ProblemsCog(HelperCog):
         else:  # But if it's global, make it global
             guild_id = None
 
-        problem = problems_module.BaseProblem(
+        problem = problems_module.FixedAnswerProblem(
             question=question,
             answers=[answer],
             id=problem_id,

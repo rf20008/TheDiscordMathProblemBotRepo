@@ -32,7 +32,7 @@ from redis import asyncio as aioredis  # type: ignore
 
 from ...FileDictionaryReader import AsyncFileDict
 from ..appeal import Appeal, AppealViewInfo
-from ..base_problem import BaseProblem
+from ..base_problem import FixedAnswerProblem
 from ..dict_convertible import DictConvertible
 from ..cache_ABC import AbstractCache
 from ..errors import (
@@ -92,12 +92,12 @@ class RedisCache(AbstractCache):
             raise LockedCacheException("The cache is currently locked")
         await self.redis.hdel(key)
 
-    async def get_problem(self, guild_id: int, problem_id: int) -> BaseProblem:
+    async def get_problem(self, guild_id: int, problem_id: int) -> FixedAnswerProblem:
         """Attempt to return the problem with guild_id and problem_id =problem_id
         Time complexity: O(1)"""
         if guild_id is not None and not isinstance(guild_id, int):
             raise TypeError("guild_id is not an int")
-        result = await self.get_key(f"BaseProblem:{guild_id}:{problem_id}")
+        result = await self.get_key(f"FixedAnswerProblem:{guild_id}:{problem_id}")
         if result is not None:
             return convert_dict_to_problem(orjson.loads(result))
         result = await self.get_key(f"QuizProblem:{guild_id}:{problem_id}")
@@ -105,13 +105,13 @@ class RedisCache(AbstractCache):
             return convert_dict_to_problem(orjson.loads(result))
         raise ProblemNotFoundException("That problem is not found")
 
-    async def get_all_problems(self) -> List[BaseProblem]:
+    async def get_all_problems(self) -> List[FixedAnswerProblem]:
         """Return a list of all problems!
         Time complexity: O(N)"""
         return list(
             map(
                 convert_dict_to_problem,
-                await self.redis.hgetall("BaseProblem").values(),
+                await self.redis.hgetall("FixedAnswerProblem").values(),
             )
         )
 
@@ -125,7 +125,7 @@ class RedisCache(AbstractCache):
         return list(
             map(
                 convert_dict_to_problem,
-                await self.redis.hgetall(f"BaseProblem:{guild_id}").values(),
+                await self.redis.hgetall(f"FixedAnswerProblem:{guild_id}").values(),
             )
         )
 
@@ -152,31 +152,31 @@ class RedisCache(AbstractCache):
         """
         raise NotImplementedError("This method is deprecated")
 
-    async def add_problem(self, problem_id: int, problem: BaseProblem):
+    async def add_problem(self, problem_id: int, problem: FixedAnswerProblem):
         """
         Add a problem to the cache.
 
         :param problem_id: The ID of the problem.
-        :param problem: The BaseProblem instance.
-        :raises TypeError: If 'problem_id' is not an int or 'problem' is not a BaseProblem.
+        :param problem: The FixedAnswerProblem instance.
+        :raises TypeError: If 'problem_id' is not an int or 'problem' is not a FixedAnswerProblem.
         :raises ValueError: If IDs do not match.
         """
-        if not isinstance(problem_id, int) or not isinstance(problem, BaseProblem):
+        if not isinstance(problem_id, int) or not isinstance(problem, FixedAnswerProblem):
             raise TypeError("Problem_id is not an int or problem is not a base problem")
         if problem.id != problem_id:
             raise ValueError("Ids do not match")
 
         await self.set_key(
-            f"BaseProblem:{problem.guild_id}:{problem_id}",
+            f"FixedAnswerProblem:{problem.guild_id}:{problem_id}",
             str(problem.to_dict(show_answer=True)),
         )
 
-    async def update_problem(self, problem_id: int, problem: BaseProblem):
+    async def update_problem(self, problem_id: int, problem: FixedAnswerProblem):
         """
         Update a problem in the cache.
 
         :param problem_id: The ID of the problem.
-        :param problem: The BaseProblem instance.
+        :param problem: The FixedAnswerProblem instance.
         """
         return await self.add_problem(problem_id, problem)
 
@@ -192,7 +192,7 @@ class RedisCache(AbstractCache):
             guild_id is not None and not isinstance(guild_id, int)
         ):
             raise TypeError("Bad types!")
-        await self.del_key(f"BaseProblem:{guild_id}:{problem_id}")
+        await self.del_key(f"FixedAnswerProblem:{guild_id}:{problem_id}")
         await self.del_key(f"QuizProblem:{guild_id}:{problem_id}")
 
     # Additional methods for quizzes

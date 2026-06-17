@@ -58,11 +58,11 @@ async def test_thing_lifecycle_with_real_models(cache):
 
 @pytest.mark.asyncio
 async def test_problems_contract_with_real_base_problem(cache):
-    """Validates parameters constraints and type safety metrics using an actual BaseProblem instance."""
+    """Validates parameters constraints and type safety metrics using an actual FixedAnswerProblem instance."""
     guild_id = 999111
     problem_id = 42
 
-    # Constructing a real BaseProblem instance from a valid layout dictionary
+    # Constructing a real FixedAnswerProblem instance from a valid layout dictionary
     problem_data = {
         "guild_id": guild_id,
         "description": "Solve for x: 2x + 4 = 10",

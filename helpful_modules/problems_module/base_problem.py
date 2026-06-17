@@ -43,7 +43,7 @@ QUESTION_CHAR_LIMIT = 2000
 
 
 # TODO: finish from_dict so that it knows to convert to a ComputationalProblem or a LinearAlgebraProblem or some other kind of problem
-class BaseProblem(IdentifiableDictConvertible):
+class FixedAnswerProblem(IdentifiableDictConvertible):
     """For readability purposes :) This also isn't an ABC."""
 
     def __init__(
@@ -59,7 +59,7 @@ class BaseProblem(IdentifiableDictConvertible):
         cache=None,
         answers: list = None,
         tolerance: float = None,
-        type: str = "BaseProblem",
+        type: str = "FixedAnswerProblem",
         extra_stuff: dict = {},
     ):
         self.type = type
@@ -439,13 +439,13 @@ class BaseProblem(IdentifiableDictConvertible):
         except AttributeError:
             return False
 
-    def __repr__(self: "BaseProblem") -> str:
+    def __repr__(self: "FixedAnswerProblem") -> str:
         """A method that when called, returns a string, that when executed, returns an object that is equal to this one. Also implements repr(self)"""
         extra_stuff_included = " ".join(
             f"{key}={value}" for key, value in self.get_extra_stuff().items()
         )
 
-        return f"""problems_module.BaseProblem(question='{self.question}', answers = {self.answers}, id = {self.id}, guild_id={self.guild_id}, voters={self.voters}, solvers={self.solvers}, author={self.author}, cache={None} {extra_stuff_included})"""  # If I stored the problems, then there would be an infinite loop
+        return f"""problems_module.FixedAnswerProblem(question='{self.question}', answers = {self.answers}, id = {self.id}, guild_id={self.guild_id}, voters={self.voters}, solvers={self.solvers}, author={self.author}, cache={None} {extra_stuff_included})"""  # If I stored the problems, then there would be an infinite loop
 
     def __str__(self, include_answer: bool = False, vote_threshold: int = 0) -> str:
         _str = f"""Question: '{self.question}', 
@@ -463,11 +463,11 @@ class BaseProblem(IdentifiableDictConvertible):
             _str += f"\nAnswer: {self.answer}"
         return str(_str)
 
-    def __deepcopy__(self: "BaseProblem", memo: typing.Any):
+    def __deepcopy__(self: "FixedAnswerProblem", memo: typing.Any):
         """Deepcopy myself. Required for MathProblemCache.update_cache() to work.
         Time complexity: O(V+S) (uh oh)
         """
-        return BaseProblem(
+        return FixedAnswerProblem(
             question=deepcopy(self.question),
             voters=deepcopy(self.voters),
             answers=deepcopy(self.answers),
@@ -480,10 +480,10 @@ class BaseProblem(IdentifiableDictConvertible):
         )
 
     def get_extra_stuff(self):
-        """Return the extra stuff for this dictionary, that doesn't go in just a BaseProblem. Override this if you're in a subclass"""
-        return {"type": "BaseProblem"}
+        """Return the extra stuff for this dictionary, that doesn't go in just a FixedAnswerProblem. Override this if you're in a subclass"""
+        return {"type": "FixedAnswerProblem"}
 
-    def __eq__(self, other: "BaseProblem"):
+    def __eq__(self, other: "FixedAnswerProblem"):
         if not isinstance(other, type(self)):
             return False
         return (

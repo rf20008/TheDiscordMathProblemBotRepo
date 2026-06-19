@@ -282,7 +282,7 @@ class DeveloperCommands(HelperCog):
             )
         ],
     )
-    @checks.trusted_users_only()
+    @commands.is_owner()
     @checks.is_not_denylisted()
     @commands.cooldown(2, 600, commands.BucketType.user)
     async def add_trusted_user(
@@ -335,7 +335,7 @@ class DeveloperCommands(HelperCog):
     )
     @commands.cooldown(1, 600, commands.BucketType.user)
     @checks.is_not_denylisted()
-    @checks.trusted_users_only()
+    @commands.is_owner()
     async def remove_trusted_user(
         self: "DeveloperCommands",
         inter: disnake.ApplicationCommandInteraction,

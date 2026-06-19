@@ -31,6 +31,7 @@ from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
 from .dict_convertible import DictConvertible, T, IdentifiableDictConvertible
 from .errors import VerificationCodeExpiredException, OwnershipNotDeterminableException
+from .register_dicts import register_dict
 from ..threads_or_useful_funcs import async_wait_for_future
 
 ONE_WEEK = datetime.timedelta(weeks=1).seconds
@@ -118,7 +119,7 @@ class VerificationCodeThreadHashingManager(concurrent.futures.ThreadPoolExecutor
         future = self.submit(fn=func, args=args, kwargs=kwargs)
         return await async_wait_for_future(future, timeout=timeout)
 
-
+@register_dict("VerificationCodeInfo")
 class VerificationCodeInfo(IdentifiableDictConvertible):
     """
     Represents information about a verification code, including its hashed representation,

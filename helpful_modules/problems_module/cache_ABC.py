@@ -216,6 +216,9 @@ class AbstractCache(ABC):
     @abstractmethod
     async def add_user_data(self, user_data: UserData) -> None:
         pass
+    @abstractmethod
+    async def remove_user_data(self, user_data: UserData) -> None:
+        pass
     async def get_permissions_required_for_command(self, command_name: str | None) -> dict[str, bool]:
         """
         Get the permissions required for a command.

@@ -31,8 +31,10 @@ from ..dict_convertible import IdentifiableDictConvertible
 from ..errors import InvalidDictionaryInDatabaseException
 from .the_basic_check import CheckForUserPassage
 from ..denylistable import Denylistable
+from ..register_dicts import register_dict
 
 
+@register_dict("GuildData")
 class GuildData(Denylistable, IdentifiableDictConvertible):
     denylisted: bool
     guild_id: int | None

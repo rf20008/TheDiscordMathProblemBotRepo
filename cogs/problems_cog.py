@@ -945,6 +945,12 @@ class ProblemsCog(HelperCog):
                 type=OptionType.integer,
                 required=True,
             ),
+            Option(
+                name="guild_id",
+                description="guild ID of the problem you want to delete.",
+                type=OptionType.integer,
+                required=True,
+            ),
         ],
     )
     @commands.cooldown(1, 0.5, commands.BucketType.user)
@@ -953,28 +959,23 @@ class ProblemsCog(HelperCog):
         self: "ProblemsCog",
         inter: disnake.ApplicationCommandInteraction,
         problem_id: int,
+        guild_id: int | None = None,
     ) -> typing.Optional[disnake.Message]:
         """/delete_problem (problem_id: int)
         Delete a problem. You must either have the Administrator permission in the guild, and the problem must be a guild problem, or be a trusted user.
 
         You do not need to specify whether the problem is a guild problem, as the bot can figure it out.
         """
-        if inter.guild is not None:
-            guild_id = inter.guild.id
-        else:
-            guild_id = None
-        try:
+        if guild_id is None:
+            guild_id = inter.guild_id
+        try
             problem = await self.bot.cache.get_problem(guild_id, problem_id)
             can_delete: bool = False  # default
             if problem.author == inter.author.id:
                 can_delete = True
             elif problem.guild_id is not None:
-                if problem.guild_id != guild_id:
-                    await inter.send(
-                        "Wrong guild; Use this command in the guild with the problem"
-                    )
-                    return
-                elif not inter.author.guild_permissions.administrator:
+
+                if not inter.author.guild_permissions.administrator and guild_id == inter.guild.id:
                     user_data: problems_module.UserData = (
                         await self.bot.cache.get_user_data(
                             user_id=inter.author.id,
@@ -1013,7 +1014,7 @@ class ProblemsCog(HelperCog):
                 ephemeral=True,
             )
             return
-        await self.cache.remove_problem(guild_id, problem_id)
+        await self.cache.remove_problem(guild_id=guild_id, problem_id=problem_id)
         await inter.send(
             embed=SuccessEmbed(
                 f"Successfully deleted problem the problem with id {problem_id}!"

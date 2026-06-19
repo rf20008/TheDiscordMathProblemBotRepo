@@ -25,6 +25,8 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 import dataclasses
 import io
 
+from helpful_modules.problems_module import DictConvertible
+
 try:
     import orjson as json
 except ImportError:
@@ -32,7 +34,7 @@ except ImportError:
 
 
 @dataclasses.dataclass
-class CommandUsage:
+class CommandUsage(DictConvertible):
     user_id: int
     command_name: str
     time: float
@@ -49,7 +51,7 @@ class CommandUsage:
         return cls(**d)
 
 
-class CommandStats:
+class CommandStats(DictConvertible):
     usages: [CommandUsage]
     unique_users: set[int]
     total_cmds_used: int

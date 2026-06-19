@@ -38,8 +38,6 @@ import orjson
 from .dict_convertible import IdentifiableDictConvertible
 from .errors import *
 
-MAX_ANSWERS_PER_PROBLEM = 30
-ANSWER_CHAR_LIMIT = 1000
 QUESTION_CHAR_LIMIT = 2000
 
 
@@ -55,7 +53,7 @@ class BaseProblem(IdentifiableDictConvertible):
     solvers: list[int]
     def __init__(
         self,
-        *
+        *,
         question: str,
         author: int,
         problem_id: int | None = None,
@@ -101,56 +99,6 @@ class BaseProblem(IdentifiableDictConvertible):
     def problem_id(self) -> int:
         return self.id
 
-    def edit(
-        self,
-        *,
-        question: str = None,
-        id: Optional[int] = None,
-        author: Optional[int] = None,
-        guild_id: Optional[int] = None,
-        voters: typing.Optional[typing.List[str]] = None,
-        solvers: typing.Optional[typing.List[str]] = None,
-    ) -> None:
-        """Edit a problem. The edit is in place."""
-
-        if guild_id not in [None, None] and not isinstance(guild_id, int):
-            raise TypeError("guild_id is not an integer")
-        if not isinstance(id, int) and id is not None:
-            raise TypeError("id is not an integer")
-        if not isinstance(question, str) and question is not None:
-            raise TypeError("question is not a string")
-        if not isinstance(author, int) and author is not None:
-            raise TypeError("author is not an integer")
-        if not isinstance(voters, list) and voters is not None:
-            raise TypeError("voters is not a list")
-        if not isinstance(solvers, list) and solvers is not None:
-            raise TypeError("solvers is not a list")
-        if (
-            id is not None
-            or guild_id is not None
-            or voters is not None
-            or solvers is not None
-            or author is not None
-        ):
-            warnings.warn(
-                "You are changing one of the attributes that you should not be changing.",
-                category=RuntimeWarning,
-            )
-        if question is not None and len(question) > QUESTION_CHAR_LIMIT:
-            raise TooLongQuestion(
-                f"Your question is {len(question) - QUESTION_CHAR_LIMIT} characters too long. Questions may be up to {QUESTION_CHAR_LIMIT} characters long."
-            )
-        self.question = question
-        if id is not None:
-            self.id = id
-        if guild_id is not None:
-            self.guild_id = guild_id
-        if voters is not None:
-            self.voters = voters
-        if solvers is not None:
-            self.solvers = solvers
-        if author is not None:
-            self.author = author
 
 
     @staticmethod
@@ -219,21 +167,18 @@ class BaseProblem(IdentifiableDictConvertible):
         )  # Problem-ify the problem, but set the guild_id to None and return it
         return problem
 
-    def to_dict(self, show_answer: bool = True):
+    def to_dict(self):
         """Convert myself to a dictionary"""
         _dict = {
-            "type": "MathProblem",
+            "type": self.type,
             "question": self.question,
-            "id": str(self.id),
-            "problem_id": str(self.id),
-            "guild_id": str(self.guild_id),
+            "id": self.id,
+            "guild_id": self.guild_id,
             "voters": self.voters,
             "solvers": self.solvers,
             "author": self.author,
             "extra_stuff": self.get_extra_stuff(),
         }
-        if show_answer:
-            _dict["answers"] = self.answers
         return _dict
 
     def convert_to_dict(self, show_answer: bool = True):
@@ -350,7 +295,7 @@ class BaseProblem(IdentifiableDictConvertible):
         """
         return type(self).from_dict(deepcopy(self.to_dict()))
 
-    def get_extra_stuff(self):
+    def get_extra_stuff(self) -> dict[str, typing.Any]:
         """Return the extra stuff for this dictionary, that doesn't go in just a FixedAnswerProblem. Override this if you're in a subclass"""
         return {}
 
@@ -359,7 +304,7 @@ class BaseProblem(IdentifiableDictConvertible):
     def key_of(cls, *, guild_id: int | None, id: int) -> str:
         return f"Problem:{guild_id}:{id}"
     def key(self) -> str:
-        return self.key_of(guild_id=self.guild_id, problem_id=self.id)
+        return self.key_of(guild_id=self.guild_id, id=self.id)
     async def belongs_to_user(self, user_id: int) -> bool:
         return self.author == user_id
     async def belongs_to_guild(self, guild_id: int | None) -> bool:

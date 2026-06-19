@@ -31,7 +31,7 @@ from disnake.utils import format_dt
 
 from . import OwnershipNotDeterminableException
 from .dict_convertible import DictConvertible, IdentifiableDictConvertible
-
+from .register_dicts import register_dict
 
 class AppealType(Enum):
     DENYLIST_APPEAL = 0
@@ -46,22 +46,32 @@ class AppealType(Enum):
         return self.value
 
 
-class Appeal(IdentifiableDictConvertible):
+
     __slots__ = (
         "user_id",
         "appeal_msg",
-        "timestamp",
+        "timestamp"
+    )
+@register_dict(type_name="Appeal")
+class Appeal(IdentifiableDictConvertible):
+        user_id: int
+        appeal_msg: str
+        timestamp: int
+        appeal_num: int
+        special_id: int
+        type: int | AppealType
         "appeal_num",
         "cache",
         "special_id",
         "type",
+
     )
 
     def __init__(
-        self,
-        *,
-        user_id: int,
-        appeal_msg: str,
+            self,
+            *,
+            user_id: int,
+            appeal_msg: str,
         timestamp: int,
         appeal_num: int,
         special_id: int,
@@ -119,6 +129,8 @@ class Appeal(IdentifiableDictConvertible):
         raise OwnershipNotDeterminableException("Appeals only belong to users, not guilds")
     def belongs_to_user(self, user_id: int) -> bool:
         return self.user_id == user_id
+
+@register_dict(type_name="AppealViewInfo")
 class AppealViewInfo(IdentifiableDictConvertible):
     def __init__(
         self,

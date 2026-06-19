@@ -34,10 +34,11 @@ from .quiz_problem import QuizProblem
 from .quiz_submissions import QuizSubmission
 from .QuizSolvingSession import QuizSolvingSession
 from .related_enums import QuizIntensity, QuizTimeLimit
+from ..register_dicts import register_dict
 
 MAX_PROBLEMS_PER_QUIZ = 100  # todo: lower it - character limits
 
-
+@register_dict("Quiz")
 class Quiz(IdentifiableDictConvertible):
     """Represents a quiz.
     but it has an additional attribute submissions which is a list of QuizSubmissions"""

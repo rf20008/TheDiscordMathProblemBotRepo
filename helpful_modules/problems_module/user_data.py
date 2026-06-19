@@ -25,7 +25,8 @@ from .denylistable import Denylistable, DenylistMetadata, DenylistType
 from .dict_convertible import IdentifiableDictConvertible
 
 
-class UserData(Denylistable, IdentifiableDictConvertible):
+
+    __slots__ = (class UserData(Denylistable, IdentifiableDictConvertible):
     """A dataclass to store user data for the bot!"""
 
     verification_code_denylist: DenylistMetadata
@@ -34,7 +35,6 @@ class UserData(Denylistable, IdentifiableDictConvertible):
     denylisted: bool
     denylist_expiry: float
     denylist_reason: str
-    __slots__ = (
         "trusted",
         "denylisted",
         "user_id",

@@ -373,4 +373,7 @@ class AbstractKVBasedCache(AbstractCache, ABC):
         raise SQLNotSupportedInRedisException(
             "SQL is not supported in Redis, and creating sql tables is not supported in Redis either"
         )
-
+    @abstractmethod
+    async def get_next_appeal_num(self, user_id: int) -> int:
+        "Get the next appeal number for the given user_id."
+        raise NotImplementedError

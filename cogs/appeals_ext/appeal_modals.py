@@ -53,7 +53,7 @@ APPEAL_TYPE_REASONS = {
 
 
 async def get_highest_appeal_num_for(
-    cache: problems_module.MathProblemCache | problems_module.RedisCache, author: int
+    cache: problems_module.AbstractCache, author: int
 ):
     highest_appeal_num = 0
     all_appeals = await cache.get_all_appeals()
@@ -103,7 +103,7 @@ async def handle_appeal(
         pages=[],
         special_color=disnake.Color.red(),
         guild_id=guild_id,
-        appeal_type=AppealType.GUILD_DENYLIST_APPEAL,
+        appeal_type=appeal_type,
     )
     our_view.add_pages(
         AppealView.break_into_pages(
@@ -184,11 +184,7 @@ class UserDenylistAppealModal(AppealModal):
 
         # Create an appeal
         # find the appeal
-        highest_appeal_num = 0
-        try:
-            await cache.update_cache()
-        except NotImplementedError:
-            pass
+
         await handle_appeal(
             bot=self.bot,
             modal_inter=modal_inter,

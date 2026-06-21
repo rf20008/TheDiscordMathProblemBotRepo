@@ -204,15 +204,12 @@ class FileSaver:
         del self
 
     def load_appeal_questions(self):
-        with open("appeal_questions.json", "r") as file5:
+        with open("appeal_questions.json", "r", encoding='utf-8') as file5:
             questions = json.load(fp=file5)
         # turn the questions into AppealQuestions
         # Iterate over each key - value pair in the questions dictionary
         for key, questionset in questions.items():
-            l = []
-            for question in questionset:
-                print(question)
-                l.append(AppealQuestion.from_dict(question))
+
             # Convert each dictionary in the questionset to an AppealQuestion object
             questions[key] = [
                 AppealQuestion.from_dict(question) for question in questionset

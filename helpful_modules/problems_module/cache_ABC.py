@@ -291,6 +291,10 @@ class AbstractCache(ABC):
     async def remove_appeal(self, appeal: Appeal) -> None:
         """Remove an appeal from the database."""
         pass
+    @abstractmethod
+    async def get_next_appeal_num(self, user_id: int) -> int:
+        """Get the next appeal number for a user."""
+        pass
     async def update_cache(self):
         raise NotImplementedError("This method is being removed due to its expensiveness!!!")
     @abstractmethod

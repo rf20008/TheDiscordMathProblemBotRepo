@@ -62,7 +62,7 @@ class VerificationCog(HelperCog):
     async def verification_codes(self, inter: disnake.ApplicationCommandInteraction):
         """
         /verification_codes
-        This subclass is used to manage your verification codes
+        This command is used to manage your verification codes. However, it has subcommands
         """
         pass
 
@@ -76,6 +76,7 @@ class VerificationCog(HelperCog):
                 type=disnake.OptionType.number,
                 required=False,
                 min_value=1e-200,
+                max_value=30*24*60*60, # One month
             ),
             disnake.Option(
                 name="here",
@@ -101,7 +102,16 @@ class VerificationCog(HelperCog):
             await inter.send(
                 embed=ErrorEmbed(
                     "Your code must be valid for a positive amount of time"
-                )
+                ),
+                ephemeral=True,
+            )
+            return
+        elif duration > 30 * 24 * 60 * 60:
+            await inter.send(
+                embed=ErrorEmbed(
+                    "Your code must be valid for a duration of less than one month."
+                ),
+                ephemeral=True,
             )
             return
         code_info, code = (
@@ -121,7 +131,7 @@ class VerificationCog(HelperCog):
             )
             return
         else:
-            await inter.send(embed=SuccessEmbed("I have sent your code to your DMs!"))
+            await inter.send(embed=SuccessEmbed("I have sent your code to your DMs!"), ephemeral=True)
             await inter.author.send(
                 embed=SuccessEmbed(
                     f"Your secret code is `{code}`. "
@@ -148,15 +158,14 @@ class VerificationCog(HelperCog):
         """/verification_codes info [detailed: bool = False]
         Get info about your verification code (if you have one)"""
         # Give them remaining duration, total duration, expiry, and
-        print("HEHE!")
         try:
             vcode_info: problems_module.VerificationCodeInfo = (
                 await self.bot.cache.get_verification_code_info(inter.author.id)
             )
         except problems_module.VerificationCodeInfoNotFound as e:
-            print(e)
             await inter.send(
-                "You don't have a verification code! Try using /verification_codes generate."
+                embed=ErrorEmbed("You don't have a verification code! Try using /verification_codes generate."),
+                ephemeral=True,
             )
             return
         embed = SuccessEmbed(title="Your verification code info")
@@ -166,14 +175,14 @@ class VerificationCog(HelperCog):
         )
         embed.add_field(
             name="Expiry status",
-            value=f"{'Expired' if vcode_info.is_expired else 'Valid'} (expire{'d' if vcode_info.is_expired else 's'} at {disnake.utils.format_dt(vcode_info.expiry, 'F')}",
+            value=f"{'Expired' if vcode_info.is_expired else 'Valid'} (Expire{'d at' if vcode_info.is_expired else 's on'} {disnake.utils.format_dt(vcode_info.expiry, 'F')}",
         )
         if detailed:
             embed.add_field("Scrypt N", vcode_info.scrypt_parameters.scrypt_n)
             embed.add_field("Scrypt P", vcode_info.scrypt_parameters.scrypt_p)
             embed.add_field("Scrypt R", vcode_info.scrypt_parameters.scrypt_r)
             embed.add_field("Scrypt len", vcode_info.scrypt_parameters.scrypt_len)
-        await inter.send(embed=embed)
+        await inter.send(embed=embed, ephemeral=True)
         return
 
     @commands.cooldown(2, 15.0, type=commands.BucketType.user)
@@ -207,6 +216,8 @@ class VerificationCog(HelperCog):
         You can only set `person` if you own this bot.
         person is the user_id of the person you want to check."""
         # only owners can set `person`
+        if person == inter.author.id:
+            person = None
         if person is not None and not await self.bot.is_owner(inter.author):
             await inter.send(
                 embed=ErrorEmbed(
@@ -216,10 +227,7 @@ class VerificationCog(HelperCog):
             )
             return
         # who's the target?
-        target = inter.author.id
-        print(person)
-        if person is not None:
-            target = person
+        target = inter.author.id if person is None else person
 
         # get the code
         try:
@@ -276,7 +284,8 @@ class VerificationCog(HelperCog):
             return
         except cryptography.exceptions.InvalidKey:
             await inter.send(
-                f"Your verification code is NOT {possible_code}. Keep this a secret"
+                f"Your verification code is NOT {possible_code}. Keep this a secret",
+                ephemeral=True,
             )
             return
 
@@ -298,13 +307,16 @@ class VerificationCog(HelperCog):
         """/verification_codes
         Delete your (or someone else's) verification code.
         If you don't own this bot, you can only delete your own verification code!"""
+        if person == inter.author.id:
+            person = None # it's yourself
         if person is not None and not await self.bot.is_owner(inter.author):
             await inter.send(
                 embed=ErrorEmbed(
-                    "You can only delete your own verification codes if you aren't the owner!"
+                    "You do not have permission to delete verification codes for other users."
                 ),
                 ephemeral=True,
             )
+            return
 
         # target
         target = inter.author.id if person is None else person
@@ -334,10 +346,10 @@ class VerificationCog(HelperCog):
         await self.bot.cache.delete_verification_code_info(user_id=target)
 
         # and tell them
-        if person:
+        if person is not None and person != inter.author.id:
             await inter.send(
                 embed=SuccessEmbed(
-                    f"I successfully deleted the verification code of the user whose user id is {person}. "
+                    f"I successfully deleted the verification code of the user with ID {person}. "
                     f"However, they have not been notified."
                     f"You should notify them (I won't notify them, because of the Discord TOS)"
                 ),
@@ -345,7 +357,8 @@ class VerificationCog(HelperCog):
             )
         else:
             await inter.send(
-                embed=SuccessEmbed("I successfully deleted your verification code!")
+                embed=SuccessEmbed("I successfully deleted your verification code!"),
+                ephemeral=True
             )
 
         return
@@ -390,7 +403,7 @@ class VerificationCog(HelperCog):
         print("NO")
         if not await self.bot.is_trusted(inter.author):
             await inter.send(
-                embed=ErrorEmbed("You are not allowed to perform this action!"),
+                embed=ErrorEmbed("Only trusted users can denylist people from the verification code system."),
                 ephemeral=True,
             )
             return
@@ -432,7 +445,7 @@ class VerificationCog(HelperCog):
         ONLY for admins!"""
         if not await self.bot.is_trusted(inter.author):
             await inter.send(
-                embed=ErrorEmbed("You are not allowed to perform this action!"),
+                embed=ErrorEmbed("Only trusted users can undenylist people from the verification code system."),
                 ephemeral=True,
             )
             return

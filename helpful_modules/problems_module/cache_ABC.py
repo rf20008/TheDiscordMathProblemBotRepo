@@ -27,6 +27,8 @@ from typing import List
 import warnings
 import orjson
 import os
+
+from . import user_data, UnknownPrivilegeError
 from ..FileDictionaryReader import AsyncFileDict
 from .appeal import Appeal, AppealViewInfo
 from .fixed_answer_problem import FixedAnswerProblem
@@ -249,28 +251,24 @@ class AbstractCache(ABC):
             permissions_required = await self.get_permissions_required_for_command(
                 command_name
             )
+        user_data: UserData = await self.get_user_data(user_id, default=UserData.default(user_id=user_id))
+        for perm_flag, required_state in permissions_required.items():
+            # Convert the lowercase dict key (e.g., 'trusted') to uppercase ('TRUSTED')
+            # to perfectly match your BotPermissionLevel attributes.
+            user_has_flag = getattr(user_data.permissions, perm_flag.upper(), None)
 
-        if "trusted" in permissions_required.keys():
-            if (
-                await self.get_user_data(
-                    user_id, default=UserData.default(user_id=user_id)
-                )
-            ).trusted != permissions_required["trusted"]:
-                return False
+            if user_has_flag is None:
+                # Fallback check directly on the UserData instance attributes if not an Enum flag
+                user_has_flag = getattr(user_data.permissions, perm_flag.lower(), None)
+            if user_has_flag is None:
+                user_has_flag = getattr(user_data.permissions, perm_flag, None) # final check: use the other one
+            if isinstance(user_has_flag, bool):
+                if user_has_flag != required_state:
+                    return False
+            else:
+                raise UnknownPrivilegeError(f"Unknown privilege {perm_flag}")
+        return True
 
-        if "denylisted" in permissions_required.keys():
-            if (
-                (
-                    await self.get_user_data(
-                        user_id, default=UserData.default(user_id=user_id)
-                    )
-                )
-            ).denylisted != permissions_required["denylisted"]:
-                return False
-        user_data = await self.get_user_data(user_id)
-        return all(
-            getattr(user_data, key) != val for key, val in permissions_required.items()
-        )
     @abstractmethod
     async def get_appeal(self, special_id: int, default: Appeal | None = None) -> Appeal:
         """Fetch an appeal from the database, with special id specified. If not found, return default (if not None)

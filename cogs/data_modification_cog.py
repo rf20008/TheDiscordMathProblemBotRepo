@@ -233,9 +233,7 @@ class DataModificationCog(HelperCog):
         )
         user_data: problems_module.UserData = await self.bot.cache.get_user_data(
             user_id=author.id,
-            default=problems_module.UserData(
-                user_id=author.id, trusted=False, denylisted=False
-            ),
+            default=problems_module.UserData.default(user_id=author.id),
         )
         is_trusted_user = user_data.trusted
         is_denylisted = user_data.denylisted
@@ -265,8 +263,7 @@ class DataModificationCog(HelperCog):
                 problem.to_dict() for problem in problems_user_solved
             ],
             "User status": {
-                "trusted_user": is_trusted_user,
-                "denylisted": is_denylisted,
+                str(user_data.permissions),
             },
             "Appeals": [appeal.to_dict() for appeal in raw_data["appeals"]],
             "total_session_command_stats": [

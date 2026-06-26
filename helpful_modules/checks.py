@@ -141,9 +141,9 @@ def is_not_denylisted():
 
         user_data: UserData = await inter.bot.cache.get_user_data( # type: ignore # we assume that it exits
             user_id=inter.author.id,
-            default=UserData(user_id=inter.author.id, trusted=False, denylisted=False),
+            default=UserData.default(user_id=inter.author.id),
         )
-        if user_data.is_denylisted():
+        if user_data.denylisted:
             until_str = ""
             if user_data.denylist_reason == float("inf"):
                 until_str = "never"

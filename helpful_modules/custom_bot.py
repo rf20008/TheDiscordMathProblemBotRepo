@@ -41,7 +41,7 @@ from helpful_modules import problems_module
 from helpful_modules.base_on_error import base_on_error
 from helpful_modules.constants_loader import BotConstants
 from helpful_modules.problems_module import GuildData, AppealQuestion
-from helpful_modules.problems_module import MathProblemCache, RedisCache
+from helpful_modules.problems_module import AbstractCache, UserData
 from helpful_modules.restart_the_bot import RestartTheBot
 from helpful_modules.save_files import FileSaver
 from helpful_modules.file_log import AuditLog
@@ -74,7 +74,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
     tasks: list[str : disnake.ext.tasks.Loop]
     config_json: AsyncFileDict
     trusted_users: list[int] | None
-    cache: MathProblemCache | RedisCache
+    cache: AbstractCache
     constants: BotConstants
     audit_log: AuditLog
     restart: RestartTheBot
@@ -205,9 +205,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         task.start()
 
     async def close(self):
-
         try:
-
             self.is_closing = True
             await self.audit_log.clear_buffer()
             await self.queue.stop(
@@ -268,7 +266,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
     async def is_denylisted_from_verification_code_system_by_user_id(
         self, user_id: int
     ) -> bool:
-        data = await self.cache.get_user_data(
+        data: UserData = await self.cache.get_user_data(
             user=user_id, default=problems_module.UserData.default(user_id)
         )
         return data.verification_code_denylist.is_denylisted()
@@ -282,7 +280,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
 
     async def is_trusted_by_user_id(self, user_id: int) -> bool:
         try:
-            data = await self.cache.get_user_data(
+            data: UserData = await self.cache.get_user_data(
                 user_id=user_id,
                 default=problems_module.UserData(
                     user_id=user_id, trusted=False, denylisted=False
@@ -290,7 +288,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
             )
         except Exception as e:
             print(
-                "An error occured while trying to find whether someone was trusted:",
+                "An error occurred while trying to find whether someone was trusted:",
                 "".join(traceback.format_exception(e)),
             )
             self.log.exception(e)
@@ -300,21 +298,15 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
     async def is_denylisted_by_user_id(self, user_id: int) -> bool:
         data = await self.cache.get_user_data(
             user_id=user_id,
-            default=problems_module.UserData(
-                user_id=user_id, trusted=False, denylisted=False
-            ),
+            default=problems_module.UserData.default(user_id)
         )
-        return data.is_denylisted()
+        return data.denylisted
 
     async def mods_can_view(self, channel: disnake.abc.Messageable):
         guild_data: problems_module.GuildData = await self.cache.get_guild_data(
             guild_id=channel.guild.id
         )
-        for role_id in guild_data.mods_check.roles_allowed:
-            role: disnake.Role = channel.guild.get_role(role_id)
-            if channel.permissions_for(role).view_channel:
-                return True
-        return False
+        return all(channel.permissions_for(channel.guild.get_role(role_id)) for role_id in guild_data.mods_check.roles_allowed)
 
     async def is_user_denylisted(
         self, user: typing.Union[disnake.User, disnake.Member]
@@ -594,9 +586,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
             #  # Make sure that a guild with id _global doesn't mess up stuff
 
     async def on_guild_remove(self, guild):
-        await self.cache.remove_all_by_guild_id(
-            guild.id
-        )  # Remove all guild-related stuff
+       pass
 
     async def on_slash_command_error(self, inter, error):
         """Function called when a slash command errors, which will inevitably happen. All the functionality was moved to base_on_error :-)"""

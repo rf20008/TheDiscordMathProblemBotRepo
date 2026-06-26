@@ -70,7 +70,7 @@ async def autoban(
     bot.dispatch("autoban_ratelimit_exceeded", user, duration, reason)
     if user_info.is_denylisted():
         return
-    user_info.denylist(
+    user_info.denylist.denylist(
         reason=reason,
         duration=duration,
         denylist_type=DenylistType.GENERAL_USER_DENYLIST,

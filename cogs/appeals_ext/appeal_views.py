@@ -136,10 +136,10 @@ class AppealView(PaginatorView):
             old_user_info: UserData = await self.cache.get_user_data(
                 user_id=self.user_id, default=UserData.default(user_id=self.user_id)
             )
-            if not old_user_info.is_denylisted():
+            if not old_user_info.denylisted:
                 raise RuntimeError("This user is already not on the denylist!")
             # undenylist them
-            old_user_info.undenylist()
+            old_user_info.denylist.undenylist()
             await self.cache.set_user_data(user_id=self.user_id, new=old_user_info)
             await inter.send(
                 f"I successfully removed the denylist for the user with id {self.user_id}!"

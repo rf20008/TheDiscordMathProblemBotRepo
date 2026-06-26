@@ -415,7 +415,7 @@ class VerificationCog(HelperCog):
         status.verification_code_denylist.denylisted = True
         status.verification_code_denylist.denylist_expiry = time.time() + duration
         status.verification_code_denylist.denylist_reason = reason
-        await self.bot.cache.set_user_data(user_id=user.id, new=status)
+        await self.bot.cache.add_user_data(user_id=user.id, new=status)
         await inter.send(
             embed=SuccessEmbed(
                 f"{user.display_name} has been successfully added to the denylist of the verification code system!"
@@ -457,7 +457,7 @@ class VerificationCog(HelperCog):
         status.verification_code_denylist.denylisted = False
         status.verification_code_denylist.denylist_expiry = time.time() - 1.0
         status.verification_code_denylist.denylist_reason = ""
-        await self.bot.cache.set_user_data(user_id=user.id, new=status)
+        await self.bot.cache.add_user_data(user_id=user.id, new=status)
         await inter.send(
             embed=SuccessEmbed(
                 f"{user.display_name} has been successfully removed from the denylist of the verification code system!"
@@ -474,13 +474,12 @@ class VerificationCog(HelperCog):
             status: problems_module.UserData = await asyncio.wait_for(
                 self.bot.cache.get_user_data(inter.author.id), timeout=1
             )
+            if status.verification_code_denylist.is_denylisted():
+                return False
+
         except asyncio.TimeoutError as error:
             return False
-        if not hasattr(status, "verification_code_denylist"):
-            return True
-        deny = status.verification_code_denylist.is_denylisted()
-        if not deny:
-            return True
+
         if status.verification_code_denylist.denylist_expiry == float("inf"):
             until_str = "never"
         else:

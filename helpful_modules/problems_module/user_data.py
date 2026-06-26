@@ -20,7 +20,7 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)"""
 import orjson
 
 from . import OwnershipNotDeterminableException
-from .BotPermissionLevels import BotPermissionLevel, BotRestrictionLevels
+from .BotPermissionLevels import BotPermissionLevel#, BotRestrictionLevel
 from .denylistable import DenylistMetadata, DenylistType
 from .dict_convertible import IdentifiableDictConvertible
 
@@ -67,6 +67,7 @@ class UserData(IdentifiableDictConvertible):
             raise TypeError("trusted isn't a boolean")
         self.permissions = permissions
         self.user_id = user_id
+        self.appeal_num = appeal_num
         self.denylist = parse_denylist_metadata(denylist)
         self.verification_code_denylist = parse_denylist_metadata(verification_code_denylist)
         self.appeal_denylist = parse_denylist_metadata(appeal_denylist)

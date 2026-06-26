@@ -253,3 +253,7 @@ class PastWarning(Warning):
 class ClearProhibitedError(MathProblemsModuleException):
     """Raised when the database is attempted to be cleared during production"""
     pass
+
+class UnknownPrivilegeError(AttributeError):
+    """Raised when has_privileges encountered an unknown privilege"""
+    pass

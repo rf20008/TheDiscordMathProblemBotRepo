@@ -280,21 +280,40 @@ class AbstractCache(ABC):
     async def get_all_appeals(self) -> list[Appeal]:
         """Fetch all appeals from the database."""
         pass
-    @abstractmethod
     async def add_appeal(self, appeal: Appeal) -> None:
         """Add an appeal to the database."""
+        # step 1: does it exist? if not, we need to insert it, and reserve a new code
+        if appeal.appeal_num >= 0 and await self.has_appeal(user_id=appeal.user_id, appeal_num=appeal.appeal_num):
+            # set it
+            await self.set_appeal(appeal) # it's already created
+        else:
+            # must create the appeal
+            appeal.appeal_num = await self.reserve_next_appeal_num(appeal.user_id)
+            await self.set_appeal(appeal)
+
+    @abstractmethod
+    async def has_appeal(self, user_id: int, appeal_num: int) -> bool:
+        """Check if an appeal exists in the database."""
         pass
+
+    @abstractmethod
     async def set_appeal(self, appeal: Appeal) -> None:
-        """Change an appeal in the database."""
-        return await self.add_appeal(appeal)
+        """Change an appeal in the database. Please call add_appeal if you are creating a new appeal, because it will handle the appeal number"""
+        pass
     @abstractmethod
     async def remove_appeal(self, appeal: Appeal) -> None:
         """Remove an appeal from the database."""
         pass
-    @abstractmethod
     async def get_next_appeal_num(self, user_id: int) -> int:
         """Get the next appeal number for a user."""
-        pass
+        data = await self.get_user_data(user_id)
+        return data.appeal_num + 1
+    async def reserve_next_appeal_num(self, user_id: int) -> int:
+        """Reserve and return the next appeal number for a user."""
+        data = await self.get_user_data(user_id)
+        data.appeal_num += 1
+        await self.add_user_data(data)
+        return data.appeal_num
     async def update_cache(self):
         raise NotImplementedError("This method is being removed due to its expensiveness!!!")
     @abstractmethod

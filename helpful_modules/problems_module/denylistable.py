@@ -34,6 +34,7 @@ class DenylistType(Enum):
     UNKNOWN = "Unknown"
     VERIFICATION_CODE_DENYLIST = "Verification code denylist"
     GENERAL_GUILD_DENYLIST = "General Guild Denylist"
+    APPEAL_DENYLIST = "Appeal Denylist"
 
 
 class Denylistable(DictConvertible):
@@ -144,6 +145,6 @@ class DenylistMetadata(Denylistable):
             denylisted=data["denylisted"],
             denylist_reason=data["denylist_reason"],
             denylist_expiry=data["denylist_expiry"],
-            denylist_type=data["denylist_type"],
+            denylist_type=DenylistType(data["denylist_type"]),
             denylisting_moderator=data["denylisting_moderator"],
         )

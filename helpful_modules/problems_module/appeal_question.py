@@ -106,7 +106,7 @@ class AppealQuestion(DictConvertible):
                 question=data.get("question"),
                 char_limit=data.get("char_limit"),
                 long_prompt=data.get("long_prompt"),
-                style=data.get("style"),
+                style=TextInputStyle(data.get("style")),
             )
         except KeyError as err:
             raise FormatException("One or more fields are missing") from err

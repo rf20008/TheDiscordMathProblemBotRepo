@@ -57,21 +57,13 @@ class Appeal(IdentifiableDictConvertible):
         user_id: int
         appeal_msg: str
         timestamp: int
-        appeal_num: int
-        special_id: int
+        appeal_num: int # should be -1 if not known
         type: int | AppealType
-        "appeal_num",
-        "cache",
-        "special_id",
-        "type",
-
-    )
-
     def __init__(
-            self,
-            *,
-            user_id: int,
-            appeal_msg: str,
+        self,
+        *,
+        user_id: int,
+        appeal_msg: str,
         timestamp: int,
         appeal_num: int,
         special_id: int,
@@ -88,7 +80,7 @@ class Appeal(IdentifiableDictConvertible):
         self.appeal_msg = appeal_msg
         self.timestamp = timestamp
         self.appeal_num = appeal_num
-        self.special_id = special_id
+
 
     @classmethod
     def from_dict(cls, data: dict):
@@ -97,7 +89,6 @@ class Appeal(IdentifiableDictConvertible):
             appeal_msg=data["appeal_msg"],
             timestamp=data["timestamp"],
             appeal_num=data["appeal_num"],
-            special_id=data["special_id"],
             type=AppealType(data["type"]),
         )
 
@@ -107,7 +98,6 @@ class Appeal(IdentifiableDictConvertible):
             "appeal_msg": self.appeal_msg,
             "timestamp": self.timestamp,
             "appeal_num": self.appeal_num,
-            "special_id": self.special_id,
             "appeal_type": int(self.type),
         }
 
@@ -124,7 +114,7 @@ class Appeal(IdentifiableDictConvertible):
         """
     @property
     def key(self) -> str:
-        return f"Appeal:{self.special_id}"
+        return f"Appeal:{self.user_id}:{self.appeal_num}"
     def belongs_to_guild(self, guild_id: int | None) -> bool:
         raise OwnershipNotDeterminableException("Appeals only belong to users, not guilds")
     def belongs_to_user(self, user_id: int) -> bool:

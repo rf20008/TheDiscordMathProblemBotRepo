@@ -61,9 +61,9 @@ class ScryptParameters(DictConvertible):
         }
 
     @classmethod
-    def from_dict(cls, data: Dict) -> T:
-        if data is None:
-            return None
+    def from_dict(cls, data: Dict | "ScryptParameters") -> "ScryptParameters":
+        if isinstance(data, cls):
+            return data
         return cls(
             scrypt_n=data.get("scrypt_n", SCRYPT_N),
             scrypt_r=data.get("scrypt_r", SCRYPT_R),
@@ -132,7 +132,11 @@ class VerificationCodeInfo(IdentifiableDictConvertible):
         expiry (float): Unix timestamp indicating when the verification code expires.
         created_at (float): Unix timestamp indicating when the verification code was created.
     """
-
+    user_id: int
+    hashed_verification_code: bytes
+    salt: bytes
+    expiry: float
+    created_at: float
     hashing_manager: VerificationCodeThreadHashingManager = (
         VerificationCodeThreadHashingManager()
     )
@@ -238,6 +242,8 @@ class VerificationCodeInfo(IdentifiableDictConvertible):
         Returns:
             VerificationCodeInfo: The initialized VerificationCodeInfo object.
         """
+        if isinstance(data, cls):
+            return data
         return cls(
             user_id=data["user_id"],
             hashed_verification_code=base64.b64decode(data["hashed_verification_code"]),

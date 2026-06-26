@@ -17,78 +17,59 @@ If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)"""
 
-import time
 import orjson
 
 from . import OwnershipNotDeterminableException
-from .denylistable import Denylistable, DenylistMetadata, DenylistType
+from .BotPermissionLevels import BotPermissionLevel, BotRestrictionLevels
+from .denylistable import DenylistMetadata, DenylistType
 from .dict_convertible import IdentifiableDictConvertible
 
+def parse_denylist_metadata(value: DenylistMetadata | str | dict | None = None) -> DenylistMetadata:
+    """Helper method to handle parsing of input formats into DenylistMetadata instances."""
+    if value is None:
+        return DenylistMetadata(
+            denylisted=False,
+            denylist_reason="",
+            denylist_expiry=float("-inf"),
+            denylisting_moderator="",
+            denylist_type=DenylistType.UNKNOWN,
+        )
+    if isinstance(value, str):
+        value = orjson.loads(value)
+    if isinstance(value, dict):
+        return DenylistMetadata.from_dict(value)
+    if isinstance(value, DenylistMetadata):
+        return value
+    raise TypeError(f"Expected DenylistMetadata, dict, or str, but got {type(value)}")
 
-
-    __slots__ = (class UserData(Denylistable, IdentifiableDictConvertible):
+class UserData(IdentifiableDictConvertible):
     """A dataclass to store user data for the bot!"""
 
     verification_code_denylist: DenylistMetadata
+    denylist: DenylistMetadata
+    appeal_denylist: DenylistMetadata
     user_id: int
-    trusted: bool
-    denylisted: bool
-    denylist_expiry: float
-    denylist_reason: str
-        "trusted",
-        "denylisted",
-        "user_id",
-        "denylist_expiry",
-        "denylist_reason",
-        "verification_code",
-    )
-
+    permissions: BotPermissionLevel
+    appeal_num: int
     def __init__(
         self,
         *,
         user_id: int,
-        trusted: bool = False,
-        denylisted: bool = False,
-        denylist_reason: str = "",
-        denylist_expiry: float = 0.0,
-        verification_code_denylist: DenylistMetadata | dict | None = None
+        appeal_num: int,
+        permissions: BotPermissionLevel = None,
+        denylist: DenylistMetadata | dict | str | None = None,
+        verification_code_denylist: DenylistMetadata | dict | str | None = None,
+        appeal_denylist: DenylistMetadata | dict | str | None = None,
     ):
         if not isinstance(user_id, int):
             raise TypeError("user_id is not an integer")
-        if not isinstance(trusted, bool):
+        if not isinstance(permissions, BotPermissionLevel):
             raise TypeError("trusted isn't a boolean")
-        if not isinstance(denylisted, bool):
-            raise TypeError("denylisted isn't a boolean")
-        if not isinstance(denylist_reason, str):
-            raise TypeError("denylist_reason isn't a str")
-        if not isinstance(denylist_expiry, float):
-            raise TypeError("denylist_expiry isn't a float")
-
+        self.permissions = permissions
         self.user_id = user_id
-        self.trusted = trusted
-        self.denylisted = denylisted
-        self.denylist_reason = denylist_reason
-        self.denylist_expiry = denylist_expiry
-        if verification_code_denylist is None:
-            verification_code_denylist = DenylistMetadata(
-                denylisted=False,
-                denylist_reason="",
-                denylist_expiry=float("-inf"),
-                denylisting_moderator="",
-                denylist_type=DenylistType.VERIFICATION_CODE_DENYLIST,
-            )
-        if isinstance(verification_code_denylist, str):
-            verification_code_denylist = DenylistMetadata.from_dict(
-                orjson.loads(verification_code_denylist)
-            )
-        elif isinstance(verification_code_denylist, dict):
-            verification_code_denylist = DenylistMetadata.from_dict(
-                verification_code_denylist
-            )
-
-        if not isinstance(verification_code_denylist, DenylistMetadata):
-            raise TypeError("verification_code_denylist is not a DenylistMetadata")
-        self.verification_code_denylist = verification_code_denylist
+        self.denylist = parse_denylist_metadata(denylist)
+        self.verification_code_denylist = parse_denylist_metadata(verification_code_denylist)
+        self.appeal_denylist = parse_denylist_metadata(appeal_denylist)
 
     @classmethod
     def from_dict(cls, dict: dict) -> "UserData":
@@ -135,3 +116,15 @@ from .dict_convertible import IdentifiableDictConvertible
         if not isinstance(user_id, int):
             raise TypeError("user_id is not an integer")
         return self.user_id == user_id
+    @property
+    def denylisted(self) -> bool:
+        return self.denylist.is_denylisted()
+    @property
+    def denylist_expiry(self) -> float:
+        return self.denylist.denylist_expiry
+    @property
+    def denylist_reason(self) -> str:
+        return self.denylist.denylist_reason
+    @property
+    def trusted(self) -> bool:
+        return self.permissions.TRUSTED # type: ignore

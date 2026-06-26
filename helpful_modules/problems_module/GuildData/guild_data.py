@@ -179,9 +179,9 @@ class GuildData(Denylistable, IdentifiableDictConvertible):
         return cls(
             denylisted=bool(data["denylisted"]),
             guild_id=data["guild_id"],
-            can_create_problems_check=data["can_create_problems_check"],
-            mods_check=data["mod_check"],
-            can_create_quizzes_check=data["can_create_quizzes_check"],
+            can_create_problems_check=CheckForUserPassage.from_dict(data["can_create_problems_check"]),
+            mods_check=CheckForUserPassage.from_dict(data["mods_check"]),
+            can_create_quizzes_check=CheckForUserPassage.from_dict(data["can_create_quizzes_check"]),
             denylist_reason=data.get("denylist_reason", ""),
             denylist_expiry=data.get("denylist_expiry", float("-inf")),
         )

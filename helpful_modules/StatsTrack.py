@@ -52,7 +52,7 @@ class CommandUsage(DictConvertible):
 
 
 class CommandStats(DictConvertible):
-    usages: [CommandUsage]
+    usages: list[CommandUsage]
     unique_users: set[int]
     total_cmds_used: int
 

@@ -130,11 +130,8 @@ class Quiz(IdentifiableDictConvertible):
 
     def to_dict(self) -> dict:
         """Convert this instance into a Dictionary!"""
-        problems = [problem.to_dict() for problem in self.problems]
-        submissions = [submission.to_dict for submission in self.submissions]
         return {
-            "problems": problems,
-            "submissions": submissions,
+            "problems": [problem.to_dict() for problem in self.problems],
             "id": self._id,
             "description": self.description.to_dict(),
             "authors": self.authors,

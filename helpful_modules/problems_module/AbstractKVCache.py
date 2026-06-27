@@ -278,9 +278,9 @@ class AbstractKVBasedCache(AbstractCache, ABC):
         return await self.remove_thing(GuildData.key_of(guild_id=guild_id))
     async def del_guild_data(self, guild_id: GuildID) -> None:
         return await self.remove_guild_data(guild_id)
-    async def get_guild_data(self, guild_id: GuildID) -> GuildData:
+    async def get_guild_data(self, guild_id: GuildID, default: GuildData | None = None) -> GuildData:
         """Get the data of a guild from the cache."""
-        return await self.get_thing(GuildData.key_of(guild_id=guild_id), cls=GuildData)
+        return await self.get_thing(GuildData.key_of(guild_id=guild_id), cls=GuildData, default=default)
     async def get_all_by_user_id(self, user_id: int) -> list[dict]:
         things = await self.get_all_things()
         things_authored = []

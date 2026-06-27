@@ -325,7 +325,7 @@ class AbstractCache(ABC):
     async def del_guild_data(self, guild_id: GuildID) -> None:
         return await self.remove_guild_data(guild_id)
     @abstractmethod
-    async def get_guild_data(self, guild_id: GuildID) -> GuildData:
+    async def get_guild_data(self, guild_id: GuildID, default: GuildData | None = None) -> GuildData:
         """Get the data of a guild from the cache."""
         pass
     @abstractmethod

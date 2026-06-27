@@ -161,6 +161,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         return time.time() - self.timeStarted  # TODO: more accurate time + timestamp
 
     async def on_ready(self):
+        """Ran when the disnake library detects that the bot is ready"""
         self.timeStarted = time.time()
         self.app_info = await self.application_info()
         if self.app_info.team:
@@ -168,7 +169,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         else:
             self.owner_id = self.app_info.owner
 
-        """Ran when the disnake library detects that the bot is ready"""
+
         app_info = await self.application_info()
         print("The bot is now ready!")
         print(f"I connected as {self.user.name}#{self.user.discriminator}.")

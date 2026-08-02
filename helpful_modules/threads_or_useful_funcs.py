@@ -341,16 +341,18 @@ async def read_last_n_lines(filename, n):
         position = await f.tell()
         lines = []
         current_line = []
-
         # Read backwards until we find the last n lines
         while position >= 0 and len(lines) < n:
             await f.seek(position)
-            char = await f.read(1)
-
+            char = (await f.read(1)).decode()
+            #print(char, end='')
             # Check for newline character
-            if char == b"\n" and current_line:
-                # Store the completed line
-                lines.append(current_line[::-1].decode())
+            #print(f"{current_line=} {char=} {lines=} ")
+            if char == "\n":
+                if len("".join(current_line)) > 0:
+                    # Store the completed line
+
+                    lines.append("".join(current_line[::-1]))
                 current_line = []
             else:
                 current_line.append(char)
@@ -359,7 +361,7 @@ async def read_last_n_lines(filename, n):
 
         # Capture the last line if it does not end with a newline
         if current_line:
-            lines.append(current_line[::-1].decode())
+            lines.append("".join(current_line[::-1]))
 
         # Reverse the lines to get them in the correct order
         return lines[::-1][:n]

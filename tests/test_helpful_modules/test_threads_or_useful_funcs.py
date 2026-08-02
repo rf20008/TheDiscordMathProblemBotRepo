@@ -28,6 +28,9 @@ from unittest.mock import AsyncMock, patch
 import aiofiles
 import pyfakefs.fake_filesystem_unittest
 
+from pyfakefs.fake_filesystem_unittest import TestCase
+
+from helpful_modules.threads_or_useful_funcs import read_last_n_lines
 from helpful_modules import threads_or_useful_funcs
 from tests.mockable_aiofiles import MockableAioFiles
 from tests.utils import generate_many_randoms
@@ -354,7 +357,94 @@ class TestSecureFisherYatesShuffle(unittest.TestCase):
         self.assertNotEqual(my_list, shuffled_list)
         self.assertCountEqual(my_list, shuffled_list)
         mock_randbelow.assert_called_with(2)
+import asyncio
+import concurrent.futures
+import unittest
 
+from helpful_modules.threads_or_useful_funcs import async_wait_for_future
+
+
+class TestAsyncWaitForFuture(unittest.IsolatedAsyncioTestCase):
+
+    async def test_asyncio_future_returns_result(self):
+        future = asyncio.Future()
+        future.set_result("hello")
+
+        result = await async_wait_for_future(future)
+
+        self.assertEqual(result, "hello")
+
+    async def test_asyncio_future_timeout(self):
+        future = asyncio.Future()
+
+        with self.assertRaises(asyncio.TimeoutError):
+            await async_wait_for_future(future, timeout=0.01)
+
+    async def test_concurrent_future_returns_result(self):
+        future = concurrent.futures.Future()
+        future.set_result(123)
+
+        result = await async_wait_for_future(future, interval=0.001)
+
+        self.assertEqual(result, 123)
+
+    async def test_invalid_future_type(self):
+        with self.assertRaises(TypeError):
+            await async_wait_for_future("not a future")
+import asyncio
+import concurrent.futures
+import unittest
+
+from helpful_modules.threads_or_useful_funcs import async_wait_for_future
+
+
+class TestAsyncWaitForFuture(unittest.IsolatedAsyncioTestCase):
+
+    async def test_asyncio_future_returns_result(self):
+        future = asyncio.Future()
+        future.set_result("hello")
+
+        result = await async_wait_for_future(future)
+
+        self.assertEqual(result, "hello")
+
+    async def test_asyncio_future_timeout(self):
+        future = asyncio.Future()
+
+        with self.assertRaises(asyncio.TimeoutError):
+            await async_wait_for_future(future, timeout=0.01)
+
+    async def test_concurrent_future_returns_result(self):
+        future = concurrent.futures.Future()
+        future.set_result(123)
+
+        result = await async_wait_for_future(future, interval=0.001)
+
+        self.assertEqual(result, 123)
+
+    async def test_invalid_future_type(self):
+        with self.assertRaises(TypeError):
+            await async_wait_for_future("not a future")
+
+
+
+class TestReadLastNLines(TestCase, unittest.IsolatedAsyncioTestCase):
+
+    def setUp(self):
+        self.setUpPyfakefs()
+
+    async def test_reads_last_lines(self):
+        self.fs.create_file(
+            "/tmp/test.txt",
+            contents="line1\nline2\nline3\nline4\n"
+        )
+
+        result = await read_last_n_lines("/tmp/test.txt", 2)
+
+        self.assertEqual(
+            result,
+            ["line3", "line4"]
+        )
 
 if __name__ == "__main__":
     unittest.main()

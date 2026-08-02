@@ -28,6 +28,7 @@ def cache():
 # 1. CORE THING CONTRACTS
 # ==============================================================================
 
+
 @pytest.mark.asyncio
 async def test_thing_lifecycle_with_real_models(cache):
     """Validates that add_thing, get_thing, and remove_thing handle data model type parameters correctly."""
@@ -55,6 +56,7 @@ async def test_thing_lifecycle_with_real_models(cache):
 # ==============================================================================
 # 2. PROBLEMS CONTRACTS
 # ==============================================================================
+
 
 @pytest.mark.asyncio
 async def test_problems_contract_with_real_base_problem(cache):
@@ -95,6 +97,7 @@ async def test_problems_contract_with_real_base_problem(cache):
 # 3. QUIZZES CONTRACTS
 # ==============================================================================
 
+
 @pytest.mark.asyncio
 async def test_quiz_contract_with_real_quiz(cache):
     """Validates parameters constraints for Quiz lifecycle tracking routines using a structural Quiz instance."""
@@ -124,6 +127,7 @@ async def test_quiz_contract_with_real_quiz(cache):
 # 4. USER DATA CONTRACTS
 # ==============================================================================
 
+
 @pytest.mark.asyncio
 async def test_user_data_contract_with_real_user_data(cache):
     """Validates structural contracts for UserData state changes and type fallbacks."""
@@ -151,6 +155,7 @@ async def test_user_data_contract_with_real_user_data(cache):
 # ==============================================================================
 # 5. APPEALS AND VIEWS CONTRACTS
 # ==============================================================================
+
 
 @pytest.mark.asyncio
 async def test_appeals_and_views_contract_with_real_models(cache):
@@ -190,6 +195,7 @@ async def test_appeals_and_views_contract_with_real_models(cache):
 # 6. GUILDS & VERIFICATION CODES CONTRACTS
 # ==============================================================================
 
+
 @pytest.mark.asyncio
 async def test_guild_and_verification_contract_with_real_models(cache):
     """Validates structural contracts for Guild configurations and Verification pipeline assets."""
@@ -222,6 +228,7 @@ async def test_guild_and_verification_contract_with_real_models(cache):
 # ==============================================================================
 # 7. MULTI-TENANT & CLEAR EXECUTION SCOPES
 # ==============================================================================
+
 
 @pytest.mark.asyncio
 async def test_scoped_deletion_and_clear_contracts_with_real_models(cache):
@@ -258,14 +265,16 @@ def test_is_locked_boolean_contract(cache):
 # Pytest Fixture
 # ==============================================================================
 
+
 @pytest.fixture
 def base_cache():
     """
     Instantiates AbstractCache directly by removing abstract methods checks
     and patching out File I/O dependencies during initialization.
     """
-    with patch.multiple(AbstractCache, __abstractmethods__=set()), \
-            patch("..FileDictionaryReader.AsyncFileDict") as mock_file_dict:
+    with patch.multiple(AbstractCache, __abstractmethods__=set()), patch(
+        "..FileDictionaryReader.AsyncFileDict"
+    ) as mock_file_dict:
         cache_instance = AbstractCache()
         # Initialize standard properties
         cache_instance._async_file_dict = MagicMock()
@@ -278,6 +287,7 @@ def base_cache():
 # ==============================================================================
 # 1. Tests for fallback core methods & loops (has_thing, add_things)
 # ==============================================================================
+
 
 @pytest.mark.asyncio
 async def test_has_thing_returns_true_when_found(base_cache):
@@ -317,6 +327,7 @@ async def test_add_things_warns_and_loops_over_add_thing(base_cache):
 # ==============================================================================
 # 2. Tests for Filter & Lookup Helpers
 # ==============================================================================
+
 
 @pytest.mark.asyncio
 async def test_get_all_problems_by_guild(base_cache):
@@ -368,6 +379,7 @@ async def test_get_all_problems_by_func(base_cache):
 # 3. Tests for Forwarding Aliases
 # ==============================================================================
 
+
 @pytest.mark.asyncio
 async def test_update_problem_alias_calls_add_problem(base_cache):
     """update_problem should act as a pass-through wrapper for add_problem."""
@@ -398,7 +410,9 @@ async def test_del_guild_data_alias_calls_remove_guild_data(base_cache):
 
 
 @pytest.mark.asyncio
-async def test_delete_verification_code_info_alias_calls_del_verification_code_info(base_cache):
+async def test_delete_verification_code_info_alias_calls_del_verification_code_info(
+    base_cache,
+):
     """delete_verification_code_info should act as a wrapper for del_verification_code_info."""
     base_cache.del_verification_code_info = AsyncMock()
 
@@ -410,18 +424,25 @@ async def test_delete_verification_code_info_alias_calls_del_verification_code_i
 # 4. Tests for Permissions Matrix Verifications
 # ==============================================================================
 
+
 @pytest.mark.asyncio
-async def test_get_permissions_required_for_command_throws_if_missing_file_dict(base_cache):
+async def test_get_permissions_required_for_command_throws_if_missing_file_dict(
+    base_cache,
+):
     """get_permissions_required_for_command throws NotImplementedError if file dictionary attribute is missing."""
     del base_cache._async_file_dict
-    with pytest.raises(NotImplementedError, match="Subclasses must implement this method"):
+    with pytest.raises(
+        NotImplementedError, match="Subclasses must implement this method"
+    ):
         await base_cache.get_permissions_required_for_command("test")
 
 
 @pytest.mark.asyncio
 async def test_get_permissions_required_for_command(base_cache):
     """get_permissions_required_for_command reads file configuration and returns expected command structure."""
-    base_cache._async_file_dict.dict = {"permissions_required": {"ban": {"admin": True}}}
+    base_cache._async_file_dict.dict = {
+        "permissions_required": {"ban": {"admin": True}}
+    }
 
     res = await base_cache.get_permissions_required_for_command("ban")
     base_cache._async_file_dict.read_from_file.assert_called_once()
@@ -431,45 +452,58 @@ async def test_get_permissions_required_for_command(base_cache):
 @pytest.mark.asyncio
 async def test_user_meets_permissions_denied_by_trusted_flag(base_cache):
     """user_meets_permissions returns False if trusted requirement fails."""
-    base_cache.get_permissions_required_for_command = AsyncMock(return_value={"trusted": True})
+    base_cache.get_permissions_required_for_command = AsyncMock(
+        return_value={"trusted": True}
+    )
 
     mock_user = MagicMock(spec=UserData, trusted=False)
     with patch.object(UserData, "default", return_value=mock_user):
         base_cache.get_user_data = AsyncMock(return_value=mock_user)
 
-        result = await base_cache.user_meets_permissions_required_to_use_command(user_id=1, command_name="cmd")
+        result = await base_cache.user_meets_permissions_required_to_use_command(
+            user_id=1, command_name="cmd"
+        )
         assert result is False
 
 
 @pytest.mark.asyncio
 async def test_user_meets_permissions_denied_by_denylisted_flag(base_cache):
     """user_meets_permissions returns False if user matches a blocked denylist configuration rule."""
-    base_cache.get_permissions_required_for_command = AsyncMock(return_value={"denylisted": False})
+    base_cache.get_permissions_required_for_command = AsyncMock(
+        return_value={"denylisted": False}
+    )
 
     mock_user = MagicMock(spec=UserData, denylisted=True)
     with patch.object(UserData, "default", return_value=mock_user):
         base_cache.get_user_data = AsyncMock(return_value=mock_user)
 
-        result = await base_cache.user_meets_permissions_required_to_use_command(user_id=1, command_name="cmd")
+        result = await base_cache.user_meets_permissions_required_to_use_command(
+            user_id=1, command_name="cmd"
+        )
         assert result is False
 
 
 @pytest.mark.asyncio
 async def test_user_meets_permissions_evaluation_pass(base_cache):
     """user_meets_permissions returns True if all operational criteria matches successfully."""
-    base_cache.get_permissions_required_for_command = AsyncMock(return_value={"custom_flag": False})
+    base_cache.get_permissions_required_for_command = AsyncMock(
+        return_value={"custom_flag": False}
+    )
 
     mock_user = MagicMock(spec=UserData)
     mock_user.custom_flag = True  # user.custom_flag (True) != required val (False) -> evaluates to True via all()
     base_cache.get_user_data = AsyncMock(return_value=mock_user)
 
-    result = await base_cache.user_meets_permissions_required_to_use_command(user_id=1, command_name="cmd")
+    result = await base_cache.user_meets_permissions_required_to_use_command(
+        user_id=1, command_name="cmd"
+    )
     assert result is True
 
 
 # ==============================================================================
 # 5. Tests for Deprecations & Hard Environment Barriers
 # ==============================================================================
+
 
 @pytest.mark.asyncio
 async def test_update_cache_raises_not_implemented(base_cache):
@@ -497,13 +531,16 @@ async def test_run_sql_raises_must_implement_error(base_cache):
 @pytest.mark.asyncio
 async def test_initialize_sql_table_raises_sql_not_supported(base_cache):
     """initialize_sql_table always throws SQLNotSupportedInRedisException."""
-    with pytest.raises(SQLNotSupportedInRedisException, match="SQL is not supported in Redis"):
+    with pytest.raises(
+        SQLNotSupportedInRedisException, match="SQL is not supported in Redis"
+    ):
         await base_cache.initialize_sql_table()
 
 
 # ==============================================================================
 # 6. Tests for Static Environment Checks (is_production)
 # ==============================================================================
+
 
 def test_is_production_defaults_to_true_when_unset(monkeypatch):
     """is_production should fallback to True when APP_ENV is completely absent from variables."""

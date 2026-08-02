@@ -63,7 +63,7 @@ class TestPaginatorView(unittest.IsolatedAsyncioTestCase):
             id=-123,
             channel=AsyncMock(spec=disnake.PartialMessageable, id=-123),
             interaction=interaction,
-            response=AsyncMock()
+            response=AsyncMock(),
         )
         self.paginator_view.page_num = 1
         await self.paginator_view.next_page_button.callback(interaction)
@@ -78,10 +78,9 @@ class TestPaginatorView(unittest.IsolatedAsyncioTestCase):
         interaction = AsyncMock(spec=disnake.MessageInteraction, author=author)
         # original_message = disnake.Message(id=-123, channel=disnake.TextChannel(id=456), interaction=interaction)
 
-
         self.paginator_view.page_num = 2
         await self.paginator_view.prev_page_button.callback(interaction)
-        #print(interaction.send.mock_calls)
+        # print(interaction.send.mock_calls)
         interaction.edit_original_response.assert_awaited_once_with(
             view=self.paginator_view, embed=self.paginator_view.create_embed()
         )
@@ -115,7 +114,11 @@ class TestPaginatorView(unittest.IsolatedAsyncioTestCase):
 
     async def test_go_to_page_button_valid_input_1(self):
         author = AsyncMock(spec=disnake.User, id=self.id)
-        interaction = AsyncMock(spec=disnake.MessageInteraction, author=author, response=AsyncMock(spec=disnake.InteractionResponse))
+        interaction = AsyncMock(
+            spec=disnake.MessageInteraction,
+            author=author,
+            response=AsyncMock(spec=disnake.InteractionResponse),
+        )
 
         print(self.paginator_view.user_id, interaction.author.id)
         # Mock the modal response
@@ -162,8 +165,11 @@ class TestPaginatorView(unittest.IsolatedAsyncioTestCase):
 
     async def test_go_to_page_button_invalid_input_not_an_integer(self):
         author = AsyncMock(spec=disnake.User, id=self.id)
-        interaction = AsyncMock(spec=disnake.MessageInteraction, author=author,
-            response=AsyncMock(spec=disnake.InteractionResponse))
+        interaction = AsyncMock(
+            spec=disnake.MessageInteraction,
+            author=author,
+            response=AsyncMock(spec=disnake.InteractionResponse),
+        )
 
         modal_interaction = AsyncMock(
             spec=disnake.ModalInteraction,
@@ -213,43 +219,68 @@ class TestBreakIntoPages(unittest.TestCase):
     def test_raise_tokenize_error_text_invalid_type(self):
         with self.assertRaises(TypeError):
             PaginatorView.break_into_pages(13)
+
     def test_raise_tokenize_error_breakingchars_invalid_type(self):
         with self.assertRaises(TypeError):
             PaginatorView.break_into_pages("13", 1500, 1030)
+
     def test_raise_tokenize_error_breakingchars_invalid(self):
         with self.assertRaises(TypeError):
             PaginatorView.validate_break_arguments("13", "MUHAHA")
+
     def test_raise_tokenize_error_breakingchars_negative(self):
         with self.assertRaises(ValueError):
             PaginatorView.validate_break_arguments("-13", -13)
+
     def test_tokenize_tiny_1(self):
         text = "HELLO! Hello!"
-        self.assertEqual(["HELLO!", " Hello!"], PaginatorView.tokenize_string(text, "!"))
+        self.assertEqual(
+            ["HELLO!", " Hello!"], PaginatorView.tokenize_string(text, "!")
+        )
+
     def test_tokenize_small_text(self):
         text = "This is a test. Lorem ipsum dolor sit amet."
         self.assertEqual(
             PaginatorView.tokenize_string(text),
-            ["This ", "is ", "a ", "test.", " Lorem ", "ipsum ", "dolor ", "sit ", 'amet.']
+            [
+                "This ",
+                "is ",
+                "a ",
+                "test.",
+                " Lorem ",
+                "ipsum ",
+                "dolor ",
+                "sit ",
+                "amet.",
+            ],
         )
+
     def test_example_1(self):
         text = "Hello!!!!!"
         max_page_length = 20
         expected_result = ["Hello!!!!!"]
         self.assertEqual(break_into_pages(text, max_page_length), expected_result)
+
     def test_tokenize_correctly(self):
         for text in ["Hello!!!!!", "this is a test", "$" * 1999]:
             self.assertEqual("".join(PaginatorView.tokenize_string(text, "!")), text)
+
     def test_example_2(self):
         text = "Hello!!!!!"
         print(PaginatorView.tokenize_string(text))
         max_page_length = 5
         expected_result = ["Hello", "!", "!!!!"]
-        self.assertEqual(expected_result, break_into_pages(text, 5, breaking_chars="!"),)
+        self.assertEqual(
+            expected_result,
+            break_into_pages(text, 5, breaking_chars="!"),
+        )
 
     def test_example_3(self):
         max_page_length = 1
         expected_result = ["H", "E", "L", "L", "O", "O", "O"]
-        self.assertEqual(PaginatorView.create_pages(["HELLOOO"], max_page_length), expected_result)
+        self.assertEqual(
+            PaginatorView.create_pages(["HELLOOO"], max_page_length), expected_result
+        )
 
     def test_example_4(self):
         text = "Hello! I am rf20008"
@@ -261,10 +292,14 @@ class TestBreakIntoPages(unittest.TestCase):
         tokens = ["A ", "long ", "text ", "with ", "many ", "characters."]
         max_page_length = 10
         expected_result = ["A long ", "text with ", "many ", "characters", "."]
-        self.assertEqual(expected_result, PaginatorView.create_pages(tokens, max_page_length))
+        self.assertEqual(
+            expected_result, PaginatorView.create_pages(tokens, max_page_length)
+        )
 
     def test_custom_2(self):
-        self.assertEqual(["Short"], PaginatorView.create_pages(["Short"], max_page_length=10))
+        self.assertEqual(
+            ["Short"], PaginatorView.create_pages(["Short"], max_page_length=10)
+        )
 
 
 if __name__ == "__main__":

@@ -75,7 +75,9 @@ class ProblemsRelatedCache(AbstractCache):
         # make_sql_table([], db_name = sql_dict_db_name)
         # make_sql_table([], db_name = "MathProblemCache1.db", table_name="kv_store")
         if use_sqlite:
-            warnings.warn("Sqlite has been deprecated. Use MySQL instead.", stacklevel=2)
+            warnings.warn(
+                "Sqlite has been deprecated. Use MySQL instead.", stacklevel=2
+            )
         self.db_name = db_name
         self.db = db_name
         if warnings_or_errors not in ["warnings", "errors"]:

@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 from . import ClearProhibitedError
 from .AbstractKVCache import AbstractKVBasedCache
 from .cache_ABC import AbstractCache
@@ -33,26 +34,24 @@ from ..FileDictionaryReader import AsyncFileDict
 from .appeal import Appeal, AppealViewInfo
 from .fixed_answer_problem import FixedAnswerProblem
 from .dict_convertible import DictConvertible, IdentifiableDictConvertible
-from .errors import (
-    CorruptedDataException, ThingNotFound, ClearProhibitedError
-)
+from .errors import CorruptedDataException, ThingNotFound, ClearProhibitedError
 from .cache_ABC import TYPE_ERROR_NOT_FOUND
-
 
 
 MUST_IMPLEMENT_ERROR = NotImplementedError("Subclasses must implement this")
 GuildID = typing.Optional[int]
-T = typing.TypeVar('T', bound=IdentifiableDictConvertible)
+T = typing.TypeVar("T", bound=IdentifiableDictConvertible)
+
 
 class RAMCache(AbstractKVBasedCache):
     def __init__(self, *args, **kwargs) -> None:
         self._async_file_dict = AsyncFileDict("config.json")
         self.things: dict[str, IdentifiableDictConvertible] = {}
 
-
     async def get_all_things(self) -> list[IdentifiableDictConvertible]:
         """Return a list of EVERYTHING in the database"""
         return self.things.values()
+
     async def add_thing(self, thing: IdentifiableDictConvertible) -> None:
         """
         Adds a dictionary convertible object to the cache. If it is already in the cache, it will replace whatever is in there.
@@ -75,10 +74,10 @@ class RAMCache(AbstractKVBasedCache):
             del self.things[thing_id]
 
     async def get_thing(
-            self,
-            thing_id: str,
-            cls: typing.Type[T],
-            default: T | None = None,
+        self,
+        thing_id: str,
+        cls: typing.Type[T],
+        default: T | None = None,
     ) -> T:
         """:param thing_id: The ID of the object.
         :type thing_id: int
@@ -95,13 +94,15 @@ class RAMCache(AbstractKVBasedCache):
             if default is not None:
                 return default
             # raise correct error
-            raise TYPE_ERROR_NOT_FOUND.get(cls, ThingNotFound)(f"No object with {thing_id} was found in the database (expected class type: {cls.__name__})")
+            raise TYPE_ERROR_NOT_FOUND.get(cls, ThingNotFound)(
+                f"No object with {thing_id} was found in the database (expected class type: {cls.__name__})"
+            )
         T = self.things[thing_id]
         if not isinstance(T, cls):
-            raise CorruptedDataException(f"Corrupted data found in database. Expected an object of type {cls.__name__} but found an object of class {T.__class__.__name__}")
+            raise CorruptedDataException(
+                f"Corrupted data found in database. Expected an object of type {cls.__name__} but found an object of class {T.__class__.__name__}"
+            )
         return T
-
-
 
     def is_locked(self) -> bool:
         """Return whether the cache is locked"""
@@ -110,6 +111,7 @@ class RAMCache(AbstractKVBasedCache):
     async def items(self) -> list[tuple[str, IdentifiableDictConvertible]]:
         """Return a list of EVERYTHING in the database (and their keys)"""
         return self.things.items()
+
     async def clear(self, force=False):
         """Clear the database."""
         if not force:

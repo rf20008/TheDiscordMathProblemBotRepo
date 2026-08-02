@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 import pytest
 from disnake.ext import commands
 
@@ -85,20 +86,20 @@ def test_custom_check_receives_interaction():
 
     assert result is True
     assert captured["value"] == 999
+
+
 @pytest.mark.asyncio
 async def test_trusted_pass(monkeypatch):
     class Bot:
         async def is_trusted(self, user):
             return True
 
-    inter = type("I", (), {
-        "bot": Bot(),
-        "author": type("U", (), {})()
-    })()
+    inter = type("I", (), {"bot": Bot(), "author": type("U", (), {})()})()
 
     @trusted_users_only()
     @commands.command()
-    async def cmd(inter): pass
+    async def cmd(inter):
+        pass
 
     assert await cmd.checks[0](inter) is True
 
@@ -109,18 +110,17 @@ async def test_trusted_fail(monkeypatch):
         async def is_trusted(self, user):
             return False
 
-    inter = type("I", (), {
-        "bot": Bot(),
-        "author": type("U", (), {"mention": "@u"})()
-    })()
+    inter = type(
+        "I", (), {"bot": Bot(), "author": type("U", (), {"mention": "@u"})()}
+    )()
 
     @trusted_users_only()
     @commands.command()
-    async def cmd(inter): pass
+    async def cmd(inter):
+        pass
 
     with pytest.raises(NotTrustedUser):
         await cmd.checks[0](inter)
-
 
 
 class FakeUserData:
@@ -141,19 +141,22 @@ async def test_denylist_fail():
 
     class Bot:
         cache = Cache()
-        async def is_trusted(self, u): return False
 
-    inter = type("I", (), {
-        "bot": Bot(),
-        "author": type("U", (), {"id": 1, "mention": "@u"})()
-    })()
+        async def is_trusted(self, u):
+            return False
+
+    inter = type(
+        "I", (), {"bot": Bot(), "author": type("U", (), {"id": 1, "mention": "@u"})()}
+    )()
 
     @is_not_denylisted()
     @commands.command()
-    async def cmd(inter): pass
+    async def cmd(inter):
+        pass
 
     with pytest.raises(DenylistedException):
         await cmd.checks[0](inter)
+
 
 @pytest.mark.asyncio
 async def test_guild_denylisted_blocks():
@@ -169,15 +172,20 @@ async def test_guild_denylisted_blocks():
     class Guild:
         id = 1
 
-    inter = type("I", (), {
-        "bot": Bot(),
-        "guild": Guild(),
-        "send": lambda *a, **k: sent.update({"msg": True}),
-    })()
+    inter = type(
+        "I",
+        (),
+        {
+            "bot": Bot(),
+            "guild": Guild(),
+            "send": lambda *a, **k: sent.update({"msg": True}),
+        },
+    )()
 
     @guild_not_denylisted()
     @commands.command()
-    async def cmd(inter): pass
+    async def cmd(inter):
+        pass
 
     result = await cmd.checks[0](inter)
 
@@ -186,15 +194,17 @@ async def test_guild_denylisted_blocks():
 
 @pytest.mark.asyncio
 async def test_huge_number_rejected():
-    inter = type("I", (), {
-        "filled_options": {"x": "999999999999999999999999999999999"}
-    })()
+    inter = type(
+        "I", (), {"filled_options": {"x": "999999999999999999999999999999999"}}
+    )()
 
     @no_insanely_huge_numbers_check(max_num=10**10)
     @commands.command()
-    async def cmd(inter): pass
+    async def cmd(inter):
+        pass
 
     assert await cmd.checks[0](inter) is False
+
 
 @pytest.mark.asyncio
 async def test_audit_log_called():
@@ -207,22 +217,30 @@ async def test_audit_log_called():
     class Bot:
         audit_log = Audit()
 
-    inter = type("I", (), {
-        "bot": Bot(),
-        "application_command": type("C", (), {"qualified_name": "x"})(),
-        "guild_id": 1,
-        "author": type("U", (), {"id": 1})()
-    })()
+    inter = type(
+        "I",
+        (),
+        {
+            "bot": Bot(),
+            "application_command": type("C", (), {"qualified_name": "x"})(),
+            "guild_id": 1,
+            "author": type("U", (), {"id": 1})(),
+        },
+    )()
 
     @audit_command_usage_check()
     @commands.command()
-    async def cmd(inter): pass
+    async def cmd(inter):
+        pass
 
     await cmd.checks[0](inter)
 
     assert calls["called"] is True
+
+
 def run_all_tests():
     raise SystemExit(pytest.main([]))
+
 
 if __name__ == "__main__":
     run_all_tests()

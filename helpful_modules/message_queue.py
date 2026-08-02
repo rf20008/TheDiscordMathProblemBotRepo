@@ -143,6 +143,8 @@ class ThingToDo:
 
     def __call__(self):
         return self.act()
+
+
 class MessageThing(ThingToDo):
     """
     Represents a message task derived from ThingToDo.
@@ -178,9 +180,17 @@ class MessageThing(ThingToDo):
             super().__eq__(other) and self.to == other.to and self.stuff == other.stuff
         )
 
+
 class FunctionThing(ThingToDo):
     __slots__ = ("priority", "time_created", "func", "args", "kwargs")
-    def __init__(self, func: callable, priority: int = 3000, args: list | None= None, kwargs: dict | None = None):
+
+    def __init__(
+        self,
+        func: callable,
+        priority: int = 3000,
+        args: list | None = None,
+        kwargs: dict | None = None,
+    ):
         super().__init__(priority)
         if not callable(func):
             raise TypeError("Function must be callable")
@@ -192,11 +202,13 @@ class FunctionThing(ThingToDo):
             self.kwargs = kwargs
         if not isinstance(kwargs, collections.abc.Mapping):
             raise TypeError("Function kwargs must be dict")
+
     async def act(self):
         r = self.func(*self.args, **self.kwargs)
         if inspect.isawaitable(r):
             return await r
         return r
+
 
 class MessageQueue:
     """
@@ -240,7 +252,11 @@ class MessageQueue:
         Args:
             interval (int, optional): Interval in seconds between each decrement operation. Defaults to 60.
         """
-        warnings.warn("Decrementing priorities periodically is deprecated", DeprecationWarning, stacklevel=2)
+        warnings.warn(
+            "Decrementing priorities periodically is deprecated",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         while True:
             await asyncio.sleep(interval)
             await self.decrement_priorities()
@@ -300,7 +316,10 @@ class MessageQueue:
         Args:
             APIRQPS (fractions.Fraction, optional): API request rate in requests per second. Defaults to 1/2.
         """
-        return self.start(send_interval=fractions.Fraction(1,1)/APIRQPS, decrement_intervals_periodically_interval=float('inf'))
+        return self.start(
+            send_interval=fractions.Fraction(1, 1) / APIRQPS,
+            decrement_intervals_periodically_interval=float("inf"),
+        )
 
     async def add_thing(self, thing: ThingToDo):
         """
@@ -341,7 +360,9 @@ class MessageQueue:
                         f"thing is not an instance of ThingToDo, but an instance of {thing.__class__.__name__}"
                     )
 
-                new_things.append((thing, self.counter, asyncio.get_running_loop().create_future()))
+                new_things.append(
+                    (thing, self.counter, asyncio.get_running_loop().create_future())
+                )
                 self.counter += 1
         if 2 * (C + N) > 4 * (C * math.log(N + C, base=2)):
             # strategy: re-heapify
@@ -354,6 +375,7 @@ class MessageQueue:
             async with self.lock:
                 for thing, ctr, fut in new_things:
                     heapq.heappush(self.heap, (thing, ctr, fut))
+
     async def empty(
         self,
         *,
@@ -383,9 +405,9 @@ class MessageQueue:
         num_rem_tasks = limit
         while not self.is_empty():
             await self.act_on_top()
-            #async with self.lock:
+            # async with self.lock:
             #    thing, future = heapq.heappop(self.heap)
-            #if num_rem_tasks == -1 or num_rem_tasks > 0:
+            # if num_rem_tasks == -1 or num_rem_tasks > 0:
             #    await thing.act()
             if num_rem_tasks != -1:
                 num_rem_tasks -= 1
@@ -399,13 +421,12 @@ class MessageQueue:
             async with self.lock:
                 self.heap.clear()
 
-    def start(
-        self, *, send_interval=1
-    ):
+    def start(self, *, send_interval=1):
         if self.worker is not None:
             raise RuntimeError("The queue already has a worker")
         self.worker = QueueWorker(self, send_interval)
         self.worker.start()
+
     async def stop(
         self,
         *,
@@ -435,42 +456,50 @@ class MessageQueue:
         """
         if self.worker is None:
             raise NotStartedError("This queue is not started yet")
-        self.allowed_to_add=False
+        self.allowed_to_add = False
+        if empty:
+            await self.empty(
+                act=act,
+                timeout=timeout,
+                limit=limit,
+                delete_undone_tasks=delete_undone_tasks,
+            )
         await self.worker.stop()
-        #if empty:
-        #    await self.empty(
-        #        act=act,
-        #        timeout=timeout,
-        #        limit=limit,
-        #        delete_undone_tasks=delete_undone_tasks,
-        #    )
+
+
 class QueueWorker:
     queue: MessageQueue
     _stopping: bool
     _task: asyncio.Task
     interval: float
+
     def __init__(self, queue: MessageQueue, interval: float = 0.1):
         self.queue = queue
         self.interval = interval
         self._stopping = False
         self._task = None
+
     @property
     def stopping(self):
         return not self.queue.allowed_to_add
+
     def begin_stopping(self):
         self.queue.allowed_to_add = False
+
     def start(self):
         if self._task is not None:
             raise RuntimeError("This queue is already running")
         self._task = asyncio.create_task(self.run())
+
     async def run(self):
-        while not self.stopping:
+        while True:
             if self.queue.empty():
                 await asyncio.sleep(self.interval)
                 continue
             else:
                 await self.queue.act_on_top(raise_act_exc=False)
                 await asyncio.sleep(self.interval)
+
     async def stop(self, cancel_task=True):
         if not self._task:
             raise RuntimeError("This queue is not started yet")
@@ -483,4 +512,3 @@ class QueueWorker:
             await self._task
         except asyncio.CancelledError:
             pass
-

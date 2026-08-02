@@ -48,6 +48,8 @@ from .the_documentation_file_loader import DocumentationFileLoader
 log = logging.getLogger(__name__)
 
 TYPE_CLASS = type(int)  # the class 'type'
+
+
 def get_git_revision_hash() -> str:
     """A method that gets the git revision hash. Credit to https://stackoverflow.com/a/21901260 for the code :-)"""
     return subprocess.check_output(
@@ -55,10 +57,13 @@ def get_git_revision_hash() -> str:
     ).strip()[
         :7
     ]  # [7:] is here because of the commit hash, the rest of this function is from stack overflow
+
+
 def get_error_cause(exc: BaseException) -> BaseException | None:
     if exc.__context__ is not None:
         return exc.__context__
     return None
+
 
 def generate_new_id():
     """Generate a random number from 0 to 2**53-1"""

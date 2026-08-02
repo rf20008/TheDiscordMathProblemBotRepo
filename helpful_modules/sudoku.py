@@ -1,6 +1,8 @@
 from problems_module import DictConvertible
 import random
 import copy
+
+
 class SudokuBoard(DictConvertible):
     N = 3
     row_bit_board: list[int]
@@ -66,9 +68,9 @@ class SudokuBoard(DictConvertible):
     def get_boxrowcol(self, boxnum: int) -> tuple[int, int]:
         return boxnum // self.size, boxnum % self.size
 
-    def find_empty(self, raise_if_none_found = False) -> tuple[int, int] | None:
-        for r in range(self.size ** 2):
-            for c in range(self.size ** 2):
+    def find_empty(self, raise_if_none_found=False) -> tuple[int, int] | None:
+        for r in range(self.size**2):
+            for c in range(self.size**2):
                 if self.board[r][c] == 0:
                     return r, c
         if raise_if_none_found:
@@ -80,9 +82,9 @@ class SudokuBoard(DictConvertible):
         bit = 1 << val
 
         return (
-                (self.row_bit_board[r] & bit) == 0
-                and (self.col_bit_board[c] & bit) == 0
-                and (self.box_bit_board[boxnum] & bit) == 0
+            (self.row_bit_board[r] & bit) == 0
+            and (self.col_bit_board[c] & bit) == 0
+            and (self.box_bit_board[boxnum] & bit) == 0
         )
 
     def place(self, r: int, c: int, val: int) -> "SudokuBoard":
@@ -117,12 +119,10 @@ class SudokuBoard(DictConvertible):
         boxnum = (r // self.size) * self.size + (c // self.size)
 
         used = (
-                self.row_bit_board[r]
-                | self.col_bit_board[c]
-                | self.box_bit_board[boxnum]
+            self.row_bit_board[r] | self.col_bit_board[c] | self.box_bit_board[boxnum]
         )
 
-        n = self.size ** 2
+        n = self.size**2
 
         # mask of valid digits: bits 1..n set
         full_mask = (1 << (n + 1)) - 2  # removes bit 0
@@ -133,10 +133,10 @@ class SudokuBoard(DictConvertible):
 
     def find_best_cell_mrv(self) -> tuple[int, int] | None:
         best = None
-        best_count = 10 ** 9
+        best_count = 10**9
 
-        for r in range(self.size ** 2):
-            for c in range(self.size ** 2):
+        for r in range(self.size**2):
+            for c in range(self.size**2):
                 if self.board[r][c] == 0:
                     cnt = self.count_candidates(r, c)
 
@@ -151,6 +151,7 @@ class SudokuBoard(DictConvertible):
                             return best  # can't do better than this
 
         return best
+
     def solve(self) -> "SudokuBoard | None":
         def backtrack(board: "SudokuBoard") -> "SudokuBoard | None":
             cell = board.find_best_cell_mrv()
@@ -159,7 +160,7 @@ class SudokuBoard(DictConvertible):
 
             r, c = cell
 
-            for val in range(1, board.size ** 2 + 1):
+            for val in range(1, board.size**2 + 1):
                 if board.is_valid(r, c, val):
                     result = backtrack(board.place(r, c, val))
                     if result is not None:
@@ -168,6 +169,7 @@ class SudokuBoard(DictConvertible):
             return None
 
         return backtrack(self.copy())
+
     @classmethod
     def generate_full_board(cls, size: int) -> "SudokuBoard":
         board = cls([[0 for _ in range(size**2)] for _ in range(size**2)])
@@ -194,8 +196,10 @@ class SudokuBoard(DictConvertible):
 
     def copy(self) -> "SudokuBoard":
         return SudokuBoard(copy.deepcopy(self.board))
+
     def to_dict(self) -> dict:
         return {"board": self.board}
+
     @classmethod
     def from_dict(cls, data: dict) -> "SudokuBoard":
         return cls(data["board"])

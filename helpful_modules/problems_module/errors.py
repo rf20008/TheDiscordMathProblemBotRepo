@@ -67,11 +67,10 @@ class TooManyProblems(MathProblemsModuleException):
     pass
 
 
-
 class ThingNotFound(KeyError, IndexError, MathProblemsModuleException):
     """Raised when a thing is not found"""
-    pass
 
+    pass
 
 
 class ProblemNotFound(ThingNotFound):
@@ -141,9 +140,12 @@ class FormatException(KeyError, MathProblemsModuleException):
 
     pass
 
+
 class CorruptedDataException(FormatException):
     """Raised when the database detects corruption"""
+
     pass
+
 
 class IsRowException(FormatException):
     """Raised when expecting a dictionary but got a row instead."""
@@ -247,13 +249,17 @@ class UnsavedContentWarning(Warning):
 
 class PastWarning(Warning):
     """A warning about things that were supported in the past but no longer are"""
+
     pass
 
 
 class ClearProhibitedError(MathProblemsModuleException):
     """Raised when the database is attempted to be cleared during production"""
+
     pass
+
 
 class UnknownPrivilegeError(AttributeError):
     """Raised when has_privileges encountered an unknown privilege"""
+
     pass

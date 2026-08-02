@@ -21,24 +21,30 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 from abc import ABC
 import typing
 import orjson
 import asyncio
 from helpful_modules.FileDictionaryReader import AsyncFileDict
-from helpful_modules.problems_module.dict_convertible import DictConvertible, IdentifiableDictConvertible
+from helpful_modules.problems_module.dict_convertible import (
+    DictConvertible,
+    IdentifiableDictConvertible,
+)
 from redis import asyncio as aioredis  # type: ignore
 from helpful_modules.problems_module.errors import (
     SQLNotSupportedInRedisException,
     ThingNotFound,
     CorruptedDataException,
-    OwnershipNotDeterminableException, ClearProhibitedError
+    OwnershipNotDeterminableException,
+    ClearProhibitedError,
 )
 from ..AbstractKVCache import AbstractKVBasedCache, PREFIX_REGISTRY
 from ..cache_ABC import TYPE_ERROR_NOT_FOUND
+
 MUST_IMPLEMENT_ERROR = NotImplementedError("Subclasses must implement this")
 GuildID = typing.Optional[int]
-T = typing.TypeVar('T', bound=IdentifiableDictConvertible)
+T = typing.TypeVar("T", bound=IdentifiableDictConvertible)
 
 
 def _parse_key(self, key: str) -> str:
@@ -54,7 +60,9 @@ def _parse_key(self, key: str) -> str:
     return key.split(":", 1)[0]
 
 
-def _parse_value(self, prefix: str, raw_val: str | bytes) -> IdentifiableDictConvertible:
+def _parse_value(
+    self, prefix: str, raw_val: str | bytes
+) -> IdentifiableDictConvertible:
     """
     Looks up the prefix in the registry, decodes the JSON, and returns
     the proper instantiated object instance.
@@ -69,6 +77,8 @@ def _parse_value(self, prefix: str, raw_val: str | bytes) -> IdentifiableDictCon
 
     parsed_dict = orjson.loads(raw_val)
     return target_class.from_dict(parsed_dict)
+
+
 class RedisCache2(AbstractKVBasedCache, ABC):
     def __init__(self, redis_url: str, password: str) -> None:
         self._async_file_dict = AsyncFileDict("config.json")
@@ -78,7 +88,6 @@ class RedisCache2(AbstractKVBasedCache, ABC):
             redis_url, encoding="utf-8", decode_responses=True, password=password
         )
         self.lock = asyncio.Lock()
-
 
     async def get_all_things(self) -> list[IdentifiableDictConvertible]:
         """Return a list of EVERYTHING in the database"""
@@ -144,10 +153,11 @@ class RedisCache2(AbstractKVBasedCache, ABC):
         if errors:
             raise ExceptionGroup(
                 "Data integrity errors encountered during cache processing inside items().",
-                errors
+                errors,
             )
 
         return results
+
     async def add_thing(self, thing: IdentifiableDictConvertible) -> None:
         """
         Adds a dictionary convertible object to the cache. If it is already in the cache, it will replace whatever is in there.
@@ -156,7 +166,8 @@ class RedisCache2(AbstractKVBasedCache, ABC):
         :type thing: DictConvertible
         :return: Nothing.
         """
-        await self.redis.set(thing.key, orjson.dumps(thing).decode('utf-8'))
+        await self.redis.set(thing.key, orjson.dumps(thing).decode("utf-8"))
+
     async def remove_thing(self, thing_id: str) -> None:
         """
         Removes a dictionary convertible object from the cache.
@@ -168,10 +179,10 @@ class RedisCache2(AbstractKVBasedCache, ABC):
         await self.redis.delete(thing_id)
 
     async def get_thing(
-            self,
-            thing_id: str,
-            cls: typing.Type[T],
-            default: T | None = None,
+        self,
+        thing_id: str,
+        cls: typing.Type[T],
+        default: T | None = None,
     ) -> T:
         """:param thing_id: The ID of the object.
         :type thing_id: int
@@ -214,6 +225,7 @@ class RedisCache2(AbstractKVBasedCache, ABC):
     def is_locked(self) -> bool:
         """Return whether the cache is locked"""
         return self.lock.locked()
+
     async def del_all_by_user_id(self, user_id: int) -> None:
         all_items = await self.items()
         for key, value in all_items:
@@ -223,6 +235,7 @@ class RedisCache2(AbstractKVBasedCache, ABC):
                 continue
             if belongs:
                 await self.remove_thing(key)
+
     async def delete_all_by_guild_id(self, guild_id: int) -> None:
         all_items = await self.items()
         for key, value in all_items:
@@ -234,8 +247,7 @@ class RedisCache2(AbstractKVBasedCache, ABC):
                 await self.remove_thing(key)
 
     async def get_all_items_starting_with(
-            self,
-            thing_start: str
+        self, thing_start: str
     ) -> list[tuple[str, IdentifiableDictConvertible]]:
         """
         Returns a list of keys and objects matching a specific namespace prefix pattern.
@@ -300,14 +312,10 @@ class RedisCache2(AbstractKVBasedCache, ABC):
         if errors:
             raise ExceptionGroup(
                 f"Data integrity errors encountered while scanning for prefix '{thing_start}'.",
-                errors
+                errors,
             )
 
         return results
-
-
-
-
 
     async def bgsave(
         self,
@@ -344,6 +352,7 @@ class RedisCache2(AbstractKVBasedCache, ABC):
             replace=replace,
             **kwargs,
         )
+
     async def run_sql(
         self, sql: str, placeholders: typing.Optional[typing.List[typing.Any]] = None
     ) -> dict:
@@ -357,20 +366,29 @@ class RedisCache2(AbstractKVBasedCache, ABC):
         Raises:
         - SQLNotSupportedInRedisException: Always raised since SQL operations are not supported in a Redis cache.
         """
-        raise SQLNotSupportedInRedisException("SQL operations are not supported in redis")
+        raise SQLNotSupportedInRedisException(
+            "SQL operations are not supported in redis"
+        )
 
     async def initialize_sql_table(self):
         raise SQLNotSupportedInRedisException(
             "SQL is not supported in Redis, and creating sql tables is not supported in Redis either"
         )
+
     async def clear(self, force=False):
         if self.is_production():
-            raise ClearProhibitedError("Aborting! Cannot flush Redis in a production environment.")
+            raise ClearProhibitedError(
+                "Aborting! Cannot flush Redis in a production environment."
+            )
 
         if not force:
-            raise ValueError("You must pass force=True to confirm clearing the Redis database.")
+            raise ValueError(
+                "You must pass force=True to confirm clearing the Redis database."
+            )
 
             # flushdb() takes an asynchronous keyword argument in redis-py / aioredis
         await self._redis.flushdb(asynchronous=True)
+
+
 if __name__ == "__main__":
     r = RedisCache2(redis_url="redis://localhost", password="<PASSWORD>")

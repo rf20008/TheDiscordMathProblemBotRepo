@@ -179,9 +179,13 @@ class GuildData(Denylistable, IdentifiableDictConvertible):
         return cls(
             denylisted=bool(data["denylisted"]),
             guild_id=data["guild_id"],
-            can_create_problems_check=CheckForUserPassage.from_dict(data["can_create_problems_check"]),
+            can_create_problems_check=CheckForUserPassage.from_dict(
+                data["can_create_problems_check"]
+            ),
             mods_check=CheckForUserPassage.from_dict(data["mods_check"]),
-            can_create_quizzes_check=CheckForUserPassage.from_dict(data["can_create_quizzes_check"]),
+            can_create_quizzes_check=CheckForUserPassage.from_dict(
+                data["can_create_quizzes_check"]
+            ),
             denylist_reason=data.get("denylist_reason", ""),
             denylist_expiry=data.get("denylist_expiry", float("-inf")),
         )
@@ -198,13 +202,17 @@ class GuildData(Denylistable, IdentifiableDictConvertible):
         }
 
         return dict_to_return
+
     def key(self) -> str:
         return self.key_of(guild_id=self.guild_id)
+
     @classmethod
     def key_of(cls, guild_id: int) -> str:
         return f"GuildData_{guild_id}"
+
     def belongs_to_user(self, user_id: int):
         raise OwnershipNotDeterminableException("GuildDatas belong to guilds only")
+
     def belongs_to_guild(self, guild_id: int | None) -> bool:
         if not isinstance(guild_id, int):
             raise TypeError("guild_id is not an integer")

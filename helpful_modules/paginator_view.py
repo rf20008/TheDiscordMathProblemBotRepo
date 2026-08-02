@@ -122,6 +122,7 @@ class PaginatorView(disnake.ui.View):
         self.user_id = user_id
         self.pages = pages
         self.page_num = 0
+
     async def interaction_check(self, interaction: disnake.Interaction) -> bool:
         if interaction.user.id == self.user_id:
             return True
@@ -130,6 +131,7 @@ class PaginatorView(disnake.ui.View):
                 "You can not interact with this because it is not yours", ephemeral=True
             )
             return False
+
     def add_page(self, page_content: str):
         if not isinstance(page_content, str):
             raise TypeError(
@@ -170,16 +172,17 @@ class PaginatorView(disnake.ui.View):
             ),
         )
         return cls(user_id, pages, special_color)
+
     @staticmethod
-    def tokenize_string(
-        text: str,
-        breaking_chars: str = DEFAULT_BREAKING_CHARS
-    ):
+    def tokenize_string(text: str, breaking_chars: str = DEFAULT_BREAKING_CHARS):
         pattern = rf".+?(?:[{re.escape(breaking_chars)}]|$)"
         return re.findall(pattern, text)
+
     @staticmethod
     def validate_break_arguments(
-        text: str, max_page_length: int = 1500, breaking_chars: str = DEFAULT_BREAKING_CHARS
+        text: str,
+        max_page_length: int = 1500,
+        breaking_chars: str = DEFAULT_BREAKING_CHARS,
     ):
         if not isinstance(text, str):
             raise TypeError("Expected 'text' to be a string.")
@@ -189,11 +192,12 @@ class PaginatorView(disnake.ui.View):
             raise TypeError("Expected 'breaking_chars' to be a string.")
         if max_page_length <= 0:
             raise ValueError("'max_page_length' must be positive.")
+
     @staticmethod
     def create_pages(tokens: list[str], max_page_length: int = 1500):
         pages = []
-        cur_page = [] # a list of all characters in the page
-        cur_length = 0 # The total number of characters in the page
+        cur_page = []  # a list of all characters in the page
+        cur_length = 0  # The total number of characters in the page
         for token_idx, cur_token in enumerate(tokens):
             # If the current token exceeds the max page length, split it into smaller chunks
             if len(cur_token) > max_page_length:
@@ -224,6 +228,7 @@ class PaginatorView(disnake.ui.View):
             pages.append("".join(cur_page))
 
         return pages
+
     @staticmethod
     def break_into_pages(
         text: str,
@@ -242,9 +247,13 @@ class PaginatorView(disnake.ui.View):
         Returns:
             list[str]: A list of pages, each containing a portion of the input text.
         """
-        PaginatorView.validate_break_arguments(text, max_page_length, breaking_chars=breaking_chars)
-        return PaginatorView.create_pages(PaginatorView.tokenize_string(text, breaking_chars=breaking_chars), max_page_length=max_page_length)
-
+        PaginatorView.validate_break_arguments(
+            text, max_page_length, breaking_chars=breaking_chars
+        )
+        return PaginatorView.create_pages(
+            PaginatorView.tokenize_string(text, breaking_chars=breaking_chars),
+            max_page_length=max_page_length,
+        )
 
     async def interaction_check(self, interaction: disnake.Interaction) -> bool:
         return interaction.author.id == self.user_id
@@ -255,7 +264,7 @@ class PaginatorView(disnake.ui.View):
         button: disnake.ui.Button,
         inter: disnake.MessageInteraction,
     ) -> None:
-        #await inter.response.defer()
+        # await inter.response.defer()
 
         self.page_num -= 1
         self.page_num %= len(self.pages)

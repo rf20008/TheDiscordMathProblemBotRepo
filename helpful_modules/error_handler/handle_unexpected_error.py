@@ -37,7 +37,7 @@ from ..cooldowns import OnCooldown
 from ..custom_embeds import ErrorEmbed, SimpleEmbed, SuccessEmbed
 from ..problems_module.errors import (
     LinearAlgebraUserInputErrorException,
-    LockedCacheException
+    LockedCacheException,
 )
 from ..threads_or_useful_funcs import get_git_revision_hash
 
@@ -48,15 +48,20 @@ async def log_unexpected_error(error) -> str:
         return ""
     except Exception as log_error_exc:
         return (
-                """Additionally, while trying to log this error, the following exception occurred: \n"""
-                + disnake.utils.escape_markdown(
-            "\n".join(
-                traceback.format_exception(log_error_exc)
+            """Additionally, while trying to log this error, the following exception occurred: \n"""
+            + disnake.utils.escape_markdown(
+                "\n".join(traceback.format_exception(log_error_exc))
             )
         )
-        )
 
-def create_plain_text_for_error(error: BaseException, yet_other_exception: BaseException | None = None, error_msg: str ="", traceback_msg: str="", additional_error: str="") -> str:
+
+def create_plain_text_for_error(
+    error: BaseException,
+    yet_other_exception: BaseException | None = None,
+    error_msg: str = "",
+    traceback_msg: str = "",
+    additional_error: str = "",
+) -> str:
     # send as plain text
     plain_text = (
         """Oh no! An Exception occurred! And it couldn't be sent as an embed!```"""
@@ -64,20 +69,24 @@ def create_plain_text_for_error(error: BaseException, yet_other_exception: BaseE
     plain_text += error_msg + traceback_msg + additional_error
     plain_text += f"```Time: {str(asctime())} Commit hash: {get_git_revision_hash()} The stack trace is shown for debugging purposes. The stack trace is also logged (and pushed), but hopefully does not contain identifying information\n"
     plain_text += f"Error that occurred while attempting to send it as an embed:"
-    plain_text += disnake.utils.escape_markdown(
-        "".join(traceback.format_exception(e))
-    )[: -(1650 - len(plain_text))]
+    plain_text += disnake.utils.escape_markdown("".join(traceback.format_exception(e)))[
+        : -(1650 - len(plain_text))
+    ]
     if yet_other_exception is not None:
         the_new_exception = deepcopy(yet_other_exception)
         the_new_exception.__cause__ = error
     if len(plain_text) > 2000:
         logging.warning(
-            f"Plain text is too long. It could not be sent as an embed, and the plain text ({plain_text}) is too long")
+            f"Plain text is too long. It could not be sent as an embed, and the plain text ({plain_text}) is too long"
+        )
         # uh oh
         return plain_text[:2000]
     return plain_text
 
-async def handle_unexpected_error(inter, error, should_log_error=True, print_error=True):
+
+async def handle_unexpected_error(
+    inter, error, should_log_error=True, print_error=True
+):
     # Embed = ErrorEmbed(custom_title="⚠ Oh no! Error: " + str(type(error)), description=("Command raised an exception:" + str(error)))
     logging.error("Uh oh - an unexpected error occurred ", exc_info=exc_info())
     error_traceback = "\n".join(traceback.format_exception(error))
@@ -107,7 +116,9 @@ async def handle_unexpected_error(inter, error, should_log_error=True, print_err
             title="Oh, no! An error occurred!",
         )
     except (TypeError, NameError) as e:
-        return create_plain_text_for_error(error, e, error_msg, traceback_msg, additional_error)
+        return create_plain_text_for_error(
+            error, e, error_msg, traceback_msg, additional_error
+        )
     footer = f"Time: {str(asctime())} Commit hash: {get_git_revision_hash()} The stack trace is shown for debugging purposes. The stack trace is also logged (and pushed), but should not contain identifying information (only code which is on github)"
     embed.set_footer(text=footer)
     if len(embed.description) < 2048:

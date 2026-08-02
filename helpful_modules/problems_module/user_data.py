@@ -20,11 +20,14 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)"""
 import orjson
 
 from . import OwnershipNotDeterminableException
-from .BotPermissionLevels import BotPermissionLevel#, BotRestrictionLevel
+from .BotPermissionLevels import BotPermissionLevel  # , BotRestrictionLevel
 from .denylistable import DenylistMetadata, DenylistType
 from .dict_convertible import IdentifiableDictConvertible
 
-def parse_denylist_metadata(value: DenylistMetadata | str | dict | None = None) -> DenylistMetadata:
+
+def parse_denylist_metadata(
+    value: DenylistMetadata | str | dict | None = None,
+) -> DenylistMetadata:
     """Helper method to handle parsing of input formats into DenylistMetadata instances."""
     if value is None:
         return DenylistMetadata(
@@ -42,6 +45,7 @@ def parse_denylist_metadata(value: DenylistMetadata | str | dict | None = None) 
         return value
     raise TypeError(f"Expected DenylistMetadata, dict, or str, but got {type(value)}")
 
+
 class UserData(IdentifiableDictConvertible):
     """A dataclass to store user data for the bot!"""
 
@@ -51,6 +55,7 @@ class UserData(IdentifiableDictConvertible):
     user_id: int
     permissions: BotPermissionLevel
     appeal_num: int
+
     def __init__(
         self,
         *,
@@ -69,7 +74,9 @@ class UserData(IdentifiableDictConvertible):
         self.user_id = user_id
         self.appeal_num = appeal_num
         self.denylist = parse_denylist_metadata(denylist)
-        self.verification_code_denylist = parse_denylist_metadata(verification_code_denylist)
+        self.verification_code_denylist = parse_denylist_metadata(
+            verification_code_denylist
+        )
         self.appeal_denylist = parse_denylist_metadata(appeal_denylist)
 
     @classmethod
@@ -106,26 +113,36 @@ class UserData(IdentifiableDictConvertible):
             denylist_expiry=0.0,
             verification_code_denylist=None,
         )
+
     def key(self) -> str:
         return self.key_of(user_id=self.user_id)
+
     @classmethod
     def key_of(cls, user_id: int) -> str:
         return f"UserData:{user_id}"
+
     def belongs_to_guild(self, guild_id: int | None) -> bool:
-        raise OwnershipNotDeterminableException("UserData only belong to users, not guilds.")
+        raise OwnershipNotDeterminableException(
+            "UserData only belong to users, not guilds."
+        )
+
     def belongs_to_user(self, user_id: int):
         if not isinstance(user_id, int):
             raise TypeError("user_id is not an integer")
         return self.user_id == user_id
+
     @property
     def denylisted(self) -> bool:
         return self.denylist.is_denylisted()
+
     @property
     def denylist_expiry(self) -> float:
         return self.denylist.denylist_expiry
+
     @property
     def denylist_reason(self) -> str:
         return self.denylist.denylist_reason
+
     @property
     def trusted(self) -> bool:
-        return self.permissions.TRUSTED # type: ignore
+        return self.permissions.TRUSTED  # type: ignore

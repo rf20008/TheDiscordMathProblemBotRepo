@@ -52,6 +52,7 @@ def cog(mock_bot):
 # 1. Tests for cog_slash_command_check
 # ==============================================================================
 
+
 @pytest.mark.asyncio
 async def test_cog_slash_command_check_success(cog, mock_inter):
     """Should return True if the author is the bot owner."""
@@ -64,13 +65,16 @@ async def test_cog_slash_command_check_success(cog, mock_inter):
 async def test_cog_slash_command_check_failure(cog, mock_inter):
     """Should raise CheckFailure if the author is not the bot owner."""
     cog.bot.is_owner.return_value = False
-    with pytest.raises(commands.CheckFailure, match="You are not the owner of this bot!"):
+    with pytest.raises(
+        commands.CheckFailure, match="You are not the owner of this bot!"
+    ):
         await cog.cog_slash_command_check(mock_inter)
 
 
 # ==============================================================================
 # 2. Tests for eval_code (Internal Execution Logic)
 # ==============================================================================
+
 
 @pytest.mark.asyncio
 @patch("your_bot_folder.debug_cog.log_evaled_code", new_callable=AsyncMock)
@@ -85,7 +89,10 @@ async def test_eval_code_successful_execution(mock_log, cog, mock_inter):
         mock_inter.send.assert_called_once()
         # Verify code stdout parsing caught 'Hello World!'
         args, kwargs = mock_inter.send.call_args
-        assert "Hello World!" in args[0] or "Hello World!" in mock_success_embed.call_args[0][0]
+        assert (
+            "Hello World!" in args[0]
+            or "Hello World!" in mock_success_embed.call_args[0][0]
+        )
 
 
 @pytest.mark.asyncio
@@ -104,12 +111,15 @@ async def test_eval_code_paginator_trigger(mock_paginator, mock_log, cog, mock_i
     await cog.eval_code(mock_inter, large_code, ephemeral=False)
 
     mock_inter.response.defer.assert_called_once()
-    mock_inter.send.assert_called_once_with(view=mock_paginator_instance, embed="MockedEmbed")
+    mock_inter.send.assert_called_once_with(
+        view=mock_paginator_instance, embed="MockedEmbed"
+    )
 
 
 # ==============================================================================
 # 3. Tests for /sql Command
 # ==============================================================================
+
 
 @pytest.mark.asyncio
 async def test_sql_command_success_short_output(cog, mock_inter):
@@ -117,7 +127,9 @@ async def test_sql_command_success_short_output(cog, mock_inter):
     cog.bot.cache.run_sql.return_value = "Short Data Output"
 
     await cog.sql(mock_inter, query="SELECT * FROM users;", ephemeral=False)
-    mock_inter.send.assert_called_once_with("Result: Short Data Output", ephemeral=False)
+    mock_inter.send.assert_called_once_with(
+        "Result: Short Data Output", ephemeral=False
+    )
 
 
 @pytest.mark.asyncio
@@ -131,15 +143,14 @@ async def test_sql_command_success_long_output(mock_file_version, cog, mock_inte
     await cog.sql(mock_inter, query="SELECT * FROM heavy_table;", ephemeral=True)
 
     mock_inter.send.assert_called_once_with(
-        "The result is in the attached file!",
-        ephemeral=True,
-        file="MockedFilePointer"
+        "The result is in the attached file!", ephemeral=True, file="MockedFilePointer"
     )
 
 
 # ==============================================================================
 # 4. Tests for /redis Command
 # ==============================================================================
+
 
 @pytest.mark.asyncio
 async def test_redis_non_redis_cache(cog, mock_inter):
@@ -167,6 +178,7 @@ async def test_redis_not_implemented(cog, mock_inter):
 # ==============================================================================
 # 5. Tests for /stop Command
 # ==============================================================================
+
 
 @pytest.mark.asyncio
 async def test_stop_command_immediate(cog, mock_inter):

@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 import unittest
 import tempfile
 import os
@@ -46,10 +47,7 @@ class TestChangeLogEntry(unittest.TestCase):
 
         self.assertEqual(entry.old_version, "1.0")
         self.assertEqual(entry.new_version, "1.1")
-        self.assertEqual(
-            entry.patch_notes,
-            ["Fixed bug", "Added feature"]
-        )
+        self.assertEqual(entry.patch_notes, ["Fixed bug", "Added feature"])
 
     def test_invalid_timestamp(self):
         with self.assertRaises(TypeError):
@@ -89,6 +87,7 @@ class TestChangeLogEntry(unittest.TestCase):
         self.assertEqual(entry.new_version, "1.1")
         self.assertEqual(entry.date_released, 1710000000)
 
+
 class TestCreateLogEntryFromFile(unittest.TestCase):
     def test_create_entries(self):
         data = {
@@ -106,10 +105,7 @@ class TestCreateLogEntryFromFile(unittest.TestCase):
             },
         }
 
-        with tempfile.NamedTemporaryFile(
-            mode="w+",
-            delete=False
-        ) as tmp:
+        with tempfile.NamedTemporaryFile(mode="w+", delete=False) as tmp:
             json.dump(data, tmp)
             tmp.seek(0)
 
@@ -124,10 +120,7 @@ class TestCreateLogEntryFromFile(unittest.TestCase):
 
 class TestChangeLogManager(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
-        self.temp = tempfile.NamedTemporaryFile(
-            mode="w+",
-            delete=False
-        )
+        self.temp = tempfile.NamedTemporaryFile(mode="w+", delete=False)
 
         json.dump({}, self.temp)
         self.temp.close()

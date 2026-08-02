@@ -102,6 +102,7 @@ class QuizSubmission(DictConvertible):
             {}
         )  # todo: fix the quiz commands to make it a list of QuizSubmissionAnswer(problem_id=quiz_id, guild_id=guild_id
         # with a number
+
     @property
     def key(self):
         return f"QuizSubmission:{self.user_id}:{self.quiz_id}"
@@ -144,5 +145,3 @@ class QuizSubmission(DictConvertible):
             )
         c.mutable = dict_["mutable"]
         return c
-
-

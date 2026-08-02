@@ -35,11 +35,7 @@ async def test_add_and_get_thing(cache):
 
     await cache.add_thing(thing)
 
-    result = await cache.get_thing(
-        thing_id=thing.key,
-        cls=GuildData,
-        default=None
-    )
+    result = await cache.get_thing(thing_id=thing.key, cls=GuildData, default=None)
 
     assert result is not None
     assert result.guild_id == 123
@@ -145,10 +141,12 @@ async def test_permissions(cache):
 
     perms = {"trusted": True}
 
-    assert await cache.user_meets_permissions_required_to_use_command(
-        user_id=user_id,
-        permissions_required=perms
-    ) is True
+    assert (
+        await cache.user_meets_permissions_required_to_use_command(
+            user_id=user_id, permissions_required=perms
+        )
+        is True
+    )
 
 
 # -----------------------------
@@ -165,57 +163,59 @@ async def test_global_problems(cache):
     "factory, add_fn, get_fn, remove_fn, modify_fn",
     [
         (  # Base Problems
-                lambda: FixedAnswerProblem(problem_id=1, guild_id=None, answer="initial"),
-                lambda c, o: c.add_problem(1, o),
-                lambda c, o: c.get_problem(None, 1),
-                lambda c, o: c.remove_problem(1, None),
-                lambda o: setattr(o, "answer", "updated") or o,
+            lambda: FixedAnswerProblem(problem_id=1, guild_id=None, answer="initial"),
+            lambda c, o: c.add_problem(1, o),
+            lambda c, o: c.get_problem(None, 1),
+            lambda c, o: c.remove_problem(1, None),
+            lambda o: setattr(o, "answer", "updated") or o,
         ),
         (  # Quizzes
-                lambda: Quiz(quiz_id=10, name="Math Quiz"),
-                lambda c, o: c.add_quiz(10, o),
-                lambda c, o: c.get_quiz(10),
-                lambda c, o: c.remove_quiz(10),
-                lambda o: setattr(o, "name", "Updated Quiz") or o,
+            lambda: Quiz(quiz_id=10, name="Math Quiz"),
+            lambda c, o: c.add_quiz(10, o),
+            lambda c, o: c.get_quiz(10),
+            lambda c, o: c.remove_quiz(10),
+            lambda o: setattr(o, "name", "Updated Quiz") or o,
         ),
         (  # UserData
-                lambda: UserData(user_id=42, xp=100),
-                lambda c, o: c.add_user_data(o),
-                lambda c, o: c.get_user_data(42),
-                lambda c, o: c.remove_user_data(o),  # Fixed from verification code info
-                lambda o: setattr(o, "xp", 250) or o,
+            lambda: UserData(user_id=42, xp=100),
+            lambda c, o: c.add_user_data(o),
+            lambda c, o: c.get_user_data(42),
+            lambda c, o: c.remove_user_data(o),  # Fixed from verification code info
+            lambda o: setattr(o, "xp", 250) or o,
         ),
         (  # GuildData
-                lambda: GuildData(guild_id=7, prefix="!"),
-                lambda c, o: c.add_guild_data(o),
-                lambda c, o: c.get_guild_data(7),
-                lambda c, o: c.remove_guild_data(7),
-                lambda o: setattr(o, "prefix", "?") or o,
+            lambda: GuildData(guild_id=7, prefix="!"),
+            lambda c, o: c.add_guild_data(o),
+            lambda c, o: c.get_guild_data(7),
+            lambda c, o: c.remove_guild_data(7),
+            lambda o: setattr(o, "prefix", "?") or o,
         ),
         (  # Appeal
-                lambda: Appeal(special_id=99, status="pending"),
-                lambda c, o: c.add_appeal(o),
-                lambda c, o: c.get_appeal(99),
-                lambda c, o: c.remove_appeal(o),
-                lambda o: setattr(o, "status", "approved") or o,
+            lambda: Appeal(special_id=99, status="pending"),
+            lambda c, o: c.add_appeal(o),
+            lambda c, o: c.get_appeal(99),
+            lambda c, o: c.remove_appeal(o),
+            lambda o: setattr(o, "status", "approved") or o,
         ),
         (  # AppealViewInfo
-                lambda: AppealViewInfo(message_id=555, channel_id=111),
-                lambda c, o: c.set_appeal_view_info(o),
-                lambda c, o: c.get_appeal_view_info(o),
-                lambda c, o: c.del_appeal_view_info(555),
-                lambda o: setattr(o, "channel_id", 222) or o,
+            lambda: AppealViewInfo(message_id=555, channel_id=111),
+            lambda c, o: c.set_appeal_view_info(o),
+            lambda c, o: c.get_appeal_view_info(o),
+            lambda c, o: c.del_appeal_view_info(555),
+            lambda o: setattr(o, "channel_id", 222) or o,
         ),
         (  # Generic Things
-                lambda: GuildData(guild_id=123, prefix="old"),
-                lambda c, o: c.add_thing(o),
-                lambda c, o: c.get_thing(o.key, type(o)),
-                lambda c, o: c.remove_thing(o.key),
-                lambda o: setattr(o, "prefix", "new") or o,
+            lambda: GuildData(guild_id=123, prefix="old"),
+            lambda c, o: c.add_thing(o),
+            lambda c, o: c.get_thing(o.key, type(o)),
+            lambda c, o: c.remove_thing(o.key),
+            lambda o: setattr(o, "prefix", "new") or o,
         ),
     ],
 )
-async def test_cache_upsert_and_crud(cache, factory, add_fn, get_fn, remove_fn, modify_fn):
+async def test_cache_upsert_and_crud(
+    cache, factory, add_fn, get_fn, remove_fn, modify_fn
+):
     # 1. Create and Insert Initial Object
     obj = factory()
     await add_fn(cache, obj)
@@ -231,7 +231,9 @@ async def test_cache_upsert_and_crud(cache, factory, add_fn, get_fn, remove_fn, 
     # 3. Assert Changes Persisted Successfully
     updated_result = await get_fn(cache, modified_obj)
     assert updated_result == modified_obj
-    assert updated_result != factory()  # Ensure it matches the modified values, not original ones
+    assert (
+        updated_result != factory()
+    )  # Ensure it matches the modified values, not original ones
 
     # 4. Cleanup and Removal
     await remove_fn(cache, modified_obj)
@@ -259,7 +261,6 @@ async def test_cache_missing_data_behavior(cache):
     # Assert it raises if None is explicitly passed as a default
     with pytest.raises(ThingNotFound):
         await cache.get_thing(fake_key, cls=UserData, default=None)
-
 
 
 # ==========================================
@@ -293,6 +294,7 @@ async def test_bulk_extraction_and_filtering(cache):
     # Cleanup
     await cache.clear(force=True)
 
+
 # ==========================================
 # 3. CASCADE DELETION TEST (MASS EVICTION)
 # ==========================================
@@ -303,7 +305,9 @@ async def test_cascade_deletion_by_guild(cache):
 
     # Populate target guild data mix
     guild_config = GuildData(guild_id=target_guild, prefix="!")
-    prob_target = FixedAnswerProblem(problem_id=100, guild_id=target_guild, answer="Yes")
+    prob_target = FixedAnswerProblem(
+        problem_id=100, guild_id=target_guild, answer="Yes"
+    )
 
     # Populate separate safe guild data
     prob_safe = FixedAnswerProblem(problem_id=200, guild_id=other_guild, answer="No")
@@ -342,11 +346,13 @@ async def test_data_corruption_handling(cache):
         await cache.initialize_sql_table()
         await cache.run_sql(
             f"INSERT INTO {cache.table_name} (key, type, data) VALUES (?, ?, ?);",
-            [corrupt_key, "UserData", "{broken-json-payload,,}"]
+            [corrupt_key, "UserData", "{broken-json-payload,,}"],
         )
     elif hasattr(cache, "_collection"):
         # For MongoCache: Insert broken data shapes manually bypassing serializers
-        await cache._collection.insert_one({"_id": corrupt_key, "type": "UserData", "data": "not-a-dict"})
+        await cache._collection.insert_one(
+            {"_id": corrupt_key, "type": "UserData", "data": "not-a-dict"}
+        )
     else:
         # For RAMCache / RedisCache raw string sets
         raw_driver = getattr(cache, "_db", cache)
@@ -361,7 +367,9 @@ async def test_data_corruption_handling(cache):
 
     # Cleanup manually from underlying driver storage frameworks
     if hasattr(cache, "run_sql"):
-        await cache.run_sql(f"DELETE FROM {cache.table_name} WHERE key = ?;", [corrupt_key])
+        await cache.run_sql(
+            f"DELETE FROM {cache.table_name} WHERE key = ?;", [corrupt_key]
+        )
     elif hasattr(cache, "_collection"):
         await cache._collection.delete_one({"_id": corrupt_key})
     else:
@@ -391,7 +399,9 @@ async def test_cache_clear_force(cache):
 
     # 3. Assert that the database is completely empty
     all_items_after = await cache.get_all_things()
-    assert len(all_items_after) == 0, "Database should be completely empty after clear(force=True)"
+    assert (
+        len(all_items_after) == 0
+    ), "Database should be completely empty after clear(force=True)"
 
     # 4. Double check individual key lookups throw ThingNotFound
     with pytest.raises(ThingNotFound):

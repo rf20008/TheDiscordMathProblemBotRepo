@@ -44,48 +44,6 @@ class InterestingComputationCog(HelperCog):
         self.cache = bot.cache
         super().__init__(bot)
 
-    class ChineseRemainderTheoremComputer:
-        def __init__(self, remainders, moduli):
-            if len(remainders) != len(moduli):
-                raise ValueError(
-                    "The length of the remainders does not equal the length of the moduli!"
-                )
-            for a, b in more_itertools.distinct_combinations(moduli, 2):
-                if gcd(a, b) != 1:
-                    raise ValueError(
-                        "Not all the moduli are relatively pairwise coprime!!!!!!"
-                    )
-            for i in range(len(moduli)):
-                if not (
-                    isinstance(remainders[i], int)
-                    and isinstance(moduli[i], int)
-                    and moduli[i] > remainders[i] > 0
-                ):
-                    raise ValueError("The CRT prerequsites are not satisifed!")
-            self.remainders = remainders
-            self.moduli = moduli
-
-        def compute(self):
-            """Compute the CRT
-            Algorithm credits to my brother"""
-            product = 1
-            for i in range(len(self.moduli)):
-                product *= self.moduli[i]
-            su = 0
-            for i in range(len(self.moduli)):
-                num = product // self.moduli[i]
-                # compute the multiplicative number of product/b_i mod b_i
-                return_val = threads_or_useful_funcs.extended_gcd(
-                    product, self.moduli[i]
-                )  # replace with pow(product, -1, self.moduli[i]) since pow can compute modular inverses
-                try:
-                    return_val = pow(product, -1, self.moduli[i])
-                except ValueError:
-                    raise ValueError("They aren't relatively prime")
-                mult_inv = return_val[0][1]
-                su += num * mult_inv * self.remainders[i]
-            return su
-
     @checks.no_insanely_huge_numbers_check()
     @commands.slash_command(name="crt_problem", description="crt_problem")
     async def crt_problem(
@@ -109,11 +67,9 @@ class InterestingComputationCog(HelperCog):
             raise
         if len(moduli) >= 100:
             return await inter.send(embed=ErrorEmbed("Too many moduli!"))
-        if len(moduli) >= 100:
-            return inter.send(embed=ErrorEmbed("Too many moduli!"))
         for i in moduli:
             if i <= 0 or i > 10**30:
-                return inter.send("All the remainders must be positive")
+                return inter.send("All remainders must be positive and at most +1e30.")
 
         # linear time solution to check for relatively prime:
         # compute a_1a_2a_3...a_n=C
@@ -123,7 +79,7 @@ class InterestingComputationCog(HelperCog):
         # proof: if a_1 is relatively prime to a_2, a_3, a_4, ..., a_n then it is relatively prime to a_2a_3a_4...a_n
 
         for num1, num2 in more_itertools.distinct_combinations(moduli, 2):
-            if gcd(moduli[i], moduli[j]) != 1:
+            if gcd(num1, num2) != 1:
                 return await inter.send(
                     embed=ErrorEmbed(
                         "The chinese remainder theorem doesn't hold unless the numbers are relatively prime"
@@ -163,7 +119,7 @@ class InterestingComputationCog(HelperCog):
         CRTC = InterestingComputationCog.ChineseRemainderTheoremComputer(
             remainders=nums, moduli=moduli
         )
-        inter.send(embed=SuccessEmbed(f"The result is f{CRTC.compute()}."))
+        await inter.send(embed=SuccessEmbed(f"The result is f{CRTC.compute()}."))
         return
 
 

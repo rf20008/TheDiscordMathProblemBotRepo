@@ -78,7 +78,7 @@ except (ModuleNotFoundError, AssertionError):
 env_path = dotenv.find_dotenv()
 dotenv.load_dotenv(env_path)
 DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN", None)
-os.environ["APP_ENV"]= "production"
+os.environ["APP_ENV"] = "production"
 if DISCORD_TOKEN is None:
     raise RuntimeError("Cannot start bot; no discord_token environment variable")
 

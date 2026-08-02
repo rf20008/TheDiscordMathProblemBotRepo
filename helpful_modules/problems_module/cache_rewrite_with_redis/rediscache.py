@@ -161,7 +161,9 @@ class RedisCache(AbstractCache):
         :raises TypeError: If 'problem_id' is not an int or 'problem' is not a FixedAnswerProblem.
         :raises ValueError: If IDs do not match.
         """
-        if not isinstance(problem_id, int) or not isinstance(problem, FixedAnswerProblem):
+        if not isinstance(problem_id, int) or not isinstance(
+            problem, FixedAnswerProblem
+        ):
             raise TypeError("Problem_id is not an int or problem is not a base problem")
         if problem.id != problem_id:
             raise ValueError("Ids do not match")
@@ -558,8 +560,6 @@ class RedisCache(AbstractCache):
             await asyncio.sleep(3.0000)
             await self.redis.delete(*things_to_remove)
             await asyncio.sleep(3.0000)
-
-
 
     async def bgsave(
         self,

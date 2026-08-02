@@ -37,7 +37,11 @@ from helpful_modules.custom_embeds import SuccessEmbed, ErrorEmbed
 from cogs.helper_cog import HelperCog
 from .appeal_modals import UserDenylistAppealModal, GuildDenylistAppealModal
 from .errors import NoAppealQuestionsException
-from helpful_modules.problems_module import AppealType, APPEAL_QUESTION_TYPE_NAMES, AppealQuestion
+from helpful_modules.problems_module import (
+    AppealType,
+    APPEAL_QUESTION_TYPE_NAMES,
+    AppealQuestion,
+)
 
 # Hard-capped safely below 15 minutes to guarantee token life and stability
 SAFE_MODAL_TIMEOUT = 600.0
@@ -50,7 +54,9 @@ class AppealsCog(HelperCog):
         self.cache = bot.cache
 
     @commands.cooldown(1, 30, commands.BucketType.user)
-    @commands.slash_command(name="appeal", description="Access the formal restrictions appeal system.")
+    @commands.slash_command(
+        name="appeal", description="Access the formal restrictions appeal system."
+    )
     async def appeal(self, inter: disnake.ApplicationCommandInteraction):
         """/appeal
 
@@ -62,7 +68,7 @@ class AppealsCog(HelperCog):
         """Loads and converts multi-category question sets into AppealQuestion objects."""
         if not getattr(self.bot, "appeal_questions", None):
             try:
-                with open("appeal_questions.json", "r", encoding='utf-8') as file5:
+                with open("appeal_questions.json", "r", encoding="utf-8") as file5:
                     question_sets: dict = json.load(fp=file5)
 
                 parsed_sets = {}
@@ -75,13 +81,20 @@ class AppealsCog(HelperCog):
             except Exception as e:
                 print(f"[AppealsCog Exception] Failed file load: {e}")
                 self.bot.appeal_questions = {}
-                raise NoAppealQuestionsException("The appeal questions failed to load.") from e
+                raise NoAppealQuestionsException(
+                    "The appeal questions failed to load."
+                ) from e
 
         if not self.bot.appeal_questions:
-            raise NoAppealQuestionsException("There are no appeal questions configurations online.")
+            raise NoAppealQuestionsException(
+                "There are no appeal questions configurations online."
+            )
 
     @commands.cooldown(3, 30, commands.BucketType.user)
-    @appeal.sub_command(name="view_questions", description="Publicly view the current active appeal questionnaires.")
+    @appeal.sub_command(
+        name="view_questions",
+        description="Publicly view the current active appeal questionnaires.",
+    )
     async def view_questions(self, inter: disnake.ApplicationCommandInteraction):
         """/appeal view_questions
         Public informational command to preview the active rules and questionnaire criteria.
@@ -90,31 +103,60 @@ class AppealsCog(HelperCog):
         try:
             self.load_questions()
         except NoAppealQuestionsException:
-            await inter.send(embed=ErrorEmbed("No active question validation schemas could be parsed."), ephemeral=True)
+            await inter.send(
+                embed=ErrorEmbed(
+                    "No active question validation schemas could be parsed."
+                ),
+                ephemeral=True,
+            )
             return
 
         user_questions = self.bot.appeal_questions.get("user_denylist", [])
-        user_text = "".join([f"**{i}. {q.question}**\n*{q.long_prompt}*\n\n" for i, q in enumerate(user_questions, 1)]) or "*None configured.*"
+        user_text = (
+            "".join(
+                [
+                    f"**{i}. {q.question}**\n*{q.long_prompt}*\n\n"
+                    for i, q in enumerate(user_questions, 1)
+                ]
+            )
+            or "*None configured.*"
+        )
 
-        guild_questions = self.bot.appeal_questions.get(APPEAL_QUESTION_TYPE_NAMES[AppealType.GUILD_DENYLIST_APPEAL], [])
-        guild_text = "".join([f"**{i}. {q.question}**\n*{q.long_prompt}*\n\n" for i, q in enumerate(guild_questions, 1)]) or "*None configured.*"
+        guild_questions = self.bot.appeal_questions.get(
+            APPEAL_QUESTION_TYPE_NAMES[AppealType.GUILD_DENYLIST_APPEAL], []
+        )
+        guild_text = (
+            "".join(
+                [
+                    f"**{i}. {q.question}**\n*{q.long_prompt}*\n\n"
+                    for i, q in enumerate(guild_questions, 1)
+                ]
+            )
+            or "*None configured.*"
+        )
 
         preview_embed = disnake.Embed(
             title="📋 System Appeal Questionnaires",
             description="Below are the active live requirements for restrictions processing:\n\n---",
-            color=disnake.Color.blue()
+            color=disnake.Color.blue(),
         )
-        preview_embed.add_field(name="👤 User Profile Appeal Questions", value=user_text, inline=False)
-        preview_embed.add_field(name="🏰 Guild Ecosystem Appeal Questions", value=guild_text, inline=False)
+        preview_embed.add_field(
+            name="👤 User Profile Appeal Questions", value=user_text, inline=False
+        )
+        preview_embed.add_field(
+            name="🏰 Guild Ecosystem Appeal Questions", value=guild_text, inline=False
+        )
         preview_embed.set_footer(
             text="NOTE: When you prepare an appeal, use /view_questions to prepare your answers. Please prepare them in an external text editor."
-                 "WARNING: If you close the modal (for example by clicking outside it), your answers will be lost FOREVER!"
+            "WARNING: If you close the modal (for example by clicking outside it), your answers will be lost FOREVER!"
         )
         await inter.send(embed=preview_embed, ephemeral=True)
 
     @has_privileges(denylisted=True)
     @commands.cooldown(2, 86400, commands.BucketType.user)
-    @appeal.sub_command(name="denylist", description="Appeal your profile-level system denylist.")
+    @appeal.sub_command(
+        name="denylist", description="Appeal your profile-level system denylist."
+    )
     async def denylist(self, inter: disnake.ApplicationCommandInteraction):
         """/appeal denylist
         Submit a formal appeal for your profile-level system restriction.
@@ -137,11 +179,21 @@ class AppealsCog(HelperCog):
         try:
             self.load_questions()
         except NoAppealQuestionsException:
-            await inter.send(embed=ErrorEmbed("No active validation question schemas could be loaded."), ephemeral=True)
+            await inter.send(
+                embed=ErrorEmbed(
+                    "No active validation question schemas could be loaded."
+                ),
+                ephemeral=True,
+            )
             return
 
         user_questions = self.bot.appeal_questions.get("user_denylist", [])
-        questionnaire_text = "".join([f"**{i}. {q.question}**\n*Instructions:* {q.long_prompt}\n\n" for i, q in enumerate(user_questions, 1)])
+        questionnaire_text = "".join(
+            [
+                f"**{i}. {q.question}**\n*Instructions:* {q.long_prompt}\n\n"
+                for i, q in enumerate(user_questions, 1)
+            ]
+        )
 
         warning_embed = disnake.Embed(
             title="⚠️ CRITICAL APPEAL REQUIREMENTS",
@@ -153,22 +205,29 @@ class AppealsCog(HelperCog):
                 "the confirmation button below to copy-paste responses into form fields immediately.\n"
                 f"*(Form submission window expires in {int(SAFE_MODAL_TIMEOUT / 60)} minutes)*"
             ),
-            color=disnake.Color.red()
+            color=disnake.Color.red(),
         )
         warning_embed.set_footer(
             text="Don't worry. If this message disappears before you're ready, you can use this command again to "
-                 "re-display the questions. \n"
-                 "Note: If you close the actual appeal modal layout, your answers will be lost FOREVER!"
+            "re-display the questions. \n"
+            "Note: If you close the actual appeal modal layout, your answers will be lost FOREVER!"
         )
         unique_gate_id = f"gate_user_{inter.author.id}_{urandom(4).hex()}"
         components = [
-            disnake.ui.Button(label="I have prepared my text, launch form", custom_id=unique_gate_id, style=disnake.ButtonStyle.danger)
+            disnake.ui.Button(
+                label="I have prepared my text, launch form",
+                custom_id=unique_gate_id,
+                style=disnake.ButtonStyle.danger,
+            )
         ]
         await inter.send(embed=warning_embed, components=components, ephemeral=True)
 
         try:
             btn_inter: disnake.MessageInteraction = await self.bot.wait_for(
-                "button_click", check=lambda b_i: b_i.data.custom_id == unique_gate_id and b_i.author.id == inter.author.id, timeout=120.0
+                "button_click",
+                check=lambda b_i: b_i.data.custom_id == unique_gate_id
+                and b_i.author.id == inter.author.id,
+                timeout=120.0,
             )
         except asyncio.TimeoutError:
             return
@@ -189,21 +248,34 @@ class AppealsCog(HelperCog):
 
         try:
             modal_inter: disnake.ModalInteraction = await self.bot.wait_for(
-                "modal_submit", check=lambda m_i: m_i.custom_id == modal_custom_id and m_i.author.id == inter.author.id, timeout=SAFE_MODAL_TIMEOUT
+                "modal_submit",
+                check=lambda m_i: m_i.custom_id == modal_custom_id
+                and m_i.author.id == inter.author.id,
+                timeout=SAFE_MODAL_TIMEOUT,
             )
         except asyncio.TimeoutError:
             try:
-                await inter.followup.send(embed=ErrorEmbed("Submission lifespan reached. Form window closed."), ephemeral=True)
+                await inter.followup.send(
+                    embed=ErrorEmbed(
+                        "Submission lifespan reached. Form window closed."
+                    ),
+                    ephemeral=True,
+                )
             except disnake.HTTPException:
                 pass
             return
 
         await modal_inter.response.send_message(
-            embed=SuccessEmbed("Your profile restriction appeal has been securely cataloged for administrative assessment."), ephemeral=True
+            embed=SuccessEmbed(
+                "Your profile restriction appeal has been securely cataloged for administrative assessment."
+            ),
+            ephemeral=True,
         )
 
     @commands.cooldown(2, 15, commands.BucketType.user)
-    @appeal.sub_command(name="guild_denylist", description="Appeal your guild denylists")
+    @appeal.sub_command(
+        name="guild_denylist", description="Appeal your guild denylists"
+    )
     async def guild_denylist(self, inter: disnake.ApplicationCommandInteraction):
         """/appeal guild_denylist
         Request a formal administrative review for server infrastructure bans.
@@ -230,11 +302,23 @@ class AppealsCog(HelperCog):
         try:
             self.load_questions()
         except NoAppealQuestionsException:
-            await inter.send(embed=ErrorEmbed("No active validation question schemas could be loaded."), ephemeral=True)
+            await inter.send(
+                embed=ErrorEmbed(
+                    "No active validation question schemas could be loaded."
+                ),
+                ephemeral=True,
+            )
             return
 
-        questions = self.bot.appeal_questions[APPEAL_QUESTION_TYPE_NAMES[AppealType.GUILD_DENYLIST_APPEAL]]
-        guild_questionnaire_text = "".join([f"**{i}. {q.question}**\n*Instructions:* {q.long_prompt}\n\n" for i, q in enumerate(questions, 1)])
+        questions = self.bot.appeal_questions[
+            APPEAL_QUESTION_TYPE_NAMES[AppealType.GUILD_DENYLIST_APPEAL]
+        ]
+        guild_questionnaire_text = "".join(
+            [
+                f"**{i}. {q.question}**\n*Instructions:* {q.long_prompt}\n\n"
+                for i, q in enumerate(questions, 1)
+            ]
+        )
 
         warning_embed = disnake.Embed(
             title="⚠️ CRITICAL GUILD APPEAL REQUIREMENTS",
@@ -246,32 +330,38 @@ class AppealsCog(HelperCog):
                 "the confirmation button below to copy-paste into the active modal submission fields.\n"
                 f"*(Form submission window expires in {int(SAFE_MODAL_TIMEOUT / 60)} minutes)*"
             ),
-            color=disnake.Color.red()
+            color=disnake.Color.red(),
         )
         warning_embed.set_footer(
             text="Don't worry. If this message disappears before you're ready, you can use this command again to "
-                 "re-display the questions. Note: If you close the actual appeal modal layout, your answers will be lost forever."
+            "re-display the questions. Note: If you close the actual appeal modal layout, your answers will be lost forever."
         )
         unique_gate_id = f"gate_guild_{inter.author.id}_{urandom(4).hex()}"
         components = [
             disnake.ui.Button(
                 label="I have prepared my text, launch form",
                 custom_id=unique_gate_id,
-                style=disnake.ButtonStyle.danger
+                style=disnake.ButtonStyle.danger,
             )
         ]
         await inter.send(embed=warning_embed, components=components, ephemeral=True)
 
         try:
             btn_inter: disnake.MessageInteraction = await self.bot.wait_for(
-                "button_click", check=lambda b_i: b_i.data.custom_id == unique_gate_id and b_i.author.id == inter.author.id, timeout=120.0
+                "button_click",
+                check=lambda b_i: b_i.data.custom_id == unique_gate_id
+                and b_i.author.id == inter.author.id,
+                timeout=120.0,
             )
         except asyncio.TimeoutError:
             return
 
         modal_custom_id = f"guild_appeal_{inter.author.id}_{urandom(4).hex()}"
         textinputs = [q.to_textinput(index=i) for i, q in enumerate(questions, 1)]
-        question_custom_ids = {question: textinput.custom_id for question, textinput in zip(questions, textinputs)}
+        question_custom_ids = {
+            question: textinput.custom_id
+            for question, textinput in zip(questions, textinputs)
+        }
 
         modal = GuildDenylistAppealModal(
             timeout=SAFE_MODAL_TIMEOUT,
@@ -287,17 +377,28 @@ class AppealsCog(HelperCog):
 
         try:
             modal_inter: disnake.ModalInteraction = await self.bot.wait_for(
-                "modal_submit", check=lambda m_i: m_i.custom_id == modal_custom_id and m_i.author.id == inter.author.id, timeout=SAFE_MODAL_TIMEOUT
+                "modal_submit",
+                check=lambda m_i: m_i.custom_id == modal_custom_id
+                and m_i.author.id == inter.author.id,
+                timeout=SAFE_MODAL_TIMEOUT,
             )
         except asyncio.TimeoutError:
             try:
-                await inter.followup.send(embed=ErrorEmbed("Submission lifespan reached. Form window closed."), ephemeral=True)
+                await inter.followup.send(
+                    embed=ErrorEmbed(
+                        "Submission lifespan reached. Form window closed."
+                    ),
+                    ephemeral=True,
+                )
             except disnake.HTTPException:
                 pass
             return
 
         await modal_inter.response.send_message(
-            embed=SuccessEmbed("The server ecosystem restriction appeal payload was securely forwarded for internal assessment."), ephemeral=True
+            embed=SuccessEmbed(
+                "The server ecosystem restriction appeal payload was securely forwarded for internal assessment."
+            ),
+            ephemeral=True,
         )
 
 

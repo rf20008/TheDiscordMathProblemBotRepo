@@ -31,6 +31,8 @@ class_map = {
     "ComputationalProblem": ComputationalProblem,
     "LinearAlgebraProblem": LinearAlgebraProblem,
 }
+
+
 # TODO: When there are new problem types, this must handle it
 def convert_to_problem(data: dict, load_strat: str, cache=None):
     if not isinstance(data, dict):
@@ -54,7 +56,10 @@ def convert_to_problem(data: dict, load_strat: str, cache=None):
         raise ValueError(f"Unknown problem type: {extra_stuff.get('type')}")
     return getattr(prob_type, load_strat)(data, cache)
 
+
 def convert_dict_to_problem(data: dict, cache=None):
     return convert_to_problem(data, cache=cache, load_strat="from_dict")
+
+
 def convert_row_to_problem(row: dict, cache=None):
     return convert_to_problem(row, cache=cache, load_strat="from_row")

@@ -71,6 +71,7 @@ class ScryptParameters(DictConvertible):
             scrypt_len=data.get("scrypt_len", SCRYPT_LEN),
         )
 
+
 DEFAULT_SCRYPT_PARAMETERS = ScryptParameters(
     scrypt_n=SCRYPT_N, scrypt_r=SCRYPT_R, scrypt_p=SCRYPT_P, scrypt_len=SCRYPT_LEN
 )
@@ -119,6 +120,7 @@ class VerificationCodeThreadHashingManager(concurrent.futures.ThreadPoolExecutor
         future = self.submit(fn=func, args=args, kwargs=kwargs)
         return await async_wait_for_future(future, timeout=timeout)
 
+
 @register_dict("VerificationCodeInfo")
 class VerificationCodeInfo(IdentifiableDictConvertible):
     """
@@ -132,6 +134,7 @@ class VerificationCodeInfo(IdentifiableDictConvertible):
         expiry (float): Unix timestamp indicating when the verification code expires.
         created_at (float): Unix timestamp indicating when the verification code was created.
     """
+
     user_id: int
     hashed_verification_code: bytes
     salt: bytes
@@ -338,10 +341,15 @@ class VerificationCodeInfo(IdentifiableDictConvertible):
 
     def belongs_to_user(self, user_id: int):
         return self.user_id == user_id
+
     def belongs_to_guild(self, guild_id: int | None) -> bool:
-        raise OwnershipNotDeterminableException("VerificationCodeInfos only belong to users, not guilds.")
+        raise OwnershipNotDeterminableException(
+            "VerificationCodeInfos only belong to users, not guilds."
+        )
+
     def key(self) -> str:
         return self.key_of(user_id=self.user_id)
+
     @classmethod
     def key_of(cls, *, user_id: int):
         return f"vcode:{user_id}"

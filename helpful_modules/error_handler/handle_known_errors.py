@@ -34,7 +34,11 @@ from ..problems_module.errors import (
     LinearAlgebraUserInputErrorException,
     LockedCacheException,
 )
-def handle_known_error(error: BaseException | Exception) -> dict[str, str | disnake.Embed | int] | None:
+
+
+def handle_known_error(
+    error: BaseException | Exception,
+) -> dict[str, str | disnake.Embed | int] | None:
     cause = get_error_cause(error)
     if isinstance(error, LockedCacheException):
         return {
@@ -53,4 +57,3 @@ def handle_known_error(error: BaseException | Exception) -> dict[str, str | disn
     if isinstance(error, disnake.ext.commands.errors.CheckFailure):
         return {"embed": ErrorEmbed(str(error))}
     return None
-

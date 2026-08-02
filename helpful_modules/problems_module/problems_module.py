@@ -310,7 +310,9 @@ class MathProblemCache:
         #
         # self._dict[Guild.id] = {}
 
-    async def add_problem(self, guild_id: int, problem_id: int, Problem: FixedAnswerProblem):
+    async def add_problem(
+        self, guild_id: int, problem_id: int, Problem: FixedAnswerProblem
+    ):
         "Adds a problem and returns the added MathProblem"
         # Preliminary checks -otherwise SQL bugs
         if not isinstance(guild_id, int):
@@ -394,7 +396,9 @@ class MathProblemCache:
             await conn.commit()
         return Problem
 
-    async def remove_problem(self, guild_id: int, problem_id: int) -> FixedAnswerProblem:
+    async def remove_problem(
+        self, guild_id: int, problem_id: int
+    ) -> FixedAnswerProblem:
         "Removes a problem. Returns the deleted problem"
         Problem = self.get_problem(guild_id, problem_id)
         await self.remove_problem_without_returning(guild_id, problem_id)
@@ -590,7 +594,9 @@ class MathProblemCache:
             quiz = Quiz(quiz_id, problems, submissions, cache=copy(self))
             return quiz
 
-    async def update_problem(self, guild_id, problem_id, new: FixedAnswerProblem) -> None:
+    async def update_problem(
+        self, guild_id, problem_id, new: FixedAnswerProblem
+    ) -> None:
         "Update the problem stored with the given guild id and problem id"
         assert isinstance(guild_id, str)
         assert isinstance(problem_id, str)

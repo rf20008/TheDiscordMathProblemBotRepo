@@ -21,16 +21,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 from enum import IntFlag
 from .errors import UnknownPrivilegeError
 
+
 class BotPermissionLevel(IntFlag):
     USER = 0
-    TRUSTED = 1<<0
-    MOD = 1<<1
-    ADMIN = 1<<2
-    DEVELOPER = 1<<3
-    OWNER = 1<<4
+    TRUSTED = 1 << 0
+    MOD = 1 << 1
+    ADMIN = 1 << 2
+    DEVELOPER = 1 << 3
+    OWNER = 1 << 4
 
     def __str__(self) -> str:
         """
@@ -48,6 +50,7 @@ class BotPermissionLevel(IntFlag):
                 # Convert 'DEVELOPER' -> 'Developer', 'MOD' -> 'Mod'
                 friendly_name = flag.name.title() if flag.name else str(flag.value)
                 active_names.append(friendly_name)
+
     def __getattr__(self, name: str) -> bool:
         """
         Allows checking if a flag is present using dot notation on an instance.
@@ -59,13 +62,16 @@ class BotPermissionLevel(IntFlag):
             return flag in self
         except KeyError:
             # Fallback to standard attribute behavior if it's not a valid flag name
-            raise UnknownPrivilegeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+            raise UnknownPrivilegeError(
+                f"'{self.__class__.__name__}' object has no attribute '{name}'"
+            )
+
 
 class BotRestrictionLevel(IntFlag):
     NONE = 0
-    DENYLISTED = 1<<0
-    APPEAL_DENYLISTED = 1<<1
-    VERIFICATION_CODE_DENYLISTED = 1<<2
+    DENYLISTED = 1 << 0
+    APPEAL_DENYLISTED = 1 << 1
+    VERIFICATION_CODE_DENYLISTED = 1 << 2
 
     def __getattr__(self, name: str) -> bool:
         """
@@ -78,4 +84,6 @@ class BotRestrictionLevel(IntFlag):
             return flag in self
         except KeyError:
             # Fallback to standard attribute behavior if it's not a valid flag name
-            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+            raise AttributeError(
+                f"'{self.__class__.__name__}' object has no attribute '{name}'"
+            )

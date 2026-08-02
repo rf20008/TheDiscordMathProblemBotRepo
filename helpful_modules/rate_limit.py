@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 import disnake
 import time
 from dataclasses import dataclass
@@ -34,7 +35,8 @@ from disnake.ext.commands import InvokableApplicationCommand
 
 from .circular_deque import CircularDeque
 from .problems_module import UserData, DenylistType
-#from .custom_bot import TheDiscordMathProblemBot
+
+# from .custom_bot import TheDiscordMathProblemBot
 from .threads_or_useful_funcs import first_true, last_true
 
 ONE_SECOND = 1
@@ -116,7 +118,8 @@ class RateLimiter:  # todo: more rate limits
         user_limits: list[RateLimit] | None = None,
         does_user_bypass: typing.Callable[[int], bool] | None = None,
     ):
-        from .custom_bot import TheDiscordMathProblemBot # avoid circular import
+        from .custom_bot import TheDiscordMathProblemBot  # avoid circular import
+
         if not isinstance(bot, TheDiscordMathProblemBot):
             raise TypeError("Bot must be of type TheDiscordMathProblemBot.")
         self.bot = bot
@@ -178,7 +181,8 @@ class RateLimiter:  # todo: more rate limits
 
     async def __call__(self, inter) -> str:
         """Return whether inter causes the user to be denylisted. If False, means"""
-        from .custom_bot import TheDiscordMathProblemBot # avoid circular import
+        from .custom_bot import TheDiscordMathProblemBot  # avoid circular import
+
         author_id = inter.author.id
         cur_time = time.time()
         if await self.will_bypass(author_id):
@@ -239,10 +243,11 @@ class RateLimiter:  # todo: more rate limits
         return ""
 
 
-#global_rate_limiter = RateLimiter()
-#appeal_rate_limiter = RateLimiter()
+# global_rate_limiter = RateLimiter()
+# appeal_rate_limiter = RateLimiter()
 global_rate_limiter = None
 appeal_rate_limiter = None
+
 
 class RateLimitedException(disnake.ext.commands.CheckFailure):
     """Raised when someone tries to run a command, but they're rate limited"""
@@ -253,6 +258,7 @@ class RateLimitedException(disnake.ext.commands.CheckFailure):
 def rate_limit_check():
     async def predicate(inter: disnake.ApplicationCommandInteraction):
         from .custom_bot import TheDiscordMathProblemBot
+
         if not isinstance(inter.bot, TheDiscordMathProblemBot):
             await inter.send("The bot ran into an error.")
             raise TypeError()

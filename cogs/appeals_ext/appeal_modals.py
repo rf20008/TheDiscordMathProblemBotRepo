@@ -52,9 +52,7 @@ APPEAL_TYPE_REASONS = {
 }
 
 
-async def get_highest_appeal_num_for(
-    cache: problems_module.AbstractCache, author: int
-):
+async def get_highest_appeal_num_for(cache: problems_module.AbstractCache, author: int):
     highest_appeal_num = 0
     all_appeals = await cache.get_all_appeals()
     for appeal in all_appeals:

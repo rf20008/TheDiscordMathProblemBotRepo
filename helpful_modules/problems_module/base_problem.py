@@ -45,12 +45,14 @@ QUESTION_CHAR_LIMIT = 2000
 @register_problem("base_problem")
 class BaseProblem(IdentifiableDictConvertible):
     """For readability purposes :) This is a partial ABC, but shares information related to all information."""
+
     question: str
     author: int
     problem_id: int
     guild_id: int | None
     voters: list[int]
     solvers: list[int]
+
     def __init__(
         self,
         *,
@@ -59,7 +61,7 @@ class BaseProblem(IdentifiableDictConvertible):
         problem_id: int | None = None,
         guild_id: typing.Optional[int] = None,
         voters: list | None = None,
-        solvers: list | None= None,
+        solvers: list | None = None,
     ):
         self.type = CLASS_TO_TYPE[self.__class__]
         if voters is None:
@@ -84,7 +86,6 @@ class BaseProblem(IdentifiableDictConvertible):
         if not isinstance(solvers, list):
             raise TypeError("solvers is not a list")
 
-
         # if not isinstance(cache,MathProblemCache) and cache is not None:
         #    raise TypeError("_cache is not a MathProblemCache.")
 
@@ -95,11 +96,10 @@ class BaseProblem(IdentifiableDictConvertible):
         self.voters = voters
         self.solvers = solvers
         self.author = author
+
     @property
     def problem_id(self) -> int:
         return self.id
-
-
 
     @staticmethod
     def try_to_convert_to_list(thing):
@@ -153,17 +153,16 @@ class BaseProblem(IdentifiableDictConvertible):
         assert info["guild_id"] is None or isinstance(info["guild_id"], int)
         # Remove the guild_id null (used for global problems), which is not used any more because of conflicts with sql.
 
-        problem_id = info.get("problem_id") or info.get('id')
-
+        problem_id = info.get("problem_id") or info.get("id")
 
         problem = cls(
-            question=info["question"], # type: ignore
+            question=info["question"],  # type: ignore
             problem_id=int(problem_id),
             guild_id=info["guild_id"],
             voters=info["voters"],
             solvers=info["solvers"],
             author=info["author"],
-            **info["extra_stuff"], # type: ignore
+            **info["extra_stuff"],  # type: ignore
         )  # Problem-ify the problem, but set the guild_id to None and return it
         return problem
 
@@ -211,12 +210,9 @@ class BaseProblem(IdentifiableDictConvertible):
                 PMDeprecationWarning,
             )
 
-
-
     def get_question(self):
         """Return my question."""
         return self.question
-
 
     def my_id(self):
         """Returns id & guild_id in a list. id is first and guild_id is second."""
@@ -274,7 +270,9 @@ class BaseProblem(IdentifiableDictConvertible):
 
         return f"""problems_module.BaseProblem(question='{self.question}', id = {self.id}, guild_id={self.guild_id}, voters={self.voters}, solvers={self.solvers}, author={self.author}, {extra_stuff_included})"""  # If I stored the problems, then there would be an infinite loop
 
-    def __str__(self, include_answer: bool = False, vote_threshold: int | None = None) -> str:
+    def __str__(
+        self, include_answer: bool = False, vote_threshold: int | None = None
+    ) -> str:
         _str = f"""Question: '{self.question}', 
         id: {self.id}, 
         guild_id: {self.guild_id}, 
@@ -299,13 +297,15 @@ class BaseProblem(IdentifiableDictConvertible):
         """Return the extra stuff for this dictionary, that doesn't go in just a FixedAnswerProblem. Override this if you're in a subclass"""
         return {}
 
-
     @classmethod
     def key_of(cls, *, guild_id: int | None, id: int) -> str:
         return f"Problem:{guild_id}:{id}"
+
     def key(self) -> str:
         return self.key_of(guild_id=self.guild_id, id=self.id)
+
     async def belongs_to_user(self, user_id: int) -> bool:
         return self.author == user_id
+
     async def belongs_to_guild(self, guild_id: int | None) -> bool:
         return self.guild_id == guild_id

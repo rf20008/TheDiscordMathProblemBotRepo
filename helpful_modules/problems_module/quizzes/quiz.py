@@ -38,6 +38,7 @@ from ..register_dicts import register_dict
 
 MAX_PROBLEMS_PER_QUIZ = 100  # todo: lower it - character limits
 
+
 @register_dict("Quiz")
 class Quiz(IdentifiableDictConvertible):
     """Represents a quiz.
@@ -155,16 +156,24 @@ class Quiz(IdentifiableDictConvertible):
             existing_sessions=existing_sessions,
             submissions=submissions,
         )  # type: ignore
+
     def __getitem__(self, item):
         return self.problems[item]
+
     def __setitem__(self, key, value):
         self.problems[key] = value
+
     @classmethod
     def key_of(cls, id: int) -> str:
         return f"Quiz:{id}"
+
     def key(self):
-        return self.key_of(quiz_id=self.id) # type: ignore
+        return self.key_of(quiz_id=self.id)  # type: ignore
+
     def belongs_to_user(self, user_id: int):
         return user_id in self.authors
+
     def belongs_to_guild(self, guild_id: int | None) -> bool:
-        raise OwnershipNotDeterminableException("At this moment, quizze don't belong to guilds")
+        raise OwnershipNotDeterminableException(
+            "At this moment, quizze don't belong to guilds"
+        )

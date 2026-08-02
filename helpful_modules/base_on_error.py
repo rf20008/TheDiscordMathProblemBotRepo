@@ -37,16 +37,11 @@ from .cooldowns import OnCooldown
 from .custom_embeds import ErrorEmbed, SimpleEmbed, SuccessEmbed
 from .problems_module.errors import (
     LinearAlgebraUserInputErrorException,
-    LockedCacheException
+    LockedCacheException,
 )
 from .error_handler.handle_known_errors import handle_known_error
 from .error_handler.handle_unexpected_error import handle_unexpected_error
 from .the_documentation_file_loader import DocumentationFileLoader
-
-
-
-
-
 
 
 async def base_on_error(
@@ -64,4 +59,3 @@ async def base_on_error(
     if known_error_result is not None:
         return known_error_result
     return await handle_unexpected_error(inter, error)
-

@@ -13,8 +13,9 @@ from .fixed_answer_problem import FixedAnswerProblem
 from .dict_convertible import DictConvertible, IdentifiableDictConvertible
 from .errors import (
     FormatException,
-    SQLNotSupportedInRedisException, ThingNotFound,
-    CorruptedDataException
+    SQLNotSupportedInRedisException,
+    ThingNotFound,
+    CorruptedDataException,
 )
 from .guild_data import GuildData  # Adjusted casing if necessary
 from .quizzes import Quiz
@@ -23,14 +24,21 @@ from .verification_code_info import VerificationCodeInfo
 from .cache_ABC import AbstractKVBasedCache, PREFIX_REGISTRY, convert_dict_to_problem
 
 GuildID = typing.Optional[int]
-T = typing.TypeVar('T', bound=IdentifiableDictConvertible)
+T = typing.TypeVar("T", bound=IdentifiableDictConvertible)
 
 
 class MongoCache(AbstractKVBasedCache):
-    def __init__(self, db_client: AsyncIOMotorClient, db_name: str, collection_name: str, *args, **kwargs) -> None:
+    def __init__(
+        self,
+        db_client: AsyncIOMotorClient,
+        db_name: str,
+        collection_name: str,
+        *args,
+        **kwargs,
+    ) -> None:
         """
         Initialize the MongoDB Cache implementation.
-        
+
         Documents are stored with an '_id' field mapping to the unique key string,
         a 'type' field representing the class type (e.g., 'Quiz', 'FixedAnswerProblem'),
         and a 'data' field containing the raw serialized object or dictionary.
@@ -47,6 +55,7 @@ class MongoCache(AbstractKVBasedCache):
         await self.collection.create_index("type")
         # Compound index for fast guild-specific lookups within problems
         await self.collection.create_index([("type", 1), ("data.guild_id", 1)])
+
     # ==========================================
     # CORE ABSTRACT METHOD IMPLEMENTATIONS
     # ==========================================
@@ -85,9 +94,9 @@ class MongoCache(AbstractKVBasedCache):
             {
                 "_id": thing_id,
                 "type": thing_type,
-                "data": thing.to_dict()  # Guaranteed by DictConvertible
+                "data": thing.to_dict(),  # Guaranteed by DictConvertible
             },
-            upsert=True
+            upsert=True,
         )
 
     def _deserialize(self, doc: dict, cls: typing.Type[T]) -> T:
@@ -97,7 +106,9 @@ class MongoCache(AbstractKVBasedCache):
             # Strictly use from_dict as guaranteed by the DictConvertible protocol
             return cls.from_dict(data)
         except Exception as e:
-            raise CorruptedDataException(f"Failed to parse data into {cls.__name__} using from_dict: {e}")
+            raise CorruptedDataException(
+                f"Failed to parse data into {cls.__name__} using from_dict: {e}"
+            )
 
     async def remove_thing(self, thing_id: str) -> None:
         """Removes an object from MongoDB by its structural key."""
@@ -108,10 +119,10 @@ class MongoCache(AbstractKVBasedCache):
         await self.remove_thing(thing_id)
 
     async def get_thing(
-            self,
-            thing_id: str,
-            cls: typing.Type[T],
-            default: T | None = None,
+        self,
+        thing_id: str,
+        cls: typing.Type[T],
+        default: T | None = None,
     ) -> T:
         """Retrieve an object by its structural ID string."""
         doc = await self.collection.find_one({"_id": thing_id})
@@ -128,7 +139,9 @@ class MongoCache(AbstractKVBasedCache):
     async def get_next_appeal_num(self, user_id: int) -> int:
         """Gets the next unique appeal incrementing token for a user."""
         # Counts current appeals under that specific user to issue the next sequence number
-        count = await self.collection.count_documents({"type": "Appeal", "data.user_id": user_id})
+        count = await self.collection.count_documents(
+            {"type": "Appeal", "data.user_id": user_id}
+        )
         return count + 1
 
     # ==========================================
@@ -156,9 +169,13 @@ class MongoCache(AbstractKVBasedCache):
             problems.append(self._deserialize(doc, FixedAnswerProblem))
         return problems
 
-    async def get_all_problems_by_guild(self, guild_id: GuildID) -> List[FixedAnswerProblem]:
+    async def get_all_problems_by_guild(
+        self, guild_id: GuildID
+    ) -> List[FixedAnswerProblem]:
         """Optimized: Sub-document structural filtering execution using indexing."""
         problems = []
-        async for doc in self.collection.find({"type": "FixedAnswerProblem", "data.guild_id": guild_id}):
+        async for doc in self.collection.find(
+            {"type": "FixedAnswerProblem", "data.guild_id": guild_id}
+        ):
             problems.append(self._deserialize(doc, FixedAnswerProblem))
         return problems

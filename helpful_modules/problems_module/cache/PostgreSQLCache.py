@@ -22,6 +22,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 With the assistance of Google Gemini
 """
+
 import typing
 from typing import List, Tuple
 import os
@@ -41,7 +42,7 @@ from .errors import (
     ProblemNotFound,
     QuizNotFound,
     AppealViewInfoNotFound,
-    CorruptedDataException
+    CorruptedDataException,
 )
 from .GuildData import GuildData
 from .quizzes import Quiz
@@ -50,11 +51,13 @@ from .verification_code_info import VerificationCodeInfo
 from .cache_ABC import AbstractCache, PREFIX_REGISTRY
 
 GuildID = typing.Optional[int]
-T = typing.TypeVar('T', bound=IdentifiableDictConvertible)
+T = typing.TypeVar("T", bound=IdentifiableDictConvertible)
 
 
 class PostgresCache(AbstractCache):
-    def __init__(self, dsn: str, table_name: str = "cache_table", *args, **kwargs) -> None:
+    def __init__(
+        self, dsn: str, table_name: str = "cache_table", *args, **kwargs
+    ) -> None:
         """
         :param dsn: PostgreSQL connection string (e.g., 'postgresql://user:password@localhost:5432/dbname')
         """
@@ -70,22 +73,28 @@ class PostgresCache(AbstractCache):
 
         async with self._pool.acquire() as conn:
             # Create the master key-value document table
-            await conn.execute(f"""
+            await conn.execute(
+                f"""
                 CREATE TABLE IF NOT EXISTS {self.table_name} (
                     key TEXT PRIMARY KEY,
                     type TEXT NOT NULL,
                     data JSONB NOT NULL
                 );
-            """)
+            """
+            )
             # GIN (Generalized Inverted Index) allows lightning-fast sub-document matching inside JSONB
-            await conn.execute(f"""
+            await conn.execute(
+                f"""
                 CREATE INDEX IF NOT EXISTS idx_{self.table_name}_data_gin 
                 ON {self.table_name} USING gin (data);
-            """)
-            await conn.execute(f"""
+            """
+            )
+            await conn.execute(
+                f"""
                 CREATE INDEX IF NOT EXISTS idx_{self.table_name}_type 
                 ON {self.table_name} (type);
-            """)
+            """
+            )
 
     async def close(self) -> None:
         """Safely close the connection pool."""
@@ -101,7 +110,9 @@ class PostgresCache(AbstractCache):
                 data_dict = orjson.loads(data_dict)
             return cls.from_dict(data_dict)
         except Exception as e:
-            raise CorruptedDataException(f"Failed to parse database record into {cls.__name__}: {e}")
+            raise CorruptedDataException(
+                f"Failed to parse database record into {cls.__name__}: {e}"
+            )
 
     # ==========================================
     # CORE ROUTINES
@@ -115,15 +126,20 @@ class PostgresCache(AbstractCache):
         thing_id = thing.key
         thing_type = type(thing).__name__
         # Encode dict into a raw JSON string for the entry parameter mapping
-        json_data = orjson.dumps(thing.to_dict()).decode('utf-8')
+        json_data = orjson.dumps(thing.to_dict()).decode("utf-8")
 
         async with self._pool.acquire() as conn:
-            await conn.execute(f"""
+            await conn.execute(
+                f"""
                 INSERT INTO {self.table_name} (key, type, data)
                 VALUES ($1, $2, $3::jsonb)
                 ON CONFLICT (key) DO UPDATE 
                 SET type = EXCLUDED.type, data = EXCLUDED.data;
-            """, thing_id, thing_type, json_data)
+            """,
+                thing_id,
+                thing_type,
+                json_data,
+            )
 
     async def add_things(self, things: list[IdentifiableDictConvertible]) -> None:
         """Optimized high-speed bulk upsert using executemany."""
@@ -131,32 +147,43 @@ class PostgresCache(AbstractCache):
             return
 
         payload = [
-            (t.key, type(t).__name__, orjson.dumps(t.to_dict()).decode('utf-8'))
+            (t.key, type(t).__name__, orjson.dumps(t.to_dict()).decode("utf-8"))
             for t in things
         ]
         async with self._pool.acquire() as conn:
-            await conn.executemany(f"""
+            await conn.executemany(
+                f"""
                 INSERT INTO {self.table_name} (key, type, data)
                 VALUES ($1, $2, $3::jsonb)
                 ON CONFLICT (key) DO UPDATE 
                 SET type = EXCLUDED.type, data = EXCLUDED.data;
-            """, payload)
+            """,
+                payload,
+            )
 
     async def remove_thing(self, thing_id: str) -> None:
         async with self._pool.acquire() as conn:
-            await conn.execute(f"DELETE FROM {self.table_name} WHERE key = $1;", thing_id)
+            await conn.execute(
+                f"DELETE FROM {self.table_name} WHERE key = $1;", thing_id
+            )
 
     def get_thing(
-            self,
-            thing_id: str,
-            cls: typing.Type[T],
-            default: T | None = None,
+        self,
+        thing_id: str,
+        cls: typing.Type[T],
+        default: T | None = None,
     ) -> T:
-        raise NotImplementedError("Use async variants or fetch data using driver task integrations.")
+        raise NotImplementedError(
+            "Use async variants or fetch data using driver task integrations."
+        )
 
-    async def get_thing_async(self, thing_id: str, cls: typing.Type[T], default: T | None = None) -> T:
+    async def get_thing_async(
+        self, thing_id: str, cls: typing.Type[T], default: T | None = None
+    ) -> T:
         async with self._pool.acquire() as conn:
-            record = await conn.fetchrow(f"SELECT * FROM {self.table_name} WHERE key = $1;", thing_id)
+            record = await conn.fetchrow(
+                f"SELECT * FROM {self.table_name} WHERE key = $1;", thing_id
+            )
             if not record:
                 if default is not None:
                     return default
@@ -171,13 +198,17 @@ class PostgresCache(AbstractCache):
     # CORE ABSTRACT CONCRETE ENTITY RESOLUTIONS
     # ==========================================
 
-    async def get_problem(self, guild_id: GuildID, problem_id: int) -> FixedAnswerProblem:
+    async def get_problem(
+        self, guild_id: GuildID, problem_id: int
+    ) -> FixedAnswerProblem:
         key = FixedAnswerProblem.key_of(guild_id=guild_id, id=problem_id)
         return await self.get_thing_async(key, FixedAnswerProblem)
 
     async def get_all_problems(self) -> List[FixedAnswerProblem]:
         async with self._pool.acquire() as conn:
-            records = await conn.fetch(f"SELECT * FROM {self.table_name} WHERE type = 'FixedAnswerProblem';")
+            records = await conn.fetch(
+                f"SELECT * FROM {self.table_name} WHERE type = 'FixedAnswerProblem';"
+            )
             return [self._deserialize(r, FixedAnswerProblem) for r in records]
 
     async def get_all_things(self) -> list[object]:
@@ -190,14 +221,19 @@ class PostgresCache(AbstractCache):
                     all_elements.append(self._deserialize(r, cls))
         return all_elements
 
-    async def get_all_problems_by_guild(self, guild_id: GuildID) -> List[FixedAnswerProblem]:
+    async def get_all_problems_by_guild(
+        self, guild_id: GuildID
+    ) -> List[FixedAnswerProblem]:
         # Using PostgreSQL native JSONB containment operator (@>) to query values instantly via the GIN index
-        guild_filter = orjson.dumps({"guild_id": guild_id}).decode('utf-8')
+        guild_filter = orjson.dumps({"guild_id": guild_id}).decode("utf-8")
         async with self._pool.acquire() as conn:
-            records = await conn.fetch(f"""
+            records = await conn.fetch(
+                f"""
                 SELECT * FROM {self.table_name} 
                 WHERE type = 'FixedAnswerProblem' AND data @> $1::jsonb;
-            """, guild_filter)
+            """,
+                guild_filter,
+            )
             return [self._deserialize(r, FixedAnswerProblem) for r in records]
 
     async def add_problem(self, problem_id, problem: FixedAnswerProblem):
@@ -210,12 +246,15 @@ class PostgresCache(AbstractCache):
         await self.remove_thing(key)
 
     async def num_guild_problems(self, guild_id: GuildID) -> int:
-        guild_filter = orjson.dumps({"guild_id": guild_id}).decode('utf-8')
+        guild_filter = orjson.dumps({"guild_id": guild_id}).decode("utf-8")
         async with self._pool.acquire() as conn:
-            count = await conn.fetchval(f"""
+            count = await conn.fetchval(
+                f"""
                 SELECT COUNT(*) FROM {self.table_name} 
                 WHERE type = 'FixedAnswerProblem' AND data @> $1::jsonb;
-            """, guild_filter)
+            """,
+                guild_filter,
+            )
             return count
 
     # ==========================================
@@ -234,8 +273,12 @@ class PostgresCache(AbstractCache):
     async def remove_quiz(self, quiz_id: int) -> None:
         await self.remove_thing(Quiz.key_of(id=quiz_id))
 
-    async def get_user_data(self, user_id: int, default: UserData | None = None) -> UserData | None:
-        return await self.get_thing_async(UserData.key_of(user_id=user_id), UserData, default=default)
+    async def get_user_data(
+        self, user_id: int, default: UserData | None = None
+    ) -> UserData | None:
+        return await self.get_thing_async(
+            UserData.key_of(user_id=user_id), UserData, default=default
+        )
 
     async def add_user_data(self, user_data: UserData) -> None:
         await self.add_thing(user_data)
@@ -247,23 +290,34 @@ class PostgresCache(AbstractCache):
     # APPEALS & SECURITY MANAGEMENT
     # ==========================================
 
-    async def get_appeal(self, special_id: int, default: Appeal | None = None) -> Appeal:
-        return await self.get_thing_async(Appeal.key_of(special_id=special_id), Appeal, default=default)
+    async def get_appeal(
+        self, special_id: int, default: Appeal | None = None
+    ) -> Appeal:
+        return await self.get_thing_async(
+            Appeal.key_of(special_id=special_id), Appeal, default=default
+        )
 
     async def get_all_appeals(self) -> list[Appeal]:
         async with self._pool.acquire() as conn:
-            records = await conn.fetch(f"SELECT * FROM {self.table_name} WHERE type = 'Appeal';")
+            records = await conn.fetch(
+                f"SELECT * FROM {self.table_name} WHERE type = 'Appeal';"
+            )
             return [self._deserialize(r, Appeal) for r in records]
 
     async def has_appeal(self, user_id: int, appeal_num: int) -> bool:
-        appeal_filter = orjson.dumps({"user_id": user_id, "appeal_num": appeal_num}).decode('utf-8')
+        appeal_filter = orjson.dumps(
+            {"user_id": user_id, "appeal_num": appeal_num}
+        ).decode("utf-8")
         async with self._pool.acquire() as conn:
-            exists = await conn.fetchval(f"""
+            exists = await conn.fetchval(
+                f"""
                 SELECT EXISTS(
                     SELECT 1 FROM {self.table_name} 
                     WHERE type = 'Appeal' AND data @> $1::jsonb
                 );
-            """, appeal_filter)
+            """,
+                appeal_filter,
+            )
             return exists
 
     async def set_appeal(self, appeal: Appeal) -> None:
@@ -278,8 +332,12 @@ class PostgresCache(AbstractCache):
     async def remove_guild_data(self, guild_id: GuildID) -> None:
         await self.remove_thing(GuildData.key_of(guild_id=guild_id))
 
-    async def get_guild_data(self, guild_id: GuildID, default: GuildData | None = None) -> GuildData:
-        return await self.get_thing_async(GuildData.key_of(guild_id=guild_id), GuildData, default=default)
+    async def get_guild_data(
+        self, guild_id: GuildID, default: GuildData | None = None
+    ) -> GuildData:
+        return await self.get_thing_async(
+            GuildData.key_of(guild_id=guild_id), GuildData, default=default
+        )
 
     # ==========================================
     # CLEANUP BY USER / GUILD ID
@@ -287,34 +345,46 @@ class PostgresCache(AbstractCache):
 
     async def get_all_by_user_id(self, user_id: int) -> list[dict]:
         # Evaluates containment vectors cleanly across discrete nested sub-properties
-        u_filter = orjson.dumps({"user_id": user_id}).decode('utf-8')
-        a_filter = orjson.dumps({"author": user_id}).decode('utf-8')
+        u_filter = orjson.dumps({"user_id": user_id}).decode("utf-8")
+        a_filter = orjson.dumps({"author": user_id}).decode("utf-8")
 
         async with self._pool.acquire() as conn:
-            records = await conn.fetch(f"""
+            records = await conn.fetch(
+                f"""
                 SELECT data FROM {self.table_name} 
                 WHERE data @> $1::jsonb 
                    OR data @> $2::jsonb 
                    OR (data->>'authors')::jsonb @> $3::jsonb;
-            """, u_filter, a_filter, str(user_id))
+            """,
+                u_filter,
+                a_filter,
+                str(user_id),
+            )
             return [r["data"] for r in records]
 
     async def del_all_by_user_id(self, user_id: int) -> None:
-        u_filter = orjson.dumps({"user_id": user_id}).decode('utf-8')
-        a_filter = orjson.dumps({"author": user_id}).decode('utf-8')
+        u_filter = orjson.dumps({"user_id": user_id}).decode("utf-8")
+        a_filter = orjson.dumps({"author": user_id}).decode("utf-8")
 
         async with self._pool.acquire() as conn:
-            await conn.execute(f"""
+            await conn.execute(
+                f"""
                 DELETE FROM {self.table_name} 
                 WHERE data @> $1::jsonb 
                    OR data @> $2::jsonb 
                    OR (data->>'authors')::jsonb @> $3::jsonb;
-            """, u_filter, a_filter, str(user_id))
+            """,
+                u_filter,
+                a_filter,
+                str(user_id),
+            )
 
     async def delete_all_by_guild_id(self, guild_id: int) -> None:
-        guild_filter = orjson.dumps({"guild_id": guild_id}).decode('utf-8')
+        guild_filter = orjson.dumps({"guild_id": guild_id}).decode("utf-8")
         async with self._pool.acquire() as conn:
-            await conn.execute(f"DELETE FROM {self.table_name} WHERE data @> $1::jsonb;", guild_filter)
+            await conn.execute(
+                f"DELETE FROM {self.table_name} WHERE data @> $1::jsonb;", guild_filter
+            )
 
     # ==========================================
     # APPEAL VIEWS & CODES
@@ -324,18 +394,24 @@ class PostgresCache(AbstractCache):
         await self.add_thing(view_info)
 
     async def get_appeal_view_info(self, view_info: AppealViewInfo):
-        return await self.get_thing_async(AppealViewInfo.key_of(message_id=view_info.message_id), AppealViewInfo)
+        return await self.get_thing_async(
+            AppealViewInfo.key_of(message_id=view_info.message_id), AppealViewInfo
+        )
 
     async def del_appeal_view_info(self, message_id: int):
         await self.remove_thing(AppealViewInfo.key_of(message_id=message_id))
 
     async def get_appeal_view_infos(self) -> list[AppealViewInfo]:
         async with self._pool.acquire() as conn:
-            records = await conn.fetch(f"SELECT * FROM {self.table_name} WHERE type = 'AppealViewInfo';")
+            records = await conn.fetch(
+                f"SELECT * FROM {self.table_name} WHERE type = 'AppealViewInfo';"
+            )
             return [self._deserialize(r, AppealViewInfo) for r in records]
 
     async def get_verification_code_info(self, user_id: int) -> VerificationCodeInfo:
-        return await self.get_thing_async(VerificationCodeInfo.key_of(user_id=user_id), VerificationCodeInfo)
+        return await self.get_thing_async(
+            VerificationCodeInfo.key_of(user_id=user_id), VerificationCodeInfo
+        )
 
     async def del_verification_code_info(self, user_id: int):
         await self.remove_thing(VerificationCodeInfo.key_of(user_id=user_id))
@@ -347,7 +423,9 @@ class PostgresCache(AbstractCache):
     # ARBITRARY SQL CAPABILITY GATEWAY
     # ==========================================
 
-    async def run_sql(self, sql: str, placeholders: typing.Optional[typing.List[typing.Any]] = None) -> dict:
+    async def run_sql(
+        self, sql: str, placeholders: typing.Optional[typing.List[typing.Any]] = None
+    ) -> dict:
         """
         Runs true native relational SQL queries against the active PostgreSQL deployment.
         """
@@ -366,8 +444,20 @@ class PostgresCache(AbstractCache):
         """Fulfills abstract protocol sequence cleanly without double overhead execution."""
         pass
 
-    async def bgsave(self, schedule: typing.Any, path: str = None, wait: bool = False, raise_on_error: bool = False,
-                     replace: bool = False, **kwargs):
+    async def bgsave(
+        self,
+        schedule: typing.Any,
+        path: str = None,
+        wait: bool = False,
+        raise_on_error: bool = False,
+        replace: bool = False,
+        **kwargs,
+    ):
         if raise_on_error:
-            raise NotImplementedError("bgsave context frames are structural to memory-mapped Redis backends.")
-        warnings.warn("bgsave safely bypassed: PostgreSQL manages background write logs continuously.", RuntimeWarning)
+            raise NotImplementedError(
+                "bgsave context frames are structural to memory-mapped Redis backends."
+            )
+        warnings.warn(
+            "bgsave safely bypassed: PostgreSQL manages background write logs continuously.",
+            RuntimeWarning,
+        )

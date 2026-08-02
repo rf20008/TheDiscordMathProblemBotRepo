@@ -24,12 +24,14 @@ import json
 import typing as t
 import os
 
+
 def create_log_entry_from_file(file):
     entries = json.load(file)
     changelogs = []
     for entry in entries.values():
         changelogs.append(ChangeLogEntry.from_dict(entry))
     return changelogs
+
 
 class ChangeLogEntry:
     def __init__(
@@ -40,7 +42,7 @@ class ChangeLogEntry:
         self.old_version = old
         self.new_version = new
         try:
-            self.date_released = datetime.datetime.fromtimestamp( ## ensure that you can convert to a date time
+            self.date_released = datetime.datetime.fromtimestamp(  ## ensure that you can convert to a date time
                 date_released, tz=datetime.timezone.utc
             )
         except TypeError:
@@ -68,7 +70,7 @@ class ChangeLogManager:
     def __init__(self, file_name: str):
         self.file_name = file_name
         self._lock = asyncio.Lock()
-        if not os.path.exists(file_name): # ensure filepath exists
+        if not os.path.exists(file_name):  # ensure filepath exists
             raise FileNotFoundError(f"{file_name} does not exist")
         self._changelogs: t.List[ChangeLogEntry] = []
 
@@ -89,8 +91,7 @@ class ChangeLogManager:
 
     async def load_files(self):
 
-
-        self._changelogs = await self._open_file(func=create_log_entry_from_file, mode="r") #type: ignore
+        self._changelogs = await self._open_file(func=create_log_entry_from_file, mode="r")  # type: ignore
         return self._changelogs
 
     async def save_files(self, new: dict):

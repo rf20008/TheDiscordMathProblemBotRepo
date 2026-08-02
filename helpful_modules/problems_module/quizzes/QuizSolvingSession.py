@@ -105,7 +105,7 @@ class QuizSolvingSession(DictConvertible):
         guild_id: int,
         start_time: int,
         expire_time: int,
-        special_id: int
+        special_id: int,
     ) -> "QuizSolvingSession":
         QuizSession: "QuizSolvingSession" = cls(
             cache=cache, quiz_id=quiz_id, user_id=user_id
@@ -196,5 +196,6 @@ class QuizSolvingSession(DictConvertible):
             return self.answers[index]
         except IndexError:
             raise IndexError("There is no such index")
+
     def key(self):
         return f"QuizSolvingSession:{self.special_id}"

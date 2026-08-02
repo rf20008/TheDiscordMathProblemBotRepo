@@ -51,6 +51,7 @@ class AutoGradeableProblem(ABC, BaseProblem):
     @abstractmethod
     def check_answer(self, answer: str) -> bool:
         pass
+
     def check_answer_and_add_checker(self, answer, potential_solver):
         """Checks the answer. If it's correct, it adds potentialSolver to the solvers."""
         if not isinstance(potential_solver, disnake.User) and not isinstance(

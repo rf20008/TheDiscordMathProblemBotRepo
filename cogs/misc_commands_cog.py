@@ -185,7 +185,9 @@ class MiscCommandsCog(HelperCog):
                 # A user with this ID does not exist
                 self.bot.trusted_users.remove(user_id)  # delete the user!
                 try:
-                    f = FileSaver(name=4, enabled=True) # do we even need to do this? we just need to tell the cache to not save it
+                    f = FileSaver(
+                        name=4, enabled=True
+                    )  # do we even need to do this? we just need to tell the cache to not save it
                     f.save_files(
                         self.bot.cache,
                         vote_threshold=self.bot.vote_threshold,

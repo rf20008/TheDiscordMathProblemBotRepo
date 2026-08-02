@@ -44,7 +44,6 @@ MAX_ANSWERS_PER_PROBLEM = 30
 ANSWER_CHAR_LIMIT = 1000
 
 
-
 # TODO: finish from_dict so that it knows to convert to a ComputationalProblem or a LinearAlgebraProblem or some other kind of problem
 @register_dict("FixedAnswerProblem")
 @register_problem("FixedAnswerProblem")
@@ -70,13 +69,15 @@ class FixedAnswerProblem(AutoGradeableProblem):
             author=author,
             guild_id=guild_id,
             voters=voters,
-            solvers=solvers
+            solvers=solvers,
         )
 
         if answers is None:
             answers = []
 
-        if not isinstance(answer, str) and answer is not None:  # answer is None because of answers
+        if (
+            not isinstance(answer, str) and answer is not None
+        ):  # answer is None because of answers
             raise TypeError("answer is not a string")
         if not isinstance(answers, list):
             raise TypeError("answers isn't a list")
@@ -98,7 +99,7 @@ class FixedAnswerProblem(AutoGradeableProblem):
         assert info["guild_id"] is None or isinstance(info["guild_id"], int)
         # Remove the guild_id null (used for global problems), which is not used any more because of conflicts with sql.
 
-        problem_id = info.get("problem_id") or info.get('id')
+        problem_id = info.get("problem_id") or info.get("id")
 
         problem = cls(
             question=info["question"],  # type: ignore
@@ -110,7 +111,7 @@ class FixedAnswerProblem(AutoGradeableProblem):
             answer=info["answer"],
             answers=info["answers"],
             tolerance=info["tolerance"],
-            **info["extra_stuff"] # type: ignore
+            **info["extra_stuff"],  # type: ignore
         )  # Problem-ify the problem, but set the guild_id to None and return it
         return problem
 
@@ -182,4 +183,3 @@ class FixedAnswerProblem(AutoGradeableProblem):
             setattr(copied, k, deepcopy(v, memo))
 
         return copied
-

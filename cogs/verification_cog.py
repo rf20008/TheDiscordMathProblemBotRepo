@@ -76,7 +76,7 @@ class VerificationCog(HelperCog):
                 type=disnake.OptionType.number,
                 required=False,
                 min_value=1e-200,
-                max_value=30*24*60*60, # One month
+                max_value=30 * 24 * 60 * 60,  # One month
             ),
             disnake.Option(
                 name="here",
@@ -131,7 +131,9 @@ class VerificationCog(HelperCog):
             )
             return
         else:
-            await inter.send(embed=SuccessEmbed("I have sent your code to your DMs!"), ephemeral=True)
+            await inter.send(
+                embed=SuccessEmbed("I have sent your code to your DMs!"), ephemeral=True
+            )
             await inter.author.send(
                 embed=SuccessEmbed(
                     f"Your secret code is `{code}`. "
@@ -164,7 +166,9 @@ class VerificationCog(HelperCog):
             )
         except problems_module.VerificationCodeInfoNotFound as e:
             await inter.send(
-                embed=ErrorEmbed("You don't have a verification code! Try using /verification_codes generate."),
+                embed=ErrorEmbed(
+                    "You don't have a verification code! Try using /verification_codes generate."
+                ),
                 ephemeral=True,
             )
             return
@@ -308,7 +312,7 @@ class VerificationCog(HelperCog):
         Delete your (or someone else's) verification code.
         If you don't own this bot, you can only delete your own verification code!"""
         if person == inter.author.id:
-            person = None # it's yourself
+            person = None  # it's yourself
         if person is not None and not await self.bot.is_owner(inter.author):
             await inter.send(
                 embed=ErrorEmbed(
@@ -358,7 +362,7 @@ class VerificationCog(HelperCog):
         else:
             await inter.send(
                 embed=SuccessEmbed("I successfully deleted your verification code!"),
-                ephemeral=True
+                ephemeral=True,
             )
 
         return
@@ -403,7 +407,9 @@ class VerificationCog(HelperCog):
         print("NO")
         if not await self.bot.is_trusted(inter.author):
             await inter.send(
-                embed=ErrorEmbed("Only trusted users can denylist people from the verification code system."),
+                embed=ErrorEmbed(
+                    "Only trusted users can denylist people from the verification code system."
+                ),
                 ephemeral=True,
             )
             return
@@ -445,7 +451,9 @@ class VerificationCog(HelperCog):
         ONLY for admins!"""
         if not await self.bot.is_trusted(inter.author):
             await inter.send(
-                embed=ErrorEmbed("Only trusted users can undenylist people from the verification code system."),
+                embed=ErrorEmbed(
+                    "Only trusted users can undenylist people from the verification code system."
+                ),
                 ephemeral=True,
             )
             return

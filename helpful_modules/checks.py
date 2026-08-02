@@ -134,12 +134,12 @@ def is_not_denylisted():
     """Check to make sure the user is not denylisted"""
 
     async def predicate(inter):
-        #if not isinstance(inter.bot, TheDiscordMathProblemBot):
+        # if not isinstance(inter.bot, TheDiscordMathProblemBot):
         #    raise TypeError(
         #        "Uh oh! We can't check whether people are denylisted if the bot is just an instance of disnake.ext.commands.Bot"
         #    )
 
-        user_data: UserData = await inter.bot.cache.get_user_data( # type: ignore # we assume that it exits
+        user_data: UserData = await inter.bot.cache.get_user_data(  # type: ignore # we assume that it exits
             user_id=inter.author.id,
             default=UserData.default(user_id=inter.author.id),
         )
@@ -322,6 +322,7 @@ def audit_command_usage_check():
         except Exception as e:
             traceback.print_exception(e)
             return True
+
     return commands.check(predicate)
 
 

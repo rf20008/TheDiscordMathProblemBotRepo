@@ -32,20 +32,23 @@ import aiosqlite
 
 from .fixed_answer_problem import FixedAnswerProblem
 from .dict_convertible import DictConvertible, IdentifiableDictConvertible
-from .errors import (
-    ThingNotFound,
-    CorruptedDataException
-)
+from .errors import ThingNotFound, CorruptedDataException
 
 from .parse_problem import convert_dict_to_problem
 from .AbstractKVCache import AbstractKVBasedCache, PREFIX_REGISTRY
 
 GuildID = typing.Optional[int]
-T = typing.TypeVar('T', bound=IdentifiableDictConvertible)
+T = typing.TypeVar("T", bound=IdentifiableDictConvertible)
 
 
 class SQLiteCache(AbstractKVBasedCache):
-    def __init__(self, db_path: str = "bot_cache.db", table_name: str = "cache_table", *args, **kwargs) -> None:
+    def __init__(
+        self,
+        db_path: str = "bot_cache.db",
+        table_name: str = "cache_table",
+        *args,
+        **kwargs,
+    ) -> None:
         super().__init__(*args, **kwargs)
         self.db_path = db_path
         self.table_name = table_name
@@ -60,17 +63,22 @@ class SQLiteCache(AbstractKVBasedCache):
         # Enable Write-Ahead Logging for high concurrency environments
         await self._db.execute("PRAGMA journal_mode=WAL;")
 
-        await self._db.execute(f"""
+        await self._db.execute(
+            f"""
             CREATE TABLE IF NOT EXISTS {self.table_name} (
                 key TEXT PRIMARY KEY,
                 type TEXT NOT NULL,
                 data TEXT NOT NULL
             );
-        """)
+        """
+        )
         # Indexes provide faster lookup vectors for type segregation and JSON fields
-        await self._db.execute(f"CREATE INDEX IF NOT EXISTS idx_type ON {self.table_name}(type);")
         await self._db.execute(
-            f"CREATE INDEX IF NOT EXISTS idx_guild_id ON {self.table_name}(json_extract(data, '$.guild_id'));")
+            f"CREATE INDEX IF NOT EXISTS idx_type ON {self.table_name}(type);"
+        )
+        await self._db.execute(
+            f"CREATE INDEX IF NOT EXISTS idx_guild_id ON {self.table_name}(json_extract(data, '$.guild_id'));"
+        )
         await self._db.commit()
 
     async def close(self) -> None:
@@ -88,7 +96,9 @@ class SQLiteCache(AbstractKVBasedCache):
 
             return cls.from_dict(data_dict)
         except Exception as e:
-            raise CorruptedDataException(f"Failed to cleanly rebuild {cls.__name__} metadata schema parameters: {e}")
+            raise CorruptedDataException(
+                f"Failed to cleanly rebuild {cls.__name__} metadata schema parameters: {e}"
+            )
 
     # ==========================================
     # ABS CONTRACT ROUTINES
@@ -105,7 +115,9 @@ class SQLiteCache(AbstractKVBasedCache):
             for r in rows:
                 cls = PREFIX_REGISTRY.get(r["type"])
                 if cls:
-                    target_cls = FixedAnswerProblem if r["type"] == "FixedAnswerProblem" else cls
+                    target_cls = (
+                        FixedAnswerProblem if r["type"] == "FixedAnswerProblem" else cls
+                    )
                     results.append(self._deserialize(r, target_cls))  # type: ignore
             return results
 
@@ -116,36 +128,49 @@ class SQLiteCache(AbstractKVBasedCache):
             for r in rows:
                 cls = PREFIX_REGISTRY.get(r["type"])
                 if cls:
-                    target_cls = FixedAnswerProblem if r["type"] == "FixedAnswerProblem" else cls
+                    target_cls = (
+                        FixedAnswerProblem if r["type"] == "FixedAnswerProblem" else cls
+                    )
                     results.append((r["key"], self._deserialize(r, target_cls)))  # type: ignore
             return results
 
     async def add_thing(self, thing: IdentifiableDictConvertible) -> None:
         thing_id = thing.key
         thing_type = type(thing).__name__
-        serialized_payload = orjson.dumps(thing.to_dict()).decode('utf-8')
+        serialized_payload = orjson.dumps(thing.to_dict()).decode("utf-8")
 
-        await self._db.execute(f"""
+        await self._db.execute(
+            f"""
             INSERT INTO {self.table_name} (key, type, data)
             VALUES (?, ?, ?)
             ON CONFLICT(key) DO UPDATE SET type=excluded.type, data=excluded.data;
-        """, (thing_id, thing_type, serialized_payload))
+        """,
+            (thing_id, thing_type, serialized_payload),
+        )
         await self._db.commit()
 
     async def remove_thing(self, thing_id: str) -> None:
-        await self._db.execute(f"DELETE FROM {self.table_name} WHERE key = ?;", (thing_id,))
+        await self._db.execute(
+            f"DELETE FROM {self.table_name} WHERE key = ?;", (thing_id,)
+        )
         await self._db.commit()
 
     async def del_thing(self, thing_id: str) -> None:
         await self.remove_thing(thing_id)
 
-    async def get_thing(self, thing_id: str, cls: typing.Type[T], default: T | None = None) -> T:
-        async with self._db.execute(f"SELECT * FROM {self.table_name} WHERE key = ?;", (thing_id,)) as cursor:
+    async def get_thing(
+        self, thing_id: str, cls: typing.Type[T], default: T | None = None
+    ) -> T:
+        async with self._db.execute(
+            f"SELECT * FROM {self.table_name} WHERE key = ?;", (thing_id,)
+        ) as cursor:
             row = await cursor.fetchone()
             if not row:
                 if default is not None:
                     return default
-                raise ThingNotFound(f"Element referenced by key token {thing_id} was missing from storage frames.")
+                raise ThingNotFound(
+                    f"Element referenced by key token {thing_id} was missing from storage frames."
+                )
             return self._deserialize(row, cls)
 
     @property
@@ -157,40 +182,56 @@ class SQLiteCache(AbstractKVBasedCache):
     # ==========================================
 
     async def get_all_problems(self) -> List[FixedAnswerProblem]:
-        async with self._db.execute(f"SELECT * FROM {self.table_name} WHERE type = 'FixedAnswerProblem';") as cursor:
+        async with self._db.execute(
+            f"SELECT * FROM {self.table_name} WHERE type = 'FixedAnswerProblem';"
+        ) as cursor:
             rows = await cursor.fetchall()
             return [self._deserialize(r, FixedAnswerProblem) for r in rows]
 
-    async def get_all_problems_by_guild(self, guild_id: GuildID) -> List[FixedAnswerProblem]:
+    async def get_all_problems_by_guild(
+        self, guild_id: GuildID
+    ) -> List[FixedAnswerProblem]:
         # Optimization over structural full scan: leverages fast indexed json extraction queries
-        async with self._db.execute(f"""
+        async with self._db.execute(
+            f"""
             SELECT * FROM {self.table_name} 
             WHERE type = 'FixedAnswerProblem' AND json_extract(data, '$.guild_id') IS ?;
-        """, (guild_id,)) as cursor:
+        """,
+            (guild_id,),
+        ) as cursor:
             rows = await cursor.fetchall()
             return [self._deserialize(r, FixedAnswerProblem) for r in rows]
 
     async def del_all_by_user_id(self, user_id: int) -> None:
         # Atomic sub-document deletions bypasses pulling everything into memory
-        await self._db.execute(f"""
+        await self._db.execute(
+            f"""
             DELETE FROM {self.table_name} 
             WHERE json_extract(data, '$.user_id') = ? 
                OR json_extract(data, '$.author') = ?;
-        """, (user_id, user_id))
+        """,
+            (user_id, user_id),
+        )
         await self._db.commit()
 
     async def delete_all_by_guild_id(self, guild_id: int) -> None:
-        await self._db.execute(f"""
+        await self._db.execute(
+            f"""
             DELETE FROM {self.table_name} 
             WHERE json_extract(data, '$.guild_id') = ?;
-        """, (guild_id,))
+        """,
+            (guild_id,),
+        )
         await self._db.commit()
 
     async def get_next_appeal_num(self, user_id: int) -> int:
-        async with self._db.execute(f"""
+        async with self._db.execute(
+            f"""
             SELECT COUNT(*) FROM {self.table_name} 
             WHERE type = 'Appeal' AND json_extract(data, '$.user_id') = ?;
-        """, (user_id,)) as cursor:
+        """,
+            (user_id,),
+        ) as cursor:
             count = await cursor.fetchone()
             return (count[0] + 1) if count else 1
 
@@ -202,7 +243,9 @@ class SQLiteCache(AbstractKVBasedCache):
         """Pre-initializes layout properties during explicit dependency workflow injections."""
         await self.initialize()
 
-    async def run_sql(self, sql: str, placeholders: typing.Optional[typing.List[typing.Any]] = None) -> dict:
+    async def run_sql(
+        self, sql: str, placeholders: typing.Optional[typing.List[typing.Any]] = None
+    ) -> dict:
         placeholders = placeholders or []
         async with self._db.execute(sql, placeholders) as cursor:
             if sql.strip().upper().startswith("SELECT"):
@@ -210,9 +253,19 @@ class SQLiteCache(AbstractKVBasedCache):
                 return {"results": [dict(r) for r in rows]}
             else:
                 await self._db.commit()
-                return {"status": "Execution completed successfully.", "changes": self._db.total_changes}
+                return {
+                    "status": "Execution completed successfully.",
+                    "changes": self._db.total_changes,
+                }
 
-    async def bgsave(self, schedule: typing.Any, path: str = None, wait: bool = False, raise_on_error: bool = False,
-                     replace: bool = False, **kwargs):
+    async def bgsave(
+        self,
+        schedule: typing.Any,
+        path: str = None,
+        wait: bool = False,
+        raise_on_error: bool = False,
+        replace: bool = False,
+        **kwargs,
+    ):
         """Bypassed safely. SQLite WAL logs automatically handle live persistent transactions directly."""
         pass

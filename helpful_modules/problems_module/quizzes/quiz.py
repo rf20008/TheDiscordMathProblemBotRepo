@@ -25,7 +25,6 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 import typing
 from typing import List
 
-from helpful_modules.problems_module import FixedAnswerProblem
 
 from ..dict_convertible import DictConvertible, IdentifiableDictConvertible
 from ..errors import *

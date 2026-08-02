@@ -29,7 +29,7 @@ from typing import *
 import orjson
 from disnake.utils import format_dt
 
-from . import OwnershipNotDeterminableException
+from .errors import OwnershipNotDeterminableException
 from .dict_convertible import DictConvertible, IdentifiableDictConvertible
 from .register_dicts import register_dict
 
@@ -54,11 +54,11 @@ class AppealType(Enum):
     )
 @register_dict(type_name="Appeal")
 class Appeal(IdentifiableDictConvertible):
-        user_id: int
-        appeal_msg: str
-        timestamp: int
-        appeal_num: int # should be -1 if not known
-        type: int | AppealType
+    user_id: int
+    appeal_msg: str
+    timestamp: int
+    appeal_num: int # should be -1 if not known
+    type: int | AppealType
     def __init__(
         self,
         *,

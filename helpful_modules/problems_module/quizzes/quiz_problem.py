@@ -27,7 +27,7 @@ import sys
 import traceback
 from typing import *
 
-from helpful_modules.problems_module import FixedAnswerProblem
+from helpful_modules.problems_module.fixed_answer_problem import FixedAnswerProblem
 
 from ..dict_convertible import DictConvertible
 

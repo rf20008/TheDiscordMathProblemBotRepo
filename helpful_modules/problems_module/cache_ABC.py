@@ -29,13 +29,13 @@ import warnings
 import orjson
 import os
 
-from . import user_data, UnknownPrivilegeError
+from .errors import UnknownPrivilegeError
+from .user_data import UserData
 from ..FileDictionaryReader import AsyncFileDict
 from .appeal import Appeal, AppealViewInfo
 from .fixed_answer_problem import FixedAnswerProblem
 from .dict_convertible import DictConvertible, IdentifiableDictConvertible
 from .errors import (
-    FormatException,
     SQLNotSupportedInRedisException,
     ThingNotFound,
     ProblemNotFound,

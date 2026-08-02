@@ -26,7 +26,7 @@ import json
 
 import disnake
 
-from .. import OwnershipNotDeterminableException
+from ..errors import OwnershipNotDeterminableException
 from ..dict_convertible import IdentifiableDictConvertible
 from ..errors import InvalidDictionaryInDatabaseException
 from .the_basic_check import CheckForUserPassage

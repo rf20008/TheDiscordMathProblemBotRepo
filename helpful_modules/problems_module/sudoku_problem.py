@@ -8,3 +8,8 @@
 # I might use heuristics because naïve backtracking is pretty slow 1) go to the cell with the least solutions instead of the next cell
 # in the order and 2) immediately check numbers that don't work
 # and 3) optimize the SudokuBoard so that it uses bitmasks so i can remove a constant factor
+from helpful_modules.problems_module.auto_checkable_problem import AutoGradeableProblem
+
+
+class SudokuProblem(AutoGradeableProblem):
+    pass

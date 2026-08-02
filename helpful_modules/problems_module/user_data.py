@@ -19,7 +19,7 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)"""
 
 import orjson
 
-from . import OwnershipNotDeterminableException
+from .errors import OwnershipNotDeterminableException
 from .BotPermissionLevels import BotPermissionLevel  # , BotRestrictionLevel
 from .denylistable import DenylistMetadata, DenylistType
 from .dict_convertible import IdentifiableDictConvertible

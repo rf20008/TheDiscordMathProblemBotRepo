@@ -236,14 +236,14 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
             await log_error(e)
             await asyncio.sleep(3)
         finally:
-           try:
+            try:
                 await super().close()
             except Exception as e:
                 self.log.exception("Failed to close Discord connection", exc_info=e)
                 try:
                     await log_error(e)
                 except Exception as le:
-                    self.log.exception("Failed to close log error", exc_info=le)
+                    self.log.exception("Failed to log error while closing", exc_info=le)
 
 
 

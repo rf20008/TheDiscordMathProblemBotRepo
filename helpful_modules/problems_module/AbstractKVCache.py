@@ -28,7 +28,7 @@ from typing import List
 import warnings
 import orjson
 
-from . import OwnershipNotDeterminableException
+from .errors import OwnershipNotDeterminableException
 from ..FileDictionaryReader import AsyncFileDict
 from .appeal import Appeal, AppealViewInfo
 from .fixed_answer_problem import FixedAnswerProblem
@@ -45,20 +45,13 @@ from .user_data import UserData
 from .verification_code_info import VerificationCodeInfo
 from .cache_ABC import AbstractCache, TYPE_ERROR_NOT_FOUND
 from .parse_problem import convert_dict_to_problem
+from .register_dicts import PREFIX_REGISTRY
 
 MUST_IMPLEMENT_ERROR = NotImplementedError("Subclasses must implement this")
 GuildID = typing.Optional[int]
 T = typing.TypeVar("T", bound=IdentifiableDictConvertible)
 
-PREFIX_REGISTRY = {
-    "Quiz": Quiz,
-    "UserData": UserData,
-    "GuildData": GuildData,
-    "VerificationCodeInfo": VerificationCodeInfo,
-    "Appeal": Appeal,
-    "AppealViewInfo": AppealViewInfo,
-    "FixedAnswerProblem": convert_dict_to_problem,  # this is because there are different types of problems that have to be parsed appropriately
-}
+
 
 
 class AbstractKVBasedCache(AbstractCache, ABC):

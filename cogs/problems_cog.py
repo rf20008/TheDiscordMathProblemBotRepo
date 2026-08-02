@@ -968,7 +968,7 @@ class ProblemsCog(HelperCog):
         """
         if guild_id is None:
             guild_id = inter.guild_id
-        try
+        try:
             problem = await self.bot.cache.get_problem(guild_id, problem_id)
             can_delete: bool = False  # default
             if problem.author == inter.author.id:

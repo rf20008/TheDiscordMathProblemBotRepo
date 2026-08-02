@@ -49,9 +49,8 @@ from helpful_modules.threads_or_useful_funcs import (
 )
 
 from .helper_cog import HelperCog
-from .interesting_computation_ import InterestingComputationCog
-
-CRTC = InterestingComputationCog.ChineseRemainderTheoremComputer
+from helpful_modules.crt_computer import ChineseRemainderTheoremComputer
+CRTC = ChineseRemainderTheoremComputer
 log = get_log(__name__)
 
 

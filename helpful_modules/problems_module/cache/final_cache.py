@@ -319,7 +319,7 @@ class MySQLCache(SQLCache):
         return int(rows[0]["count"])
 
 
-class MathProblemCache(MySQLCache):
+class MathProblemCache(SQLCache):
     """Backwards-compatible public cache name."""
 
     pass

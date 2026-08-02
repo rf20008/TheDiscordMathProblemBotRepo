@@ -61,7 +61,7 @@ class AppealsRelatedCache(GuildDataRelatedCache):
                 )  # TODO: test
                 await conn.commit()
         else:
-            with self.get_a_connection() as connection:
+            async with self.get_a_connection() as connection:
                 cursor = await connection.cursor(DictCursor)
                 await cursor.execute(
                     """INSERT INTO appeals (special_id, appeal_msg appeal_num, user_id, timestamp,type) 
@@ -84,9 +84,9 @@ class AppealsRelatedCache(GuildDataRelatedCache):
                     ),
                 )  # TODO: test
 
-    async def get_appeal(self, special_id: int, default: Appeal) -> Appeal:
+    async def get_appeal(self, special_id: int, default: Appeal | None) -> Appeal:
         assert isinstance(special_id, int)
-        assert isinstance(default, Appeal)
+        assert isinstance(default, Appeal | None)
 
         if self.use_sqlite:
             async with aiosqlite.connect(self.db) as conn:
@@ -340,3 +340,40 @@ class AppealsRelatedCache(GuildDataRelatedCache):
                 errors.append(nerr)
         if errors:
             raise BaseExceptionGroup("Formatting exceptions occured!", errors)
+    async def has_appeal(self, user_id: int, appeal_num: int):
+        if self.use_sqlite:
+            async with aiosqlite.connect(self.db) as conn:
+                cursor = await conn.cursor()
+                await cursor.execute(
+                    "SELECT 1 FROM appeals WHERE user_id=? AND appeal_num=?",
+                    (user_id, appeal_num),
+                )
+                return await cursor.fetchone() is not None
+        async with self.get_a_connection() as connection:
+            cursor = await connection.cursor(DictCursor)
+            await cursor.execute(
+                "SELECT 1 FROM appeals WHERE user_id=%s AND appeal_num=%s",
+                (user_id, appeal_num),
+            )
+            return await cursor.fetchone() is not None
+
+    async def set_appeal(self, appeal: Appeal):
+        return await self.set_appeal_data(appeal)
+
+    async def remove_appeal(self, appeal: Appeal):
+        if self.use_sqlite:
+            async with aiosqlite.connect(self.db) as conn:
+                cursor = await conn.cursor()
+                await cursor.execute(
+                    "DELETE FROM appeals WHERE user_id=? AND appeal_num=?",
+                    (appeal.user_id, appeal.appeal_num),
+                )
+                await conn.commit()
+            return
+        async with self.get_a_connection() as connection:
+            cursor = await connection.cursor(DictCursor)
+            await cursor.execute(
+                "DELETE FROM appeals WHERE user_id=%s AND appeal_num=%s",
+                (appeal.user_id, appeal.appeal_num),
+            )
+            await connection.commit()

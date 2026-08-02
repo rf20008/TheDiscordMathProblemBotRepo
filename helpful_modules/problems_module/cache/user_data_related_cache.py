@@ -110,7 +110,8 @@ class UserDataRelatedCache(QuizRelatedCache):
                         )
                     except NameError:
                         raise TooMuchUserDataException("Too much user data found!")
-
+    async def add_user_data(self, data: UserData):
+        return await self.set_user_data(data)
     async def set_user_data(self, user_id: int, new: UserData) -> None:
         """Set the user_data of a user."""
         assert isinstance(user_id, int)

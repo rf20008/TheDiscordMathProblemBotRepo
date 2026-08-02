@@ -88,7 +88,8 @@ class GuildDataRelatedCache(PermissionsRequiredRelatedCache):
                         MCTD,
                     ),
                 )  # TODO: test this
-
+    async def add_guild_data(self, data: GuildData):
+        return await self.set_guild_data(data)
     async def get_guild_data(self, guild_id: int, default: GuildData | None = None):
         if default is None:
             default = GuildData.default(guild_id)

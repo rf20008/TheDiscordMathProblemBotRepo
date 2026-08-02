@@ -640,3 +640,5 @@ class MiscRelatedCache(VerificationCodesRelatedCache):
                 log.debug("Created user data table")
                 connection.commit()
                 log.debug("Saved tables!")
+    async def is_locked(self) -> bool:
+        return False

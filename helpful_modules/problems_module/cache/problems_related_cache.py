@@ -155,29 +155,7 @@ class ProblemsRelatedCache(AbstractCache):
 
         # TODO: finish logging
 
-    def convert_dict_to_math_problem(self, problem: dict, use_from_dict: bool = True):
-        """Convert a dictionary into a math problem. It must be in the expected format. (Overridden by from_dict, but still used) Possibly not used due to SQL."""
-        if use_from_dict:
 
-            return problem.to_dict()
-        try:
-            assert isinstance(problem, dict)
-        except AssertionError:
-            raise TypeError("problem is not actually a Dictionary")
-        guild_id = problem["guild_id"]
-        if guild_id is not None:
-            guild_id = int(guild_id)
-        problem2 = FixedAnswerProblem(  # Create the problem
-            question=problem["question"],
-            answer=problem["answer"],
-            id=int(problem["id"]),
-            guild_id=guild_id,
-            voters=problem["voters"],
-            solvers=problem["solvers"],
-            author=problem["author"],
-            cache=self,
-        )
-        return problem2
 
     async def get_problem(
         self, guild_id: typing.Optional[int], problem_id: int

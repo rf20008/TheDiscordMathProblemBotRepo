@@ -23,7 +23,7 @@
 # Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 from . import *
 from .appeals_related_cache import AppealsRelatedCache
-from .final_cache import MathProblemCache
+from .final_cache import MathProblemCache, MySQLCache, SQLCache
 from .guild_data_related_cache import GuildDataRelatedCache
 from .misc_related_cache import MiscRelatedCache
 from .permissions_required_related_cache import PermissionsRequiredRelatedCache

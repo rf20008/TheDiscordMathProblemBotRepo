@@ -117,7 +117,6 @@ class CircularDeque:
             iterable = []
         self.data = list(iterable)
         self.front = 0
-        self.back = self.capacity - 1
         self.size = self.capacity
 
     def __getitem__(self, item) -> typing.Any:
@@ -149,7 +148,7 @@ class CircularDeque:
             raise IndexError("CircularDeque index out of range")
         if item >= 0:
             return self.data[(self.front + item) % self.capacity]
-        return self.data[(self.back - item) % self.capacity]
+        return self.data[(self.back + item) % self.capacity]
 
     def __setitem__(self, index, value):
         """
@@ -246,7 +245,6 @@ class CircularDeque:
             new_data[i] = self.data[(self.front + i) % self.capacity]
         self.data = new_data
         self.front = 0
-        self.back = old_size
 
     def __iter__(self):
         """
@@ -303,7 +301,7 @@ class CircularDeque:
         Returns:
             CircularDeque: A new deque containing the repeated elements.
         """
-        return self.__mul__(self, other)
+        return self.__mul__(other)
 
     def __lt__(self, other):
         """
@@ -423,10 +421,10 @@ class CircularDeque:
         """
         if len(self) == self.capacity:
             self.resize(self.size * 2 + 1)
-
+        self.data[self.back] = item
         self.size += 1
-        self.back = (self.back + 1) % self.capacity
-        self.data[self.back - 1] = item
+
+
 
     def extend_right(self, items):
         """
@@ -440,13 +438,11 @@ class CircularDeque:
         if len(self) + len(items) >= self.capacity:
             self.resize((self.size + len(items)) * 2 + 1)
         for val in items:
-            self.data[self.back] = (
-                val  # Store at back (which is exclusive, i.e., the next free slot)
-            )
-            self.back = (
-                self.back + 1
-            ) % self.capacity  # Move back pointer to the next free slot
+            self.data[self.back] = val
             self.size += 1
+            # Store at back (which is exclusive, i.e., the next free slot)
+
+
 
     def extend_left(self, items, reverse=True):
         """
@@ -521,7 +517,6 @@ class CircularDeque:
 
         val = self.data[(self.back - 1) % self.capacity]
         self.data[(self.back - 1) % self.capacity] = None
-        self.back = (self.back - 1) % self.capacity
         self.size -= 1
         return val
 
@@ -623,3 +618,7 @@ class CircularDeque:
 
     def __str__(self):
         return str([item for item in self])
+
+    @property
+    def back(self):
+        return (self.front + self.size) % self.capacity

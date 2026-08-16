@@ -45,8 +45,7 @@ def start():
     # os.system(f"cd {executable}; python3.12 -m main.py")
     p.wait()
 
-
-if __name__ == "__main__":
+def main():
     print("We are: " + str(os.path.abspath(os.getcwd())))
     current_file_path = os.path.abspath(__file__)
     main_script_path = os.path.abspath(
@@ -74,3 +73,6 @@ if __name__ == "__main__":
     finally:
         sp.kill()
         os._exit(0)  # type: ignore
+
+if __name__ == "__main__":
+    main()

@@ -35,7 +35,6 @@ sample_problem = FixedAnswerProblem(
     answer="4",
     voters=[],
     solvers=[],
-    cache=None,
     answers=["4"],
     tolerance=0.001,
 )
@@ -211,7 +210,7 @@ class TestBaseProblem(unittest.TestCase):
         problem = sample_problem
         self.assertEqual(
             repr(problem),
-            "problems_module.FixedAnswerProblem(question='What is 2+2?', answers = ['4'], id = -1, guild_id=None, voters=[], solvers=[], author=-123456789, cache=None )",
+            "problems_module.FixedAnswerProblem(question='What is 2+2?', answers = ['4'], id = -1, guild_id=None, voters=[], solvers=[], author=-123456789)",
         )  # Representation matches expected value
 
     def test___str__(self):

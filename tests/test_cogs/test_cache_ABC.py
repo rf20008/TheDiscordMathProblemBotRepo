@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import MagicMock
 
 # Ensure these match the exact import paths of your data models and exceptions
-from .your_cache_module import (
+from helpful_modules.problems_module import (
     BaseProblem,
     Quiz,
     UserData,

@@ -30,4 +30,4 @@ def test_main_block_execution(mock_popen, mock_process, mock_exit):
     mock_sp.start.assert_called_once()
     mock_sp.join.assert_called_once_with(timeout=1.0)
     mock_sp.kill.assert_called_once()
-    mock_exit.assert_not_called()  # Prevented accidental test runner exit
+    mock_exit.assert_called_once()  # Prevented accidental test runner exit

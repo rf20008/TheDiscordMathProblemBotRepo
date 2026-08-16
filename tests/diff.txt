@@ -1,0 +1,102 @@
+diff --git a/helpful_modules/actual_restarter.py b/helpful_modules/actual_restarter.py
+index 2227be7..65af7fa 100644
+--- a/helpful_modules/actual_restarter.py
++++ b/helpful_modules/actual_restarter.py
+@@ -23,25 +23,7 @@ import subprocess
+ from sys import executable
+ from time import sleep
+ 
+-print("We are: " + str(os.path.abspath(os.getcwd())))
+-current_file_path = os.path.abspath(__file__)
+-main_script_path = os.path.abspath(
+-    os.path.join(os.path.dirname(current_file_path), "..", "main.py")
+-)
+-test_script_path = os.path.abspath(
+-    os.path.join(os.path.dirname(current_file_path), "test.py")
+-)
+-print("Current file path: " + str(current_file_path))
+-print("Main script path: " + str(main_script_path))
+-q = subprocess.Popen(
+-    test_script_path.split(),
+-    executable=executable,
+-    shell=False,
+-)
+ 
+-print("Q's PID is " + str(q.pid))
+-q.wait()
+-print(q.stdout)
+ 
+ 
+ def start():
+@@ -65,6 +47,25 @@ def start():
+ 
+ 
+ if __name__ == "__main__":
++    print("We are: " + str(os.path.abspath(os.getcwd())))
++    current_file_path = os.path.abspath(__file__)
++    main_script_path = os.path.abspath(
++        os.path.join(os.path.dirname(current_file_path), "..", "main.py")
++    )
++    test_script_path = os.path.abspath(
++        os.path.join(os.path.dirname(current_file_path), "test.py")
++    )
++    print("Current file path: " + str(current_file_path))
++    print("Main script path: " + str(main_script_path))
++    q = subprocess.Popen(
++        test_script_path.split(),
++        executable=executable,
++        shell=False,
++    )
++
++    print("Q's PID is " + str(q.pid))
++    q.wait()
++    print(q.stdout)
+     print(f"Parent PID: {os.getpid()}")
+     sp = multiprocessing.Process(target=start)
+     sp.start()
+diff --git a/helpful_modules/test.py b/helpful_modules/test.py
+index 4606639..ff51b4c 100644
+--- a/helpful_modules/test.py
++++ b/helpful_modules/test.py
+@@ -25,5 +25,5 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
+ import subprocess
+ 
+ print("test stuff is working :D")
+-subprocess.run(("/usr/bin/say " + "HELLO " * 10).split())
+-subprocess.run(f"/usr/bin/say {__name__}")
++#subprocess.run(("/usr/bin/say " + "HELLO " * 10).split())
++#subprocess.run(f"/usr/bin/say {__name__}")
+diff --git a/tests/test_cogs/test_cache_ABC.py b/tests/test_cogs/test_cache_ABC.py
+index 354fae0..1ae494d 100644
+--- a/tests/test_cogs/test_cache_ABC.py
++++ b/tests/test_cogs/test_cache_ABC.py
+@@ -2,7 +2,7 @@ import pytest
+ from unittest.mock import MagicMock
+ 
+ # Ensure these match the exact import paths of your data models and exceptions
+-from .your_cache_module import (
++from helpful_modules.problems_module import (
+     BaseProblem,
+     Quiz,
+     UserData,
+diff --git a/tests/test_helpful_modules/test_problems_module/test_base_problem.py b/tests/test_helpful_modules/test_problems_module/test_base_problem.py
+index 1e33c8b..1c9afdc 100644
+--- a/tests/test_helpful_modules/test_problems_module/test_base_problem.py
++++ b/tests/test_helpful_modules/test_problems_module/test_base_problem.py
+@@ -35,7 +35,6 @@ sample_problem = FixedAnswerProblem(
+     answer="4",
+     voters=[],
+     solvers=[],
+-    cache=None,
+     answers=["4"],
+     tolerance=0.001,
+ )
+@@ -211,7 +210,7 @@ class TestBaseProblem(unittest.TestCase):
+         problem = sample_problem
+         self.assertEqual(
+             repr(problem),
+-            "problems_module.FixedAnswerProblem(question='What is 2+2?', answers = ['4'], id = -1, guild_id=None, voters=[], solvers=[], author=-123456789, cache=None )",
++            "problems_module.FixedAnswerProblem(question='What is 2+2?', answers = ['4'], id = -1, guild_id=None, voters=[], solvers=[], author=-123456789)",
+         )  # Representation matches expected value
+ 
+     def test___str__(self):

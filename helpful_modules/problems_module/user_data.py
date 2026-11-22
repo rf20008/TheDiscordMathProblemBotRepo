@@ -19,6 +19,7 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)"""
 
 import orjson
 
+from .register_dicts import register_dict
 from .errors import OwnershipNotDeterminableException
 from .BotPermissionLevels import BotPermissionLevel  # , BotRestrictionLevel
 from .denylistable import DenylistMetadata, DenylistType
@@ -45,7 +46,7 @@ def parse_denylist_metadata(
         return value
     raise TypeError(f"Expected DenylistMetadata, dict, or str, but got {type(value)}")
 
-
+@register_dict("UserInfo")
 class UserData(IdentifiableDictConvertible):
     """A dataclass to store user data for the bot!"""
 

@@ -26,7 +26,7 @@ class BotConstants:
     """Bot constants"""
 
     def __init__(self, env_path):
-        dotenv.load_dotenv(env_path)
+        dotenv.load_dotenv(env_path, override=True)
         self.MYSQL_USERNAME = os.environ.get("mysql_username")
         self.MYSQL_PASSWORD = os.environ.get("mysql_password")
         self.MYSQL_DB_IP = os.environ.get("mysql_db_ip")

@@ -482,11 +482,11 @@ class VerificationCog(HelperCog):
             status: problems_module.UserData = await asyncio.wait_for(
                 self.bot.cache.get_user_data(inter.author.id), timeout=1
             )
-            if status.verification_code_denylist.is_denylisted():
-                return False
+            if not status.verification_code_denylist.is_denylisted():
+                return True
 
-        except asyncio.TimeoutError as error:
-            return False
+        except asyncio.TimeoutError:
+            raise helpful_modules.checks.DenylistedException("You might be denylisted. The database could not determine whether you are denylisted in time.")
 
         if status.verification_code_denylist.denylist_expiry == float("inf"):
             until_str = "never"

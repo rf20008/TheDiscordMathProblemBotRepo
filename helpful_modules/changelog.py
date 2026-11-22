@@ -92,7 +92,7 @@ class ChangeLogManager:
     async def load_files(self):
         async with self._lock:
             with open(self.file_name, "r") as file:
-                self._changelogs = await create_log_entry_from_file(file)
+                self._changelogs = create_log_entry_from_file(file)
                 return self._changelogs
     async def save_files(self, data: dict):
         async with self._lock:
@@ -113,9 +113,22 @@ class ChangeLogManager:
             self._changelogs = [ChangeLogEntry.from_dict(entry) for entry in entries]
 
     @staticmethod
-    async def create_changelog(data: dict):
-        # TODO: finish
+    def create_changelog(data: t.Mapping[str, t.Any]) -> ChangeLogEntry:
+        if not isinstance(data, t.Mapping):
+            raise TypeError("Expected changelog data to be a mapping/dict")
+
+        required_keys = ("patch_notes", "old_version", "new_version", "date_released")
+        missing = [key for key in required_keys if key not in data]
+        if missing:
+            raise ValueError(f"Missing required changelog fields: {', '.join(missing)}")
+
+        patch_notes = data["patch_notes"]
+        if not isinstance(patch_notes, list) or not all(
+                isinstance(line, str) for line in patch_notes
+        ):
+            raise TypeError("patch_notes must be a list of strings")
+
         try:
-            return ChangeLogEntry(**data)
-        except BaseException as exc:
-            raise RuntimeError("Could not convert it to a dictionary") from exc
+            return ChangeLogEntry.from_dict(dict(data))
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError("Invalid changelog entry data") from exc

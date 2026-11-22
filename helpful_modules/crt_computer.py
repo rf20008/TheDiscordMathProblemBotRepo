@@ -35,7 +35,7 @@ class ChineseRemainderTheoremComputer:
         self.moduli = moduli
         self._validate()
 
-    def _validate(self):
+    def _validate(self) -> None:
         if not isinstance(self.remainders, list):
             raise TypeError("Remainders is not a list")
         if not isinstance(self.moduli, list):
@@ -54,13 +54,20 @@ class ChineseRemainderTheoremComputer:
                 raise ValueError(
                     f"{a} and {b} are 2 of the moduli, but they have gcd({a}, {b}) = {ABP} != 1"
                 )
-        for remainder, moduli in zip(self.remainders, self.moduli):
-            if not moduli > remainder >= 0:
-                raise ValueError("The CRT prerequsites are not satisifed!")
+        for i, (remainder, modulus) in enumerate(zip(self.remainders, self.moduli)):
+            if modulus <= 0:
+                raise ValueError(f"In congruence #{i+1}, the modulus {modulus} is nonpositive")
+            if not modulus > remainder >= 0:
+                raise ValueError(f"For congruence #{i+1}, the remainder {remainder} is not in the range [0, {modulus})")
 
-    def compute(self):
+    def compute(self, revalidate: bool=True):
         """Compute the CRT
-        Algorithm credits to my brother"""
+        Algorithm credits to my brother
+
+        revalidate: bool
+        Whether to revalidate the conditions of the CRT being defined"""
+        if revalidate:
+            self._validate()
         product = 1
         for i in range(len(self.moduli)):
             product *= self.moduli[i]
@@ -68,10 +75,8 @@ class ChineseRemainderTheoremComputer:
         for i in range(len(self.moduli)):
             num = product // self.moduli[i]
             # compute the multiplicative number of product/b_i mod b_i
-            try:
-                return_val = pow(product, -1, self.moduli[i])
-            except ValueError:
-                raise ValueError("They aren't relatively prime")
-            mult_inv = return_val[0][1]
+            return_val = pow(num, -1, self.moduli[i])
+            mult_inv = return_val
             su += num * mult_inv * self.remainders[i]
+            su %= product
         return su % product

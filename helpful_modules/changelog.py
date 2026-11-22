@@ -35,12 +35,12 @@ def create_log_entry_from_file(file):
 
 class ChangeLogEntry:
     def __init__(
-        self, *, patchNotes: t.List[str], old: str, new: str, date_released: str
+        self, *, patch_notes: t.List[str], old_version: str, new_version: str, date_released: str
     ):
-        self.patchNotes = "\n".join(patchNotes)
-        self.patch_notes = patchNotes
-        self.old_version = old
-        self.new_version = new
+        self.patchNotes = "\n".join(patch_notes)
+        self.patch_notes = patch_notes
+        self.old_version = old_version
+        self.new_version = new_version
         try:
             self.date_released = datetime.datetime.fromtimestamp(  ## ensure that you can convert to a date time
                 date_released, tz=datetime.timezone.utc
@@ -51,17 +51,17 @@ class ChangeLogEntry:
     def to_dict(self) -> dict:
         return {
             "patch_notes": self.patchNotes.split("\n"),
-            "old": self.old_version,
-            "new": self.new_version,
+            "old_version": self.old_version,
+            "new_version": self.new_version,
             "date_released": self.date_released.timestamp(),
         }
 
     @classmethod
     def from_dict(cls, data: dict) -> "ChangeLogEntry":
         return cls(
-            patchNotes=data["patch_notes"],
-            old=data["old"],
-            new=data["new"],
+            patch_notes=data["patch_notes"],
+            old_version=data["old_version"],
+            new_version=data["new_version"],
             date_released=data["date_released"],
         )
 
@@ -87,27 +87,30 @@ class ChangeLogManager:
             kwargs = {}
         async with self._lock:
             with open(self.file_name, mode) as file:
-                return func(file, *args, *kwargs)  # type: ignore
+                return func(file, *args, **kwargs)  # type: ignore
 
     async def load_files(self):
-
-        self._changelogs = await self._open_file(func=create_log_entry_from_file, mode="r")  # type: ignore
-        return self._changelogs
-
-    async def save_files(self, new: dict):
-        def func(file: io.TextIOWrapper, data: dict):
-            json.dump(data, file)
-
-        return await self._open_file(func=func, mode="w", args=[new])
+        async with self._lock:
+            with open(self.file_name, "r") as file:
+                self._changelogs = await create_log_entry_from_file(file)
+                return self._changelogs
+    async def save_files(self, data: dict):
+        async with self._lock:
+            with open(self.file_name, mode="w") as file:
+                json.dump(data, file, indent=4)
 
     async def add_changelog(self, item: ChangeLogEntry):
-        data = await self.load_files()
-        data.append(item.to_dict())
+        async with self._lock:
+            with open(self.file_name, "r", encoding="utf-8") as file:
+                raw = json.load(file)
 
-        def func(file, _data):
-            json.dump(_data, file)
+            entries = list(raw.values()) if isinstance(raw, dict) else list(raw)
+            entries.append(item.to_dict())
 
-        await self._open_file(func=func, mode="w", args=[data])
+            with open(self.file_name, "w", encoding="utf-8") as file:
+                json.dump(entries, file, indent=4)
+
+            self._changelogs = [ChangeLogEntry.from_dict(entry) for entry in entries]
 
     @staticmethod
     async def create_changelog(data: dict):
